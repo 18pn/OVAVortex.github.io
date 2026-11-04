@@ -27,7 +27,7 @@
             GithubAuthProvider,
             OAuthProvider,
             signInWithPopup 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBVHSbnkj96Jofi5NgD9cHukegytHXP2zc",
@@ -160,6 +160,15 @@
         .modal { display: none; }
         .modal.active { display: flex; }
         
+        /* Drawer Slide Animation */
+        #cartDrawer {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #cartDrawer.active {
+            transform: translateX(0);
+        }
+
         .store-banner {
             background: linear-gradient(180deg, rgba(236, 72, 153, 0.25) 0%, rgba(9, 9, 11, 0.95) 100%), url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop');
             background-size: cover;
@@ -566,7 +575,7 @@
                         <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
                     </summary>
                     <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Du kannst sicher per PayPal, PayPal-Kreditkarte/Debitkarte oder SEPA-Lastschrift bezahlen.
+                        Du kannst sicher per PayPal, Kreditkarte/Debitkarte oder SEPA bezahlen.
                     </p>
                 </details>
 
@@ -617,7 +626,7 @@
 
             <div class="flex items-center gap-1.5 text-zinc-400 font-medium">
                 <i class="fa-solid fa-shield-halved text-accent text-xs"></i>
-                <span>Verifizierter PayPal, Karten & SEPA Checkout</span>
+                <span>Verifizierter PayPal & Karten Checkout</span>
             </div>
         </div>
     </footer>
@@ -662,20 +671,24 @@
         </div>
     </div>
 
-    <!-- 2. WARENKORB MODAL -->
-    <div id="cartModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4" onclick="handleModalBackdrop(event, 'cartModal')">
-        <div class="bg-[#121217] border border-saBorder rounded-3xl max-w-lg w-full p-6 sm:p-8 relative space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
-            
-            <div class="flex justify-between items-center pb-3 border-b border-saBorder">
+    <!-- 2. WARENKORB SLIDE-OVER DRAWER (Genau wie auf dem Bild links bzw. rechts) -->
+    <div id="cartOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden transition-opacity" onclick="toggleCartModal()"></div>
+    <div id="cartDrawer" class="fixed top-0 right-0 bottom-0 w-full sm:max-w-md bg-[#121217] border-l border-saBorder z-50 flex flex-col justify-between p-6 sm:p-8 shadow-2xl overflow-y-auto">
+        
+        <div class="space-y-6">
+            <!-- Header -->
+            <div class="flex justify-between items-center pb-4 border-b border-saBorder">
                 <div class="flex items-center gap-2.5">
                     <i class="fa-solid fa-bag-shopping text-accent text-lg"></i>
                     <h2 class="text-base font-extrabold text-white">Warenkorb</h2>
                 </div>
-                <button onclick="toggleCartModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button onclick="toggleCartModal()" class="text-zinc-400 hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
+            <!-- Items List -->
             <div id="cartItemsContainer" class="space-y-3"></div>
 
+            <!-- EXTRAS -->
             <div class="space-y-2 pt-2 border-t border-saBorder/60">
                 <div class="flex justify-between items-center text-xs">
                     <span class="font-bold text-white uppercase tracking-wider text-[11px]">Extras</span>
@@ -689,7 +702,7 @@
                         </div>
                         <div>
                             <p class="font-bold text-white text-xs">Windows Custom Installation</p>
-                            <p class="text-[10px] text-zinc-400 line-clamp-1">Kompletter Installationsprozess vorbereitet, live Betreuung.</p>
+                            <p class="text-[10px] text-zinc-400 line-clamp-1">Kompletter Installationsprozess vorbereitet.</p>
                             <p class="text-xs font-bold text-white mt-1">20,00 €</p>
                         </div>
                     </div>
@@ -699,6 +712,7 @@
                 </div>
             </div>
 
+            <!-- Gutschein -->
             <div class="flex gap-2 pt-2">
                 <div class="relative w-full">
                     <i class="fa-solid fa-tag absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs"></i>
@@ -716,9 +730,11 @@
                 <span>Rabatt (<span id="discountName"></span>)</span>
                 <span id="discountAmount">-€0.00</span>
             </div>
+        </div>
 
-            <!-- Exakter Bezahlmethoden-Stil aus dem Screenshot (Nur Visa, MC, Maestro, AMEX, PayPal) -->
-            <div class="space-y-2 pt-3 text-center border-t border-saBorder/60">
+        <div class="space-y-4 pt-6 border-t border-saBorder mt-4">
+            <!-- Zahlungsarten Badges exakt nach Bild[cite: 3] -->
+            <div class="space-y-2 text-center">
                 <p class="text-[11px] font-semibold text-zinc-400">Sicher bezahlen mit</p>
                 <div class="flex flex-wrap items-center justify-center gap-1.5">
                     <span class="px-2.5 py-1 bg-blue-700 text-white rounded text-[10px] font-black italic">VISA</span>
@@ -729,12 +745,10 @@
                 </div>
             </div>
 
-            <div class="space-y-3 pt-2">
-                <button onclick="proceedToCheckout()" class="w-full py-3.5 bg-gradient-to-r from-pink-600 to-accent text-white font-extrabold rounded-2xl text-xs hover:opacity-95 transition shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-lock text-[11px]"></i> Zum Checkout
-                </button>
-                <p class="text-[10px] text-zinc-400 text-center">Unter 18? Bitte kauf nur mit dem Einverständnis deiner Eltern.</p>
-            </div>
+            <button onclick="proceedToCheckout()" class="w-full py-4 bg-gradient-to-r from-pink-600 to-accent text-white font-extrabold rounded-2xl text-xs hover:opacity-95 transition shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2">
+                Zum Checkout
+            </button>
+            <p class="text-[10px] text-zinc-500 text-center">Unter 18? Bitte kauf nur mit dem Einverständnis deiner Eltern.</p>
         </div>
     </div>
 
@@ -755,7 +769,7 @@
                     </div>
 
                     <div class="space-y-3 pt-2">
-                        <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mit PayPal, Karte oder SEPA bezahlen:</p>
+                        <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mit PayPal oder Karte bezahlen:</p>
                         <div id="paypal-button-container" class="w-full"></div>
                     </div>
                 </div>
@@ -790,159 +804,163 @@
         </div>
     </div>
 
-    <!-- 4. DASHBOARD & ADMIN PANEL MODAL -->
-    <div id="dashboardModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-2 sm:p-6" onclick="handleModalBackdrop(event, 'dashboardModal')">
-        <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-6xl w-full grid md:grid-cols-[240px_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
+    <!-- 4. VOLLBILD (FULLSCREEN) DASHBOARD & ADMIN PANEL MODAL -->
+    <div id="dashboardModal" class="modal fixed inset-0 bg-[#09090b] z-50 items-center justify-center p-0">
+        <div class="w-full h-full grid md:grid-cols-[260px_1fr] bg-[#09090b] overflow-hidden">
             
             <!-- Sidebar -->
-            <div class="bg-[#121217] p-6 border-b md:border-b-0 md:border-r border-saBorder flex flex-col justify-between space-y-6">
+            <div class="bg-[#121217] p-6 border-r border-saBorder flex flex-col justify-between space-y-6">
                 <div class="space-y-6">
-                    <div class="flex items-center gap-3.5 bg-[#09090b] p-3 rounded-2xl border border-saBorder">
+                    <div class="flex items-center gap-3.5 bg-[#09090b] p-3.5 rounded-2xl border border-saBorder">
                         <div id="userAvatarLetter" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-accent to-accentGlow text-white font-black text-sm flex items-center justify-center shadow-md">L</div>
                         <div class="truncate">
                             <p class="text-xs font-extrabold text-white">Mein Account</p>
-                            <p id="userEmailDisplay" class="text-[10px] text-zinc-400 truncate max-w-[130px]"></p>
+                            <p id="userEmailDisplay" class="text-[10px] text-zinc-400 truncate max-w-[140px]"></p>
                         </div>
                     </div>
 
-                    <div class="space-y-1.5 text-xs font-semibold">
-                        <button onclick="switchTab('orders')" id="tabBtnOrders" class="w-full text-left px-3.5 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3 transition shadow-sm">
+                    <div class="space-y-2 text-xs font-semibold">
+                        <button onclick="switchTab('orders')" id="tabBtnOrders" class="w-full text-left px-4 py-3.5 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3 transition shadow-sm">
                             <i class="fa-solid fa-box text-sm"></i> Bestellungen
                         </button>
-                        <button onclick="switchTab('balance')" id="tabBtnBalance" class="w-full text-left px-3.5 py-3 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition">
+                        <button onclick="switchTab('balance')" id="tabBtnBalance" class="w-full text-left px-4 py-3.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition">
                             <span class="flex items-center gap-3"><i class="fa-solid fa-wallet text-sm"></i> Guthaben</span>
                             <span id="sidebarBalance" class="text-accent font-bold">€0.00</span>
                         </button>
                         <!-- Admin Button -->
-                        <button onclick="switchTab('admin')" id="tabBtnAdmin" class="hidden w-full text-left px-3.5 py-3 rounded-xl hover:bg-amber-500/10 text-amber-400 font-bold flex items-center gap-3 transition border border-amber-500/30">
+                        <button onclick="switchTab('admin')" id="tabBtnAdmin" class="hidden w-full text-left px-4 py-3.5 rounded-xl hover:bg-amber-500/10 text-amber-400 font-bold flex items-center gap-3 transition border border-amber-500/30">
                             <i class="fa-solid fa-shield-halved text-sm"></i> Admin Panel
                         </button>
                     </div>
                 </div>
 
-                <button onclick="handleLogout()" class="w-full text-left px-3.5 py-3 rounded-xl text-red-400 hover:bg-red-500/10 text-xs font-semibold flex items-center gap-2.5 transition">
-                    <i class="fa-solid fa-right-from-bracket text-sm"></i> Abmelden
-                </button>
+                <div class="space-y-3">
+                    <button onclick="toggleDashboardModal()" class="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs transition border border-saBorder flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrow-left"></i> Zurück zum Store
+                    </button>
+                    <button onclick="handleLogout()" class="w-full text-left px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 text-xs font-semibold flex items-center gap-2.5 transition">
+                        <i class="fa-solid fa-right-from-bracket text-sm"></i> Abmelden
+                    </button>
+                </div>
             </div>
 
-            <!-- Main Content Area -->
-            <div class="p-6 sm:p-8 relative space-y-6 overflow-y-auto">
-                <button onclick="toggleDashboardModal()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <!-- Main Fullscreen Content Area -->
+            <div class="p-8 sm:p-12 relative space-y-6 overflow-y-auto bg-[#09090b]">
 
                 <!-- TAB 1: Bestellungen -->
-                <div id="tabContentOrders" class="space-y-5">
+                <div id="tabContentOrders" class="space-y-6 max-w-5xl mx-auto">
                     <div class="border-b border-saBorder pb-4">
-                        <h3 class="text-lg font-extrabold text-white tracking-tight">Bestellverlauf</h3>
-                        <p class="text-xs text-zinc-400 mt-0.5">Übersicht aller deiner gekauften Produkte und digitalen Downloads.</p>
+                        <h3 class="text-2xl font-extrabold text-white tracking-tight">Bestellverlauf</h3>
+                        <p class="text-xs text-zinc-400 mt-1">Übersicht aller deiner gekauften Produkte und digitalen Downloads im Vollbild-Modus.</p>
                     </div>
                     <div id="userOrdersList" class="space-y-3"></div>
                 </div>
 
                 <!-- TAB 2: Guthaben aufladen -->
-                <div id="tabContentBalance" class="hidden space-y-6">
+                <div id="tabContentBalance" class="hidden space-y-6 max-w-5xl mx-auto">
                     <div class="border-b border-saBorder pb-4">
-                        <h3 class="text-lg font-extrabold text-white tracking-tight">Account-Guthaben</h3>
-                        <p class="text-xs text-zinc-400 mt-0.5">Lade dein Guthaben auf, um Einkäufe blitzschnell und ohne erneute Zahlungsabwicklung abzuschließen.</p>
+                        <h3 class="text-2xl font-extrabold text-white tracking-tight">Account-Guthaben</h3>
+                        <p class="text-xs text-zinc-400 mt-1">Lade dein Guthaben auf, um Einkäufe blitzschnell und ohne erneute Zahlungsabwicklung abzuschließen.</p>
                     </div>
-                    <div class="bg-[#121217] p-6 rounded-3xl border border-saBorder flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xl">
+                    <div class="bg-[#121217] p-8 rounded-3xl border border-saBorder flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-2xl">
                         <div>
                             <span class="text-xs text-zinc-400 font-medium">Aktuelles Guthaben</span>
-                            <h2 id="balanceTabDisplay" class="text-3xl font-black text-white mt-1">€0.00</h2>
+                            <h2 id="balanceTabDisplay" class="text-4xl font-black text-white mt-1">€0.00</h2>
                         </div>
-                        <div class="flex flex-wrap gap-2.5">
-                            <button onclick="topUpBalance(10)" class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs border border-saBorder transition">+ 10 €</button>
-                            <button onclick="topUpBalance(25)" class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs border border-saBorder transition">+ 25 €</button>
-                            <button onclick="topUpBalance(50)" class="px-4 py-2.5 bg-accent hover:opacity-90 text-white font-bold rounded-xl text-xs shadow-lg shadow-pink-500/20 transition">+ 50 €</button>
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="topUpBalance(10)" class="px-5 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl text-xs border border-saBorder transition">+ 10 €</button>
+                            <button onclick="topUpBalance(25)" class="px-5 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl text-xs border border-saBorder transition">+ 25 €</button>
+                            <button onclick="topUpBalance(50)" class="px-5 py-3 bg-accent hover:opacity-90 text-white font-bold rounded-2xl text-xs shadow-lg shadow-pink-500/20 transition">+ 50 €</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 3: ADMIN MANAGEMENT CENTER -->
-                <div id="tabContentAdmin" class="hidden space-y-6">
+                <!-- TAB 3: ADMIN MANAGEMENT CENTER (Fullscreen) -->
+                <div id="tabContentAdmin" class="hidden space-y-6 max-w-6xl mx-auto">
                     
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-saBorder pb-4 gap-3">
                         <div>
-                            <h2 class="text-lg font-extrabold text-amber-400 flex items-center gap-2">
+                            <h2 class="text-2xl font-extrabold text-amber-400 flex items-center gap-2">
                                 <i class="fa-solid fa-shield-halved"></i> Admin Management Center
                             </h2>
-                            <p class="text-xs text-zinc-400 mt-0.5">Vollständiger Zugriff auf Bestellungen, Gutscheine, User-Logins und IP-Tracker.</p>
+                            <p class="text-xs text-zinc-400 mt-1">Vollständiger Vollbild-Zugriff auf Bestellungen, Gutscheine, User-Logins und IP-Tracker.</p>
                         </div>
-                        <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-full font-mono font-bold w-max">
+                        <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-4 py-2 rounded-full font-mono font-bold w-max">
                             l@valentinolopez.de
                         </span>
                     </div>
 
                     <!-- Admin KPI Overview Cards -->
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div class="bg-[#121217] border border-saBorder p-3.5 rounded-2xl">
-                            <p class="text-[10px] text-zinc-400 font-semibold uppercase">Gesamtumsatz</p>
-                            <p id="adminStatRevenue" class="text-base font-extrabold text-white mt-1">€0.00</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl">
+                            <p class="text-xs text-zinc-400 font-semibold uppercase">Gesamtumsatz</p>
+                            <p id="adminStatRevenue" class="text-xl font-extrabold text-white mt-1">€0.00</p>
                         </div>
-                        <div class="bg-[#121217] border border-saBorder p-3.5 rounded-2xl">
-                            <p class="text-[10px] text-zinc-400 font-semibold uppercase">Bestellungen</p>
-                            <p id="adminStatOrdersCount" class="text-base font-extrabold text-accent mt-1">0</p>
+                        <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl">
+                            <p class="text-xs text-zinc-400 font-semibold uppercase">Bestellungen</p>
+                            <p id="adminStatOrdersCount" class="text-xl font-extrabold text-accent mt-1">0</p>
                         </div>
-                        <div class="bg-[#121217] border border-saBorder p-3.5 rounded-2xl">
-                            <p class="text-[10px] text-zinc-400 font-semibold uppercase">Registrierte User</p>
-                            <p id="adminStatUsersCount" class="text-base font-extrabold text-sky-400 mt-1">0</p>
+                        <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl">
+                            <p class="text-xs text-zinc-400 font-semibold uppercase">Registrierte User</p>
+                            <p id="adminStatUsersCount" class="text-xl font-extrabold text-sky-400 mt-1">0</p>
                         </div>
-                        <div class="bg-[#121217] border border-saBorder p-3.5 rounded-2xl">
-                            <p class="text-[10px] text-zinc-400 font-semibold uppercase">Besucher IPs</p>
-                            <p id="adminStatIpsCount" class="text-base font-extrabold text-amber-400 mt-1">0</p>
+                        <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl">
+                            <p class="text-xs text-zinc-400 font-semibold uppercase">Besucher IPs</p>
+                            <p id="adminStatIpsCount" class="text-xl font-extrabold text-amber-400 mt-1">0</p>
                         </div>
                     </div>
 
                     <!-- Admin Sub-Navigation -->
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        <button onclick="switchAdminSubTab('orders')" id="admSub-orders" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-accent text-white shadow-md">Orders</button>
-                        <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">Gutscheine</button>
-                        <button onclick="switchAdminSubTab('users')" id="admSub-users" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">User Passwörter DB</button>
-                        <button onclick="switchAdminSubTab('ips')" id="admSub-ips" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">Besucher IPs</button>
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        <button onclick="switchAdminSubTab('orders')" id="admSub-orders" class="px-5 py-3 rounded-2xl text-xs font-bold bg-accent text-white shadow-md">Orders</button>
+                        <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">Gutscheine</button>
+                        <button onclick="switchAdminSubTab('users')" id="admSub-users" class="px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">User Passwörter DB</button>
+                        <button onclick="switchAdminSubTab('ips')" id="admSub-ips" class="px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">Besucher IPs</button>
                     </div>
 
                     <!-- Sub-Box 1: Orders -->
-                    <div id="admBox-orders" class="bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-3 shadow-lg">
+                    <div id="admBox-orders" class="bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl">
                         <div class="flex justify-between items-center">
                             <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Globale Bestellübersicht</h4>
-                            <span class="text-[10px] text-zinc-500">Live aus LocalStorage</span>
+                            <span class="text-xs text-zinc-500">Live aus LocalStorage</span>
                         </div>
-                        <div id="adminPendingOrders" class="space-y-2.5 max-h-72 overflow-y-auto pr-1 text-xs"></div>
+                        <div id="adminPendingOrders" class="space-y-3 max-h-96 overflow-y-auto pr-1 text-xs"></div>
                     </div>
 
                     <!-- Sub-Box 2: Coupons -->
-                    <div id="admBox-coupons" class="hidden bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-4 shadow-lg">
+                    <div id="admBox-coupons" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl">
                         <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Gutschein erstellen & verwalten</h4>
                         <div class="grid sm:grid-cols-2 gap-3">
-                            <input type="text" id="newAdminCouponCode" placeholder="Code (z.B. PROMO20)" class="bg-[#09090b] border border-saBorder rounded-xl px-3.5 py-2.5 text-xs text-white uppercase placeholder-zinc-500 focus:outline-none focus:border-accent">
-                            <input type="number" id="newAdminCouponValue" placeholder="Rabatt in €..." class="bg-[#09090b] border border-saBorder rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent">
+                            <input type="text" id="newAdminCouponCode" placeholder="Code (z.B. PROMO20)" class="bg-[#09090b] border border-saBorder rounded-xl px-4 py-3 text-xs text-white uppercase placeholder-zinc-500 focus:outline-none focus:border-accent">
+                            <input type="number" id="newAdminCouponValue" placeholder="Rabatt in €..." class="bg-[#09090b] border border-saBorder rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent">
                         </div>
-                        <button onclick="createAdminCoupon()" class="w-full py-2.5 bg-accent hover:opacity-90 text-white font-bold rounded-xl text-xs transition shadow-md">+ Gutschein speichern</button>
+                        <button onclick="createAdminCoupon()" class="w-full py-3 bg-accent hover:opacity-90 text-white font-bold rounded-xl text-xs transition shadow-md">+ Gutschein speichern</button>
                         <div id="adminCouponsList" class="space-y-2 pt-2 text-xs"></div>
                     </div>
 
                     <!-- Sub-Box 3: User Passwords DB -->
-                    <div id="admBox-users" class="hidden bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-3 shadow-lg">
+                    <div id="admBox-users" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl">
                         <div class="flex justify-between items-center">
                             <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Registrierungs- & Login-Historie DB</h4>
-                            <button onclick="clearAdminUserDB()" class="text-[10px] text-red-400 hover:underline">DB leeren</button>
+                            <button onclick="clearAdminUserDB()" class="text-xs text-red-400 hover:underline">DB leeren</button>
                         </div>
-                        <div class="overflow-x-auto max-h-72 overflow-y-auto font-mono text-[11px]">
+                        <div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs">
                             <table class="w-full text-left">
-                                <thead><tr class="text-zinc-500 text-[10px] border-b border-saBorder"><th class="py-2 px-3">Zeit</th><th class="py-2 px-3">Aktion</th><th class="py-2 px-3">E-Mail</th><th class="py-2 px-3">Passwort</th><th class="py-2 px-3">IP</th></tr></thead>
+                                <thead><tr class="text-zinc-500 text-xs border-b border-saBorder"><th class="py-3 px-3">Zeit</th><th class="py-3 px-3">Aktion</th><th class="py-3 px-3">E-Mail</th><th class="py-3 px-3">Passwort</th><th class="py-3 px-3">IP</th></tr></thead>
                                 <tbody id="adminUserDbTable" class="divide-y divide-saBorder/40"></tbody>
                             </table>
                         </div>
                     </div>
 
                     <!-- Sub-Box 4: IP Logger -->
-                    <div id="admBox-ips" class="hidden bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-3 shadow-lg">
+                    <div id="admBox-ips" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl">
                         <div class="flex justify-between items-center">
                             <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Besucher IP-Tracker</h4>
-                            <button onclick="clearAdminIPLogs()" class="text-[10px] text-red-400 hover:underline">Logs leeren</button>
+                            <button onclick="clearAdminIPLogs()" class="text-xs text-red-400 hover:underline">Logs leeren</button>
                         </div>
-                        <div class="overflow-x-auto max-h-72 overflow-y-auto font-mono text-[11px]">
+                        <div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs">
                             <table class="w-full text-left">
-                                <thead><tr class="text-zinc-500 text-[10px] border-b border-saBorder"><th class="py-2 px-3">Uhrzeit</th><th class="py-2 px-3">IP</th><th class="py-2 px-3">Standort</th><th class="py-2 px-3">Gerät</th></tr></thead>
+                                <thead><tr class="text-zinc-500 text-xs border-b border-saBorder"><th class="py-3 px-3">Uhrzeit</th><th class="py-3 px-3">IP</th><th class="py-3 px-3">Standort</th><th class="py-3 px-3">Gerät</th></tr></thead>
                                 <tbody id="adminIpLogTable" class="divide-y divide-saBorder/40"></tbody>
                             </table>
                         </div>
@@ -1179,7 +1197,7 @@
 
         function proceedToCheckout() {
             if(cart.length === 0) return showToast("Dein Warenkorb ist leer!");
-            if (document.getElementById('cartModal').classList.contains('active')) toggleCartModal();
+            toggleCartModal();
             const list = document.getElementById('checkoutItemsList');
             let subtotal = 0;
             list.innerHTML = cart.map(i => {
@@ -1204,7 +1222,7 @@
                     const txId = orderData.purchase_units[0].payments.captures[0].id;
                     const email = document.getElementById('checkoutEmail').value.trim() || 'kunde@val3ntino.de';
                     
-                    recordOrder(email, 'PayPal / PayPal-Karte / SEPA', 'TxID: ' + txId, 'Completed');
+                    recordOrder(email, 'PayPal / Karte', 'TxID: ' + txId, 'Completed');
                     togglePaymentModal();
                     showToast("Zahlung erfolgreich! Produkt im Dashboard freigeschaltet.");
                     toggleDashboardModal();
@@ -1243,7 +1261,13 @@
             renderAllAdminData();
         }
 
-        function toggleCartModal() { document.getElementById('cartModal').classList.toggle('active'); }
+        function toggleCartModal() { 
+            const drawer = document.getElementById('cartDrawer');
+            const overlay = document.getElementById('cartOverlay');
+            drawer.classList.toggle('active');
+            overlay.classList.toggle('hidden');
+        }
+
         function togglePaymentModal() { document.getElementById('paymentModal').classList.toggle('active'); }
         function toggleAuthModal() { document.getElementById('authModal').classList.toggle('active'); }
         function toggleDashboardModal() { 
@@ -1270,12 +1294,12 @@
             document.getElementById('tabContentAdmin').classList.toggle('hidden', t !== 'admin');
             
             document.getElementById('tabBtnOrders').className = t === 'orders' 
-                ? "w-full text-left px-3.5 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3 shadow-sm" 
-                : "w-full text-left px-3.5 py-3 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center gap-3 transition";
+                ? "w-full text-left px-4 py-3.5 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3 shadow-sm" 
+                : "w-full text-left px-4 py-3.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center gap-3 transition";
 
             document.getElementById('tabBtnBalance').className = t === 'balance' 
-                ? "w-full text-left px-3.5 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center justify-between shadow-sm" 
-                : "w-full text-left px-3.5 py-3 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition";
+                ? "w-full text-left px-4 py-3.5 rounded-xl bg-accent/20 text-accent font-bold flex items-center justify-between shadow-sm" 
+                : "w-full text-left px-4 py-3.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition";
 
             if (t === 'admin') renderAllAdminData();
         }
@@ -1285,8 +1309,8 @@
             tabs.forEach(k => {
                 document.getElementById('admBox-' + k).classList.toggle('hidden', k !== sub);
                 document.getElementById('admSub-' + k).className = k === sub
-                    ? "px-4 py-2.5 rounded-xl text-xs font-bold bg-accent text-white shadow-md"
-                    : "px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition";
+                    ? "px-5 py-3 rounded-2xl text-xs font-bold bg-accent text-white shadow-md"
+                    : "px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition";
             });
             renderAllAdminData();
         }
@@ -1299,21 +1323,21 @@
             const orders = JSON.parse(localStorage.getItem('orders_' + email) || '[]');
             const list = document.getElementById('userOrdersList');
             if (orders.length === 0) {
-                list.innerHTML = '<p class="text-xs text-zinc-500 py-8 text-center bg-[#121217] border border-saBorder rounded-2xl">Bisher keine Bestellungen vorhanden.</p>';
+                list.innerHTML = '<p class="text-xs text-zinc-500 py-12 text-center bg-[#121217] border border-saBorder rounded-3xl">Bisher keine Bestellungen vorhanden.</p>';
                 return;
             }
 
             list.innerHTML = orders.map(o => `
-                <div class="bg-[#121217] border border-saBorder p-4 rounded-2xl flex justify-between items-center text-xs">
+                <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl flex justify-between items-center text-xs shadow-md">
                     <div>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-white">#${o.invoice}</span>
-                            <span class="text-[9px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400">${o.status}</span>
+                        <div class="flex items-center gap-2.5">
+                            <span class="font-bold text-white text-sm">#${o.invoice}</span>
+                            <span class="text-[10px] px-3 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400">${o.status}</span>
                         </div>
-                        <p class="text-zinc-300 mt-1 font-medium">${o.items}</p>
-                        <p class="text-[10px] text-zinc-500 mt-0.5">${o.date} • via ${o.method}</p>
+                        <p class="text-zinc-300 mt-1.5 font-medium text-sm">${o.items}</p>
+                        <p class="text-[11px] text-zinc-500 mt-1">${o.date} • via ${o.method}</p>
                     </div>
-                    <span class="font-black text-accent text-sm">${o.total}</span>
+                    <span class="font-black text-accent text-base">${o.total}</span>
                 </div>
             `).join('');
         }
@@ -1362,7 +1386,7 @@
                 return;
             }
             list.innerHTML = all.map(o => `
-                <div class="bg-[#09090b] border border-saBorder p-3.5 rounded-xl flex justify-between items-center text-xs">
+                <div class="bg-[#09090b] border border-saBorder p-4 rounded-xl flex justify-between items-center text-xs">
                     <div>
                         <p class="font-bold text-white">#${o.invoice} - ${o.email} <span class="text-emerald-400">[${o.status}]</span></p>
                         <p class="text-zinc-300">${o.items} (${o.total}) • <span class="text-zinc-500">${o.date}</span></p>
@@ -1384,7 +1408,7 @@
             const box = document.getElementById('adminCouponsList');
             if (!box) return;
             box.innerHTML = Object.keys(coupons).map(c => `
-                <div class="bg-[#09090b] border border-saBorder p-3 rounded-xl flex justify-between items-center text-xs">
+                <div class="bg-[#09090b] border border-saBorder p-3.5 rounded-xl flex justify-between items-center text-xs">
                     <span class="font-mono font-bold text-white">${c} (-€${coupons[c].toFixed(2)})</span>
                     <button onclick="deleteAdminCoupon('${c}')" class="text-red-400 transition p-1"><i class="fa-solid fa-trash"></i></button>
                 </div>
@@ -1414,7 +1438,7 @@
             const tbody = document.getElementById('adminUserDbTable');
             if (!tbody) return;
             const db = JSON.parse(localStorage.getItem('admin_user_credentials_db') || '[]');
-            tbody.innerHTML = db.length ? db.map(u => `<tr class="hover:bg-white/5"><td class="py-2.5 px-3 text-zinc-400">${u.time}</td><td class="py-2.5 px-3 font-semibold">${u.action}</td><td class="py-2.5 px-3 text-white">${u.email}</td><td class="py-2.5 px-3 text-accent">${u.password}</td><td class="py-2.5 px-3 text-zinc-400">${u.ip}</td></tr>`).join('') : '<tr><td colspan="5" class="py-4 text-center text-zinc-500">Keine Login-Daten aufgezeichnet</td></tr>';
+            tbody.innerHTML = db.length ? db.map(u => `<tr class="hover:bg-white/5"><td class="py-3 px-3 text-zinc-400">${u.time}</td><td class="py-3 px-3 font-semibold">${u.action}</td><td class="py-3 px-3 text-white">${u.email}</td><td class="py-3 px-3 text-accent">${u.password}</td><td class="py-3 px-3 text-zinc-400">${u.ip}</td></tr>`).join('') : '<tr><td colspan="5" class="py-6 text-center text-zinc-500">Keine Login-Daten aufgezeichnet</td></tr>';
         }
 
         function clearAdminUserDB() {
@@ -1427,7 +1451,7 @@
             const tbody = document.getElementById('adminIpLogTable');
             if (!tbody) return;
             const logs = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
-            tbody.innerHTML = logs.length ? logs.map(l => `<tr class="hover:bg-white/5"><td class="py-2.5 px-3 text-zinc-400">${l.time}</td><td class="py-2.5 px-3 text-emerald-400 font-bold">${l.ip}</td><td class="py-2.5 px-3 text-zinc-300">${l.location}</td><td class="py-2.5 px-3 text-zinc-400">${l.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-4 text-center text-zinc-500">Keine Besucher-IPs aufgezeichnet</td></tr>';
+            tbody.innerHTML = logs.length ? logs.map(l => `<tr class="hover:bg-white/5"><td class="py-3 px-3 text-zinc-400">${l.time}</td><td class="py-3 px-3 text-emerald-400 font-bold">${l.ip}</td><td class="py-3 px-3 text-zinc-300">${l.location}</td><td class="py-3 px-3 text-zinc-400">${l.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-6 text-center text-zinc-500">Keine Besucher-IPs aufgezeichnet</td></tr>';
         }
 
         function clearAdminIPLogs() {
