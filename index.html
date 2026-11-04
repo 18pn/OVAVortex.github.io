@@ -617,7 +617,7 @@
 
             <div class="flex items-center gap-1.5 text-zinc-400 font-medium">
                 <i class="fa-solid fa-shield-halved text-accent text-xs"></i>
-                <span>Verifizierter PayPal & SEPA Checkout</span>
+                <span>Verifizierter PayPal, Karten & SEPA Checkout</span>
             </div>
         </div>
     </footer>
@@ -717,19 +717,21 @@
                 <span id="discountAmount">-€0.00</span>
             </div>
 
-            <!-- Bezahlmethoden Übersicht im Warenkorb -->
-            <div class="space-y-2 pt-2 text-center border-t border-saBorder/60">
-                <p class="text-[11px] font-semibold text-zinc-400">Akzeptierte Zahlungsarten</p>
-                <div class="flex flex-wrap items-center justify-center gap-2 text-xs font-bold">
-                    <span class="px-2.5 py-1 bg-sky-600 text-white rounded-lg flex items-center gap-1"><i class="fa-brands fa-paypal"></i> PayPal</span>
-                    <span class="px-2.5 py-1 bg-blue-700 text-white rounded-lg flex items-center gap-1"><i class="fa-solid fa-credit-card"></i> PayPal-Karte</span>
-                    <span class="px-2.5 py-1 bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-lg flex items-center gap-1"><i class="fa-solid fa-university"></i> SEPA</span>
+            <!-- Exakter Bezahlmethoden-Stil aus dem Screenshot (Nur Visa, MC, Maestro, AMEX, PayPal) -->
+            <div class="space-y-2 pt-3 text-center border-t border-saBorder/60">
+                <p class="text-[11px] font-semibold text-zinc-400">Sicher bezahlen mit</p>
+                <div class="flex flex-wrap items-center justify-center gap-1.5">
+                    <span class="px-2.5 py-1 bg-blue-700 text-white rounded text-[10px] font-black italic">VISA</span>
+                    <span class="px-2.5 py-1 bg-zinc-900 border border-zinc-700 text-white rounded text-[10px] font-bold">MC</span>
+                    <span class="px-2.5 py-1 bg-red-600 text-white rounded text-[10px] font-bold">Maestro</span>
+                    <span class="px-2.5 py-1 bg-blue-900 text-white rounded text-[10px] font-bold">AMEX</span>
+                    <span class="px-2.5 py-1 bg-sky-600 text-white rounded text-[10px] font-bold flex items-center gap-1"><i class="fa-brands fa-paypal"></i> PayPal</span>
                 </div>
             </div>
 
             <div class="space-y-3 pt-2">
                 <button onclick="proceedToCheckout()" class="w-full py-3.5 bg-gradient-to-r from-pink-600 to-accent text-white font-extrabold rounded-2xl text-xs hover:opacity-95 transition shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-lock text-[11px]"></i> Zur Kasse gehen & Bezahlen
+                    <i class="fa-solid fa-lock text-[11px]"></i> Zum Checkout
                 </button>
                 <p class="text-[10px] text-zinc-400 text-center">Unter 18? Bitte kauf nur mit dem Einverständnis deiner Eltern.</p>
             </div>
@@ -753,7 +755,7 @@
                     </div>
 
                     <div class="space-y-3 pt-2">
-                        <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Wähle deine Zahlungsart (PayPal / PayPal-Karte / SEPA):</p>
+                        <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Mit PayPal, Karte oder SEPA bezahlen:</p>
                         <div id="paypal-button-container" class="w-full"></div>
                     </div>
                 </div>
@@ -1191,7 +1193,7 @@
             togglePaymentModal();
         }
 
-        // PAYPAL SDK AUTOMATISCHE ZAHLUNG (Inkl. Karte & SEPA über PayPal Funding)
+        // PAYPAL SDK AUTOMATISCHE ZAHLUNG
         paypal.Buttons({
             createOrder: function(data, actions) {
                 const total = getCartTotal();
