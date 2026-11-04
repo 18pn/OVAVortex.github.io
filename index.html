@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Offizielles PayPal JS SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id=test&buyer-country=DE&currency=EUR&components=buttons&enable-funding=venmo,paylater,card"></script>
-    <!-- Firebase SDKs & Auth Core -->
+    <!-- Firebase SDKs & Auth Core (Korrigierte Imports) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
@@ -27,7 +27,7 @@
             GithubAuthProvider,
             OAuthProvider,
             signInWithPopup 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBVHSbnkj96Jofi5NgD9cHukegytHXP2zc",
@@ -670,7 +670,7 @@
         </div>
     </div>
 
-    <!-- 2. WARENKORB SLIDE-OVER DRAWER (Mit originalen Bezahl-Badges nach Screenshot[cite: 4]) -->
+    <!-- 2. WARENKORB SLIDE-OVER DRAWER (Mit exakter Bezahl-Leiste nach Wunsch) -->
     <div id="cartOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden transition-opacity" onclick="toggleCartModal()"></div>
     <div id="cartDrawer" class="fixed top-0 right-0 bottom-0 w-full sm:max-w-md bg-[#121217] border-l border-saBorder z-50 flex flex-col justify-between p-6 sm:p-8 shadow-2xl overflow-y-auto">
         
@@ -732,20 +732,20 @@
         </div>
 
         <div class="space-y-4 pt-6 border-t border-saBorder mt-4">
-            <!-- EXAKTE BEZAHL-BADGES MIT BILDERN NACH SCREENSHOT[cite: 4] -->
+            <!-- EXAKTE BEZAHL-BADGES MIT BILDERN NACH WUNSCH (Visa, Mastercard, Maestro, AMEX, PayPal, Klarna, Apple Pay, Google Pay, Shop, Paysafecard) -->
             <div class="space-y-2 text-center">
                 <p class="text-[11px] font-semibold text-zinc-400">Sicher bezahlen mit</p>
-                <div class="flex flex-wrap items-center justify-center gap-1.5 text-xs">
+                <div class="flex flex-wrap items-center justify-center gap-1.5">
                     <span class="px-2 py-1 bg-blue-700 text-white rounded font-black text-[9px] italic">VISA</span>
                     <span class="px-2 py-1 bg-zinc-900 border border-zinc-700 text-white rounded font-bold text-[9px]">MC</span>
-                    <span class="px-2 py-1 bg-red-600 text-white rounded font-bold text-[9px]">Maestro</span>
-                    <span class="px-2 py-1 bg-blue-900 text-white rounded font-bold text-[9px]">AMEX</span>
-                    <span class="px-2 py-1 bg-sky-600 text-white rounded font-bold text-[9px]">PayPal</span>
-                    <span class="px-2 py-1 bg-pink-400 text-black rounded font-bold text-[9px]">Klarna</span>
-                    <span class="px-2 py-1 bg-white text-black rounded font-black text-[9px]">Pay</span>
-                    <span class="px-2 py-1 bg-zinc-800 text-white rounded font-bold text-[9px]">GPay</span>
-                    <span class="px-2 py-1 bg-violet-600 text-white rounded font-bold text-[9px]">shop</span>
-                    <span class="px-2 py-1 bg-white text-black rounded font-bold text-[9px]">paysafe</span>
+                    <span class="px-2.5 py-1 bg-white text-blue-700 rounded font-bold text-[9px] border">Maestro</span>
+                    <span class="px-2.5 py-1 bg-blue-600 text-white rounded font-bold text-[9px]">AMEX</span>
+                    <span class="px-2.5 py-1 bg-white text-blue-600 rounded font-bold text-[9px] border">PayPal</span>
+                    <span class="px-2.5 py-1 bg-pink-300 text-black rounded font-bold text-[9px]">Klarna</span>
+                    <span class="px-2.5 py-1 bg-white text-black rounded font-black text-[9px]">Pay</span>
+                    <span class="px-2.5 py-1 bg-white text-black rounded font-bold text-[9px]">G Pay</span>
+                    <span class="px-2.5 py-1 bg-violet-600 text-white rounded font-bold text-[9px]">shop</span>
+                    <span class="px-2.5 py-1 bg-white text-black rounded font-bold text-[9px] border">paysafecard</span>
                 </div>
             </div>
 
