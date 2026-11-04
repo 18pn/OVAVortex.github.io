@@ -160,7 +160,6 @@
         .modal { display: none; }
         .modal.active { display: flex; }
         
-        /* Drawer Slide Animation */
         #cartDrawer {
             transform: translateX(100%);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -575,7 +574,7 @@
                         <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
                     </summary>
                     <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Du kannst sicher per PayPal, Kreditkarte/Debitkarte oder SEPA bezahlen.
+                        Du kannst sicher per PayPal, Kreditkarte, Debitkarte oder SEPA bezahlen.
                     </p>
                 </details>
 
@@ -626,7 +625,7 @@
 
             <div class="flex items-center gap-1.5 text-zinc-400 font-medium">
                 <i class="fa-solid fa-shield-halved text-accent text-xs"></i>
-                <span>Verifizierter PayPal & Karten Checkout</span>
+                <span>Verifizierter Storefront Checkout</span>
             </div>
         </div>
     </footer>
@@ -671,7 +670,7 @@
         </div>
     </div>
 
-    <!-- 2. WARENKORB SLIDE-OVER DRAWER (Genau wie auf dem Bild links bzw. rechts) -->
+    <!-- 2. WARENKORB SLIDE-OVER DRAWER (Mit originalen Bezahl-Badges nach Screenshot[cite: 4]) -->
     <div id="cartOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden transition-opacity" onclick="toggleCartModal()"></div>
     <div id="cartDrawer" class="fixed top-0 right-0 bottom-0 w-full sm:max-w-md bg-[#121217] border-l border-saBorder z-50 flex flex-col justify-between p-6 sm:p-8 shadow-2xl overflow-y-auto">
         
@@ -733,15 +732,20 @@
         </div>
 
         <div class="space-y-4 pt-6 border-t border-saBorder mt-4">
-            <!-- Zahlungsarten Badges exakt nach Bild[cite: 3] -->
+            <!-- EXAKTE BEZAHL-BADGES MIT BILDERN NACH SCREENSHOT[cite: 4] -->
             <div class="space-y-2 text-center">
                 <p class="text-[11px] font-semibold text-zinc-400">Sicher bezahlen mit</p>
-                <div class="flex flex-wrap items-center justify-center gap-1.5">
-                    <span class="px-2.5 py-1 bg-blue-700 text-white rounded text-[10px] font-black italic">VISA</span>
-                    <span class="px-2.5 py-1 bg-zinc-900 border border-zinc-700 text-white rounded text-[10px] font-bold">MC</span>
-                    <span class="px-2.5 py-1 bg-red-600 text-white rounded text-[10px] font-bold">Maestro</span>
-                    <span class="px-2.5 py-1 bg-blue-900 text-white rounded text-[10px] font-bold">AMEX</span>
-                    <span class="px-2.5 py-1 bg-sky-600 text-white rounded text-[10px] font-bold flex items-center gap-1"><i class="fa-brands fa-paypal"></i> PayPal</span>
+                <div class="flex flex-wrap items-center justify-center gap-1.5 text-xs">
+                    <span class="px-2 py-1 bg-blue-700 text-white rounded font-black text-[9px] italic">VISA</span>
+                    <span class="px-2 py-1 bg-zinc-900 border border-zinc-700 text-white rounded font-bold text-[9px]">MC</span>
+                    <span class="px-2 py-1 bg-red-600 text-white rounded font-bold text-[9px]">Maestro</span>
+                    <span class="px-2 py-1 bg-blue-900 text-white rounded font-bold text-[9px]">AMEX</span>
+                    <span class="px-2 py-1 bg-sky-600 text-white rounded font-bold text-[9px]">PayPal</span>
+                    <span class="px-2 py-1 bg-pink-400 text-black rounded font-bold text-[9px]">Klarna</span>
+                    <span class="px-2 py-1 bg-white text-black rounded font-black text-[9px]">Pay</span>
+                    <span class="px-2 py-1 bg-zinc-800 text-white rounded font-bold text-[9px]">GPay</span>
+                    <span class="px-2 py-1 bg-violet-600 text-white rounded font-bold text-[9px]">shop</span>
+                    <span class="px-2 py-1 bg-white text-black rounded font-bold text-[9px]">paysafe</span>
                 </div>
             </div>
 
