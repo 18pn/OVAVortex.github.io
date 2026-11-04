@@ -241,7 +241,7 @@
                 </div>
             </div>
 
-            <!-- Actions (Währung, Sprache, Links, Auth, Cart) -->
+            <!-- Actions -->
             <div class="flex items-center gap-2.5">
                 <select id="currencySelect" onchange="changeCurrency(this.value)" class="bg-[#121217] border border-saBorder text-zinc-300 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-accent font-semibold cursor-pointer">
                     <option value="EUR">EUR (€)</option>
@@ -320,8 +320,8 @@
                     <div class="bg-[#121217]/90 border border-saBorder rounded-2xl px-3.5 py-2 flex items-center gap-2 text-xs backdrop-blur-md">
                         <i class="fa-solid fa-user-clock text-accent"></i>
                         <div>
-                            <p class="font-bold text-white text-[11px]">Manuelle Zustellung</p>
-                            <p class="text-[10px] text-zinc-400">Prüfung & Versand per Hand</p>
+                            <p class="font-bold text-white text-[11px]">Automatische Link-Zustellung</p>
+                            <p class="text-[10px] text-zinc-400">Sofort nach Bestellung im Dashboard</p>
                         </div>
                     </div>
                     <div class="bg-[#121217]/90 border border-saBorder rounded-2xl px-3.5 py-2 flex items-center gap-2 text-xs backdrop-blur-md">
@@ -357,7 +357,7 @@
             </div>
 
             <div class="flex items-center justify-between md:justify-end gap-3">
-                <span class="text-xs text-zinc-500 font-medium" id="productCountLabel">3 Produkte</span>
+                <span class="text-xs text-zinc-500 font-medium" id="productCountLabel">4 Produkte</span>
                 <select id="sortSelect" onchange="sortProducts()" class="bg-[#121217] border border-saBorder text-zinc-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-accent">
                     <option value="featured">Empfohlen</option>
                     <option value="low-high">Preis: Aufsteigend</option>
@@ -366,7 +366,7 @@
             </div>
         </div>
 
-        <!-- Zahlungsarten-Leiste direkt in der Mitte unter den Filtern/Produkten -->
+        <!-- Zahlungsarten-Leiste direkt in der Mitte -->
         <section class="mb-12 bg-[#121217] border border-saBorder rounded-3xl p-6 text-center space-y-3 shadow-xl">
             <h4 class="text-xs font-extrabold text-zinc-400 uppercase tracking-widest">Sicher bezahlen mit</h4>
             <div class="flex flex-wrap items-center justify-center gap-3">
@@ -391,9 +391,57 @@
             </div>
         </section>
 
-        <!-- Products Grid -->
-        <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Products Grid (Inkl. dem neuen Streaming/Media-Produkt mit yarrlist.net Link) -->
+        <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
+            <!-- Neu: All-in-One Streaming & Media Access -->
+            <div class="product-item group bg-[#121217] border-2 border-accent/60 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between relative shadow-xl shadow-pink-500/10" data-category="services" data-price="0.50" data-name="All-in-One Media Access" data-desc="Free movie, TV, live TV, games, manga, anime and much more. Instant access link!">
+                <div class="absolute top-3 right-3 z-10">
+                    <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-accent text-white shadow-md">
+                        🔥 HOT 0.50€
+                    </span>
+                </div>
+                <div>
+                    <div class="relative h-44 bg-gradient-to-br from-purple-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auto-Link
+                            </span>
+                        </div>
+                        <div class="flex justify-center items-center h-full">
+                            <i class="fa-solid fa-tv text-4xl text-accent group-hover:scale-110 transition duration-300"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-5">
+                        <h3 class="text-base font-bold text-white mb-1 group-hover:text-accent transition">All-in-One Media Access</h3>
+                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed">
+                            Free movie, TV, live TV, games, manga, anime and much more. Link wird nach Kauf automatisch freigeschaltet!
+                        </p>
+                        <div class="space-y-1.5 text-xs text-zinc-300 font-light mb-4">
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Movies, TV & Live TV</div>
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Games, Manga & Anime</div>
+                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Sofortiger Link im Dashboard</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-5 pt-0">
+                    <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
+                        <span class="text-xs text-zinc-500">Nur</span>
+                        <span class="text-xl font-extrabold text-white product-price" data-base="0.50">€0.50 <span class="text-xs text-zinc-500 font-normal currency-label">EUR</span></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="openProductDetail('media')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
+                            Details
+                        </button>
+                        <button onclick="addToCartDirect('All-in-One Media Access', 0.50)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
+                            <i class="fa-solid fa-bolt"></i> Kaufen
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Produkt 1: Basic PC-Tuning -->
             <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning" data-desc="Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung und Basis-Timer-Optimierung.">
                 <div>
@@ -554,7 +602,7 @@
                         <span class="text-[10px] text-zinc-500">Vor 3 Tagen</span>
                     </div>
                     <p class="text-xs text-zinc-300 font-light leading-relaxed">
-                        "Tuning hat etwas gedauert wegen manueller Prüfung, aber das Ergebnis in Shootern ist der Hammer. Absolut stabil!"
+                        "Streaming-Link direkt nach Bezahlung im Dashboard erhalten. Funktioniert einwandfrei, Top Auswahl!"
                     </p>
                     <div class="text-[11px] font-bold text-white flex items-center gap-2 pt-1 border-t border-saBorder/40">
                         <span class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px]">L</span>
@@ -602,11 +650,11 @@
             <div class="space-y-3">
                 <details class="group bg-[#121217] border border-saBorder rounded-2xl p-4 cursor-pointer">
                     <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
-                        <span>Wie funktioniert die Auslieferung?</span>
+                        <span>Wie erhalte ich den Media / Streaming Link?</span>
                         <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
                     </summary>
                     <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Die Bereitstellung und Freischaltung erfolgt manuell nach erfolgreicher Zahlung und Prüfung. Die Zugänge werden dir im Dashboard angezeigt.
+                        Nach erfolgreicher Bezahlung wird dir der Link direkt in deinem Account-Dashboard unter deinen Bestellungen angezeigt.
                     </p>
                 </details>
 
@@ -653,18 +701,18 @@
             
             <div class="flex items-center gap-4">
                 <div id="detailIconBox" class="w-14 h-14 rounded-2xl bg-white/5 border border-saBorder flex items-center justify-center text-2xl text-accent">
-                    <i class="fa-solid fa-microchip"></i>
+                    <i class="fa-solid fa-tv"></i>
                 </div>
                 <div>
-                    <h2 id="detailTitle" class="text-lg font-bold text-white">Pro Tuning (0 Delay Setup)</h2>
-                    <p id="detailPrice" class="text-base font-black text-accent mt-0.5">€35.00 EUR</p>
+                    <h2 id="detailTitle" class="text-lg font-bold text-white">All-in-One Media Access</h2>
+                    <p id="detailPrice" class="text-base font-black text-accent mt-0.5">€0.50 EUR</p>
                 </div>
             </div>
 
-            <p id="detailDesc" class="text-xs text-zinc-300 font-light leading-relaxed">Ultra Low-Latency Setup, BIOS- & Registry-Edits, Interrupt Affinity (MSI Mode), BCDedit und maximale Reaktionszeit.</p>
+            <p id="detailDesc" class="text-xs text-zinc-300 font-light leading-relaxed">Free movie, TV, live TV, games, manga, anime and much more. Instant access link provided after checkout!</p>
 
             <div class="flex items-center justify-between pt-2">
-                <button onclick="addToCartFromModal()" class="w-full py-3 rounded-xl bg-accent text-white font-bold text-xs hover:opacity-90 transition shadow-lg shadow-pink-500/20">
+                <button onclick="addToCartDirect('All-in-One Media Access', 0.50)" class="w-full py-3 rounded-xl bg-accent text-white font-bold text-xs hover:opacity-90 transition shadow-lg shadow-pink-500/20">
                     <i class="fa-solid fa-cart-shopping"></i> In den Warenkorb
                 </button>
             </div>
@@ -725,12 +773,12 @@
         <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-4xl w-full grid md:grid-cols-[1.2fr_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             <div class="p-6 sm:p-8 space-y-6">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-accent uppercase tracking-wider">Kasse & Manuelle Prüfung</span>
+                    <span class="text-xs font-bold text-accent uppercase tracking-wider">Kasse & Automatische Link-Zustellung</span>
                     <button onclick="togglePaymentModal()" class="text-zinc-400 hover:text-white md:hidden"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">E-Mail für manuelle Zustellung *</label>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">E-Mail für Link-Zustellung *</label>
                         <input type="email" id="checkoutEmail" placeholder="deine-email@example.com" class="w-full bg-[#121217] border border-saBorder rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-accent">
                     </div>
                     <div class="space-y-3 pt-2">
@@ -751,8 +799,8 @@
                     </div>
                 </div>
                 <div class="bg-[#09090b] p-4 rounded-xl border border-saBorder space-y-1 text-[11px] text-zinc-400">
-                    <p class="font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-user-clock text-accent"></i> Manuelle Auslieferung</p>
-                    <p>Nach Zahlungseingang wird deine Bestellung manuell geprüft und im Dashboard freigeschaltet.</p>
+                    <p class="font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-link text-accent"></i> Automatischer Link</p>
+                    <p>Nach erfolgreicher Zahlung wird dir der Link (https://yarrlist.net/) sofort im Dashboard und per E-Mail bereitgestellt!</p>
                 </div>
             </div>
         </div>
@@ -772,7 +820,7 @@
                     </div>
                     <div class="space-y-2 text-xs font-semibold">
                         <button onclick="switchTab('orders')" id="tabBtnOrders" class="w-full text-left px-4 py-3.5 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3 transition">
-                            <i class="fa-solid fa-box text-sm"></i> Dashboard & Sales
+                            <i class="fa-solid fa-box text-sm"></i> Dashboard & Downloads
                         </button>
                         <button onclick="switchTab('balance')" id="tabBtnBalance" class="w-full text-left px-4 py-3.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition">
                             <span class="flex items-center gap-3"><i class="fa-solid fa-wallet text-sm"></i> Guthaben</span>
@@ -826,7 +874,7 @@
                         </div>
                     </div>
                     <div class="bg-[#121217] border border-saBorder p-6 rounded-3xl shadow-xl space-y-4">
-                        <h4 class="text-sm font-extrabold text-white uppercase tracking-wider">Bestellverlauf & Management</h4>
+                        <h4 class="text-sm font-extrabold text-white uppercase tracking-wider">Deine Bestellungen & Streaming-Links</h4>
                         <div id="userOrdersList" class="space-y-3"></div>
                     </div>
                 </div>
@@ -890,7 +938,7 @@
             <button onclick="toggleAuthModal()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             <div class="text-center">
                 <h3 class="text-lg font-extrabold text-white">Willkommen bei Val3ntino</h3>
-                <p class="text-xs text-zinc-400 mt-1">Anmelden für Bestellungen & Guthaben.</p>
+                <p class="text-xs text-zinc-400 mt-1">Anmelden für Bestellungen & Downloads.</p>
             </div>
             <div id="authErrorMsg" class="text-[11px] text-red-400 text-center font-medium"></div>
             <div class="space-y-2.5">
@@ -1085,7 +1133,7 @@
                                 <div class="w-10 h-10 rounded-xl bg-accent/20 text-accent border border-accent/30 flex items-center justify-center font-black text-sm shrink-0">V</div>
                                 <div>
                                     <p class="font-bold text-white">${item.name}</p>
-                                    <p class="text-zinc-400 text-[10px]">Manuelle Lieferung</p>
+                                    <p class="text-zinc-400 text-[10px]">Automatischer Link</p>
                                     <div class="flex items-center gap-2 mt-1.5 bg-[#121217] border border-saBorder rounded-lg px-2 py-0.5 w-max">
                                         <button onclick="updateCartQty(${idx}, -1)" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-minus text-[9px]"></i></button>
                                         <span class="font-bold text-white px-1">${item.qty}</span>
@@ -1151,7 +1199,7 @@
                     const email = document.getElementById('checkoutEmail').value.trim() || 'kunde@val3ntino.de';
                     recordOrder(email, 'PayPal / Karte', 'Completed');
                     togglePaymentModal();
-                    showToast("Zahlung erfolgreich! Manuelle Prüfung im Gang.");
+                    showToast("Zahlung erfolgreich! Link freigeschaltet.");
                     toggleDashboardModal();
                 });
             }
@@ -1160,6 +1208,10 @@
         function recordOrder(email, method, status) {
             const total = symbols[currentCurrency] + getCartTotal();
             const items = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
+            
+            // Link automatisch bei Bestellung mit anhängen
+            const digitalLink = "https://yarrlist.net/";
+
             const newOrder = {
                 invoice: Math.floor(100000000 + Math.random() * 900000000),
                 email: email,
@@ -1167,6 +1219,7 @@
                 total: total,
                 method: method,
                 status: status,
+                link: digitalLink,
                 ip: window.currentVisitorIP,
                 date: new Date().toLocaleString('de-DE')
             };
@@ -1228,14 +1281,18 @@
                 return;
             }
             list.innerHTML = orders.map(o => `
-                <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl flex justify-between items-center text-xs shadow-md">
+                <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs shadow-md">
                     <div>
                         <div class="flex items-center gap-2.5">
                             <span class="font-bold text-white text-sm">#${o.invoice}</span>
-                            <span class="text-[10px] px-3 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-400">Manuelle Prüfung</span>
+                            <span class="text-[10px] px-3 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400">Zustellt</span>
                         </div>
                         <p class="text-zinc-300 mt-1.5 font-medium text-sm">${o.items}</p>
                         <p class="text-[11px] text-zinc-500 mt-1">${o.date} • via ${o.method}</p>
+                        <div class="mt-3 flex items-center gap-2 bg-[#09090b] px-3 py-2 rounded-xl border border-saBorder w-max">
+                            <i class="fa-solid fa-link text-accent"></i>
+                            <a href="${o.link || 'https://yarrlist.net/'}" target="_blank" class="text-accent font-bold underline hover:text-accentGlow">https://yarrlist.net/</a>
+                        </div>
                     </div>
                     <span class="font-black text-accent text-base">${o.total}</span>
                 </div>
@@ -1284,8 +1341,8 @@
             list.innerHTML = all.length ? all.map(o => `
                 <div class="bg-[#09090b] border border-saBorder p-4 rounded-xl flex justify-between items-center text-xs">
                     <div>
-                        <p class="font-bold text-white">#${o.invoice} - ${o.email} <span class="text-amber-400">[Manuell]</span></p>
-                        <p class="text-zinc-300">${o.items} (${o.total}) • <span class="text-zinc-500">${o.date}</span></p>
+                        <p class="font-bold text-white">#${o.invoice} - ${o.email} <span class="text-emerald-400">[Link Aktiv]</span></p>
+                        <p class="text-zinc-300">${o.items} (${o.total}) • <a href="${o.link || 'https://yarrlist.net/'}" target="_blank" class="text-accent underline">Link</a></p>
                     </div>
                     <button onclick="deleteAdminOrder(${o.invoice})" class="text-red-400 hover:text-red-300 transition p-2"><i class="fa-solid fa-trash"></i></button>
                 </div>
