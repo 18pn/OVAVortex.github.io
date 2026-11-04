@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Offizielles PayPal JS SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id=test&buyer-country=DE&currency=EUR&components=buttons&enable-funding=venmo,paylater,card"></script>
-    <!-- Firebase SDKs & Auth Core -->
+    <!-- Firebase SDKs & Auth Core (Korrigierter Auth-Import) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
@@ -26,7 +26,7 @@
             GoogleAuthProvider,
             OAuthProvider,
             signInWithPopup 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBVHSbnkj96Jofi5NgD9cHukegytHXP2zc",
@@ -465,7 +465,7 @@
         </div>
     </div>
 
-    <!-- Checkout Modal mit Guthaben-Zahlung -->
+    <!-- Checkout Modal -->
     <div id="paymentModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-3 sm:p-6" onclick="handleModalBackdrop(event, 'paymentModal')">
         <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-4xl w-full grid md:grid-cols-[1.2fr_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             <div class="p-6 sm:p-8 space-y-6">
@@ -479,7 +479,6 @@
                         <input type="email" id="checkoutEmail" placeholder="deine-email@example.com" class="w-full bg-[#121217] border border-saBorder rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-accent">
                     </div>
                     
-                    <!-- Guthaben-Zahlungsbox -->
                     <div id="balancePaymentBox" class="bg-[#121217] border border-saBorder rounded-2xl p-4 space-y-3">
                         <div class="flex justify-between items-center text-xs">
                             <span class="text-zinc-300 font-bold">Mit Account-Guthaben bezahlen:</span>
@@ -509,7 +508,7 @@
                 </div>
                 <div class="bg-[#09090b] p-4 rounded-xl border border-saBorder space-y-1 text-[11px] text-zinc-400">
                     <p class="font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-link text-accent"></i> Automatischer Link</p>
-                    <p data-i18n="checkoutNote">Nach Zahlung wird der Link (https://yarrlist.net/) sofort freigeschaltet.</p>
+                    <p data-i18n="checkoutNote">Nach Zahlung wird der Link sofort freigeschaltet.</p>
                 </div>
             </div>
         </div>
@@ -1103,7 +1102,6 @@
             let finalTotal = Math.max(0, subtotal - (appliedDiscount * currentRate));
             document.getElementById('checkoutTotalFinal').innerText = symbols[currentCurrency] + finalTotal;
 
-            // Aktualisiere Guthaben-Anzeige im Checkout
             const activeEmail = document.getElementById('checkoutEmail').value.trim() || (window.firebaseAuth && window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.email : '');
             let userBal = activeEmail ? parseFloat(localStorage.getItem('balance_' + activeEmail) || '0.00') : 0.00;
             document.getElementById('checkoutUserBalanceDisplay').innerText = symbols[currentCurrency] + userBal.toFixed(2);
@@ -1111,7 +1109,6 @@
             togglePaymentModal();
         }
 
-        // BEZAHLEN MIT ACCOUNT-GUTHABEN
         function payWithBalance() {
             const email = document.getElementById('checkoutEmail').value.trim();
             if(!email) return showToast("Bitte E-Mail eingeben!");
