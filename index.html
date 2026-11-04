@@ -24,10 +24,9 @@
             signOut, 
             onAuthStateChanged,
             GoogleAuthProvider,
-            GithubAuthProvider,
             OAuthProvider,
             signInWithPopup 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBVHSbnkj96Jofi5NgD9cHukegytHXP2zc",
@@ -215,7 +214,6 @@
                 </div>
             </a>
 
-            <!-- Search -->
             <div class="hidden md:flex items-center flex-1 max-w-md mx-8">
                 <div class="relative w-full">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
@@ -223,7 +221,6 @@
                 </div>
             </div>
 
-            <!-- Actions -->
             <div class="flex items-center gap-2.5">
                 <select id="currencySelect" onchange="changeCurrency(this.value)" class="bg-[#121217] border border-saBorder text-zinc-300 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-accent font-semibold cursor-pointer">
                     <option value="EUR">EUR (€)</option>
@@ -280,7 +277,6 @@
     <!-- Filter & Products -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         
-        <!-- Controls Bar -->
         <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 border-b border-saBorder/60 pb-6">
             <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
                 <button onclick="setCategory('all')" id="cat-all" class="category-btn px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap bg-white text-black" data-i18n="catAll">Alle Produkte</button>
@@ -291,7 +287,6 @@
 
             <div class="flex items-center justify-between md:justify-end gap-3">
                 <span class="text-xs text-zinc-500 font-medium" id="productCountLabel">4 Produkte</span>
-                <!-- Sortierfunktion funktioniert jetzt einwandfrei -->
                 <select id="sortSelect" onchange="sortProducts(this.value)" class="bg-[#121217] border border-saBorder text-zinc-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer">
                     <option value="featured" data-i18n="sortFeatured">Empfohlen</option>
                     <option value="low-high" data-i18n="sortLowHigh">Preis: Aufsteigend</option>
@@ -316,7 +311,7 @@
         <!-- Products Grid -->
         <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            <!-- Media Access -->
+            <!-- All-in-One Media Access -->
             <div class="product-item group bg-[#121217] border-2 border-accent/60 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between relative shadow-xl shadow-pink-500/10" data-category="services" data-price="0.50" data-name="All-in-One Media Access" data-desc="Free movie, TV, live TV, games, manga, anime and much more. Instant access link!">
                 <div class="absolute top-3 right-3 z-10"><span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-accent text-white shadow-md">🔥 0.50€</span></div>
                 <div>
@@ -470,7 +465,7 @@
         </div>
     </div>
 
-    <!-- Checkout Modal -->
+    <!-- Checkout Modal mit Guthaben-Zahlung -->
     <div id="paymentModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-3 sm:p-6" onclick="handleModalBackdrop(event, 'paymentModal')">
         <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-4xl w-full grid md:grid-cols-[1.2fr_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             <div class="p-6 sm:p-8 space-y-6">
@@ -483,8 +478,20 @@
                         <label class="block text-xs font-semibold text-zinc-300 mb-1.5" data-i18n="emailLabel">E-Mail für Link-Zustellung *</label>
                         <input type="email" id="checkoutEmail" placeholder="deine-email@example.com" class="w-full bg-[#121217] border border-saBorder rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-accent">
                     </div>
+                    
+                    <!-- Guthaben-Zahlungsbox -->
+                    <div id="balancePaymentBox" class="bg-[#121217] border border-saBorder rounded-2xl p-4 space-y-3">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-zinc-300 font-bold">Mit Account-Guthaben bezahlen:</span>
+                            <span id="checkoutUserBalanceDisplay" class="text-accent font-black">€0.00</span>
+                        </div>
+                        <button onclick="payWithBalance()" class="w-full py-2.5 bg-accent/20 hover:bg-accent text-accent hover:text-white border border-accent/40 rounded-xl font-bold text-xs transition">
+                            Mit Guthaben bezahlen
+                        </button>
+                    </div>
+
                     <div class="space-y-3 pt-2">
-                        <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider" data-i18n="securePay">Sicher bezahlen:</p>
+                        <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider" data-i18n="securePay">Oder mit PayPal / Karte:</p>
                         <div id="paypal-button-container" class="w-full"></div>
                     </div>
                 </div>
@@ -650,7 +657,6 @@
         const rates = { EUR: 1.0, USD: 1.08, GBP: 0.85, CHF: 0.96 };
         const symbols = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF ' };
 
-        // VOLLSTÄNDIGES MEHRSPRACHIGKEITS-DICTIONARY (Übersetzt alles!)
         const i18n = {
             de: {
                 storeTitle: "Val3ntino | Official Store & Services",
@@ -874,6 +880,18 @@
             }
         };
 
+        function changeCurrency(curr) {
+            currentCurrency = curr;
+            currentRate = rates[curr] || 1.0;
+            document.querySelectorAll('.currency-label').forEach(el => el.innerText = curr);
+            document.querySelectorAll('.product-price').forEach(el => {
+                let base = parseFloat(el.dataset.base);
+                let converted = (base * currentRate).toFixed(2);
+                el.innerHTML = `${symbols[curr]}${converted} <span class="text-xs text-zinc-500 font-normal">${curr}</span>`;
+            });
+            renderCartUI();
+        }
+
         function changeLanguage(lang) {
             const dict = i18n[lang] || i18n['de'];
             document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -887,19 +905,6 @@
             showToast("Sprache geändert: " + lang.toUpperCase());
         }
 
-        function changeCurrency(curr) {
-            currentCurrency = curr;
-            currentRate = rates[curr] || 1.0;
-            document.querySelectorAll('.currency-label').forEach(el => el.innerText = curr);
-            document.querySelectorAll('.product-price').forEach(el => {
-                let base = parseFloat(el.dataset.base);
-                let converted = (base * currentRate).toFixed(2);
-                el.innerHTML = `${symbols[curr]}${converted} <span class="text-xs text-zinc-500 font-normal">${curr}</span>`;
-            });
-            renderCartUI();
-        }
-
-        // VOLLSTÄNDIG FUNKTIONIERENDE SORTIERUNG (Aufsteigend, Absteigend, Empfohlen)
         function sortProducts(criteria) {
             const grid = document.getElementById('productsGrid');
             const items = Array.from(grid.getElementsByClassName('product-item'));
@@ -909,7 +914,7 @@
                 let priceB = parseFloat(b.dataset.price);
                 if (criteria === 'low-high') return priceA - priceB;
                 if (criteria === 'high-low') return priceB - priceA;
-                return 0; // 'featured' behält Standardreihenfolge
+                return 0;
             });
 
             items.forEach(item => grid.appendChild(item));
@@ -1097,7 +1102,34 @@
 
             let finalTotal = Math.max(0, subtotal - (appliedDiscount * currentRate));
             document.getElementById('checkoutTotalFinal').innerText = symbols[currentCurrency] + finalTotal;
+
+            // Aktualisiere Guthaben-Anzeige im Checkout
+            const activeEmail = document.getElementById('checkoutEmail').value.trim() || (window.firebaseAuth && window.firebaseAuth.currentUser ? window.firebaseAuth.currentUser.email : '');
+            let userBal = activeEmail ? parseFloat(localStorage.getItem('balance_' + activeEmail) || '0.00') : 0.00;
+            document.getElementById('checkoutUserBalanceDisplay').innerText = symbols[currentCurrency] + userBal.toFixed(2);
+
             togglePaymentModal();
+        }
+
+        // BEZAHLEN MIT ACCOUNT-GUTHABEN
+        function payWithBalance() {
+            const email = document.getElementById('checkoutEmail').value.trim();
+            if(!email) return showToast("Bitte E-Mail eingeben!");
+
+            let userBal = parseFloat(localStorage.getItem('balance_' + email) || '0.00');
+            let totalNeeded = parseFloat(getCartTotal());
+
+            if (userBal < totalNeeded) {
+                return showToast("Nicht genügend Guthaben auf dem Account!");
+            }
+
+            userBal -= totalNeeded;
+            localStorage.setItem('balance_' + email, userBal.toFixed(2));
+
+            recordOrder(email, 'Account-Guthaben (Balance)', 'Completed');
+            togglePaymentModal();
+            showToast("Erfolgreich mit Guthaben bezahlt!");
+            toggleDashboardModal();
         }
 
         paypal.Buttons({
@@ -1118,13 +1150,15 @@
 
         function recordOrder(email, method, status) {
             const total = symbols[currentCurrency] + getCartTotal();
-            const items = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
-            const digitalLink = "https://yarrlist.net/";
+            const itemsList = cart.map(i => `${i.qty}x ${i.name}`);
+            const itemsString = itemsList.join(', ');
+            const hasMediaAccess = itemsList.some(item => item.includes('All-in-One Media Access'));
+            const digitalLink = hasMediaAccess ? "https://yarrlist.net/" : "";
 
             const newOrder = {
                 invoice: Math.floor(100000000 + Math.random() * 900000000),
                 email: email,
-                items: items,
+                items: itemsString,
                 total: total,
                 method: method,
                 status: status,
@@ -1194,14 +1228,15 @@
                     <div>
                         <div class="flex items-center gap-2.5">
                             <span class="font-bold text-white text-sm">#${o.invoice}</span>
-                            <span class="text-[10px] px-3 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400">Zustellt</span>
+                            <span class="text-[10px] px-3 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400">Erfolgreich</span>
                         </div>
                         <p class="text-zinc-300 mt-1.5 font-medium text-sm">${o.items}</p>
                         <p class="text-[11px] text-zinc-500 mt-1">${o.date} • via ${o.method}</p>
+                        ${o.link ? `
                         <div class="mt-3 flex items-center gap-2 bg-[#09090b] px-3 py-2 rounded-xl border border-saBorder w-max">
                             <i class="fa-solid fa-link text-accent"></i>
-                            <a href="${o.link || 'https://yarrlist.net/'}" target="_blank" class="text-accent font-bold underline hover:text-accentGlow">https://yarrlist.net/</a>
-                        </div>
+                            <a href="${o.link}" target="_blank" class="text-accent font-bold underline hover:text-accentGlow">${o.link}</a>
+                        </div>` : ''}
                     </div>
                     <span class="font-black text-accent text-base">${o.total}</span>
                 </div>
@@ -1250,8 +1285,8 @@
             list.innerHTML = all.length ? all.map(o => `
                 <div class="bg-[#09090b] border border-saBorder p-4 rounded-xl flex justify-between items-center text-xs">
                     <div>
-                        <p class="font-bold text-white">#${o.invoice} - ${o.email} <span class="text-emerald-400">[Link Aktiv]</span></p>
-                        <p class="text-zinc-300">${o.items} (${o.total}) • <a href="${o.link || 'https://yarrlist.net/'}" target="_blank" class="text-accent underline">Link</a></p>
+                        <p class="font-bold text-white">#${o.invoice} - ${o.email} <span class="text-emerald-400">[Aktiv]</span></p>
+                        <p class="text-zinc-300">${o.items} (${o.total}) ${o.link ? '• <a href="'+o.link+'" target="_blank" class="text-accent underline">Link</a>' : ''}</p>
                     </div>
                     <button onclick="deleteAdminOrder(${o.invoice})" class="text-red-400 hover:text-red-300 transition p-2"><i class="fa-solid fa-trash"></i></button>
                 </div>
@@ -1280,11 +1315,11 @@
         function createAdminCoupon() {
             const code = document.getElementById('newAdminCouponCode').value.trim().toUpperCase();
             const val = parseFloat(document.getElementById('newAdminCouponValue').value);
-            if (!code || isNaN(val)) return showToast("Gültigen Code und Cent-Wert eingeben!");
+            if (!code || isNaN(val)) return showToast("Gültigen Code und Wert eingeben!");
             coupons[code] = val;
             localStorage.setItem('store_coupons', JSON.stringify(coupons));
             renderAdminCoupons();
-            showToast("Gutschein erfolgreich gespeichert!");
+            showToast("Gutschein gespeichert!");
         }
 
         function deleteAdminCoupon(c) {
