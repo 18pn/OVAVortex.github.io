@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Val3ntino | Official Store & Services</title>
+    <title data-i18n="storeTitle">Val3ntino | Official Store & Services</title>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,7 +46,6 @@
         window.loginWithProvider = function(providerName) {
             let provider;
             if (providerName === 'google') provider = new GoogleAuthProvider();
-            else if (providerName === 'github') provider = new GithubAuthProvider();
             else if (providerName === 'apple') provider = new OAuthProvider('apple.com');
 
             if (provider) {
@@ -76,13 +75,7 @@
                     showToast("Erfolgreich angemeldet!");
                     toggleAuthModal();
                 })
-                .catch((err) => { 
-                    if(err.code === 'auth/invalid-credential') {
-                        msgBox.innerText = "Ungültige Anmeldedaten (E-Mail oder Passwort falsch).";
-                    } else {
-                        msgBox.innerText = err.message; 
-                    }
-                });
+                .catch((err) => { msgBox.innerText = "Ungültige Anmeldedaten!"; });
         };
 
         window.executeRegister = function() {
@@ -114,7 +107,7 @@
             const adminSidebarBtn = document.getElementById('tabBtnAdmin');
             
             if (user) {
-                authNavBtn.innerHTML = `<i class="fa-solid fa-user-check text-accent text-sm"></i> <span>Dashboard</span>`;
+                authNavBtn.innerHTML = `<i class="fa-solid fa-user-check text-accent text-sm"></i> <span data-i18n="dashboard">Dashboard</span>`;
                 authNavBtn.onclick = toggleDashboardModal;
                 document.getElementById('userEmailDisplay').innerText = user.email;
                 document.getElementById('userAvatarLetter').innerText = user.email.charAt(0).toUpperCase();
@@ -131,7 +124,7 @@
                 }
                 loadDashboardStats(user.email);
             } else {
-                authNavBtn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket text-sm"></i> <span>Sign In</span>`;
+                authNavBtn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket text-sm"></i> <span data-i18n="signIn">Sign In</span>`;
                 authNavBtn.onclick = toggleAuthModal;
                 if (adminSidebarBtn) adminSidebarBtn.classList.add('hidden');
             }
@@ -165,21 +158,16 @@
         }
         .modal { display: none; }
         .modal.active { display: flex; }
-        
         #cartDrawer {
             transform: translateX(100%);
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        #cartDrawer.active {
-            transform: translateX(0);
-        }
-
+        #cartDrawer.active { transform: translateX(0); }
         .store-banner {
             background: linear-gradient(180deg, rgba(236, 72, 153, 0.25) 0%, rgba(9, 9, 11, 0.95) 100%), url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
         }
-
         #toast {
             visibility: hidden;
             min-width: 260px;
@@ -197,10 +185,7 @@
             font-size: 13px;
             font-weight: 600;
         }
-        #toast.show {
-            visibility: visible;
-            animation: saFadeIn 0.25s, saFadeOut 0.25s 2.75s;
-        }
+        #toast.show { visibility: visible; animation: saFadeIn 0.25s, saFadeOut 0.25s 2.75s; }
         @keyframes saFadeIn { from { bottom: 10px; opacity: 0; } to { bottom: 24px; opacity: 1; } }
         @keyframes saFadeOut { from { bottom: 24px; opacity: 1; } to { bottom: 10px; opacity: 0; } }
     </style>
@@ -209,35 +194,32 @@
 
     <div id="toast">Benachrichtigung</div>
 
-    <!-- Top Announcement Bar -->
+    <!-- Announcement Bar -->
     <div class="w-full bg-[#121217] border-b border-saBorder/80 py-2.5 px-4 text-center text-xs font-semibold text-zinc-300 flex items-center justify-center gap-2">
         <span class="bg-accent/20 text-accent text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full border border-accent/30">SALE ACTIVE</span>
-        <span>Nutze Code <strong class="text-white font-mono bg-white/5 px-1.5 py-0.5 rounded">VAL3NTINO</strong> für 5,00 € Rabatt an der Kasse!</span>
+        <span data-i18n="announcement">Nutze Code VAL3NTINO für 5,00 € Rabatt an der Kasse!</span>
     </div>
 
     <!-- Sticky Navigation Bar -->
     <header class="sticky top-0 z-40 w-full bg-[#09090b]/90 backdrop-blur-xl border-b border-saBorder">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             
-            <!-- Brand Logo -->
             <a href="#" class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-accent to-accentGlow flex items-center justify-center text-white font-black text-lg shadow-lg shadow-pink-500/20">
-                    V
-                </div>
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-accent to-accentGlow flex items-center justify-center text-white font-black text-lg shadow-lg shadow-pink-500/20">V</div>
                 <div class="flex flex-col">
                     <span class="text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
                         Val3ntino<span class="text-accent">.</span>
-                        <i class="fa-solid fa-circle-check text-sky-400 text-xs" title="Verified Merchant"></i>
+                        <i class="fa-solid fa-circle-check text-sky-400 text-xs"></i>
                     </span>
-                    <span class="text-[10px] font-medium text-zinc-400 -mt-1">High-End Performance Store</span>
+                    <span class="text-[10px] font-medium text-zinc-400 -mt-1" data-i18n="storeSubtitle">High-End Performance Store</span>
                 </div>
             </a>
 
-            <!-- Search (Desktop) -->
+            <!-- Search -->
             <div class="hidden md:flex items-center flex-1 max-w-md mx-8">
                 <div class="relative w-full">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
-                    <input type="text" id="storeSearchInput" oninput="filterProducts()" placeholder="Produkte, Tweaks & Services suchen..." class="w-full bg-[#121217] border border-saBorder rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent transition">
+                    <input type="text" id="storeSearchInput" oninput="filterProducts()" data-i18n-placeholder="searchPlaceholder" placeholder="Produkte suchen..." class="w-full bg-[#121217] border border-saBorder rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent">
                 </div>
             </div>
 
@@ -248,8 +230,6 @@
                     <option value="USD">USD ($)</option>
                     <option value="GBP">GBP (£)</option>
                     <option value="CHF">CHF (CHF)</option>
-                    <option value="CAD">CAD (CA$)</option>
-                    <option value="AUD">AUD (A$)</option>
                 </select>
 
                 <select id="langSelect" onchange="changeLanguage(this.value)" class="bg-[#121217] border border-saBorder text-zinc-300 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-accent font-semibold cursor-pointer">
@@ -260,76 +240,37 @@
                     <option value="it">IT</option>
                 </select>
 
-                <a href="https://discord.gg/YE2jHSwM7" target="_blank" class="hidden lg:flex p-2 rounded-xl bg-[#121217] hover:bg-saHover border border-saBorder text-xs font-semibold text-zinc-300 hover:text-white transition items-center gap-2" title="Discord">
-                    <i class="fa-brands fa-discord text-[#5865F2] text-sm"></i>
-                </a>
-
-                <a href="https://linktr.ee/val3nt1no" target="_blank" class="hidden lg:flex p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-saBorder text-xs font-semibold text-accent transition items-center gap-1.5" title="All Links">
-                    <i class="fa-solid fa-link text-xs"></i>
-                </a>
-
                 <button id="authNavBtn" onclick="toggleAuthModal()" class="px-3.5 py-1.5 rounded-xl bg-[#121217] hover:bg-saHover border border-saBorder text-xs font-semibold text-white transition flex items-center gap-2">
                     <i class="fa-solid fa-arrow-right-to-bracket text-sm"></i>
-                    <span>Sign In</span>
+                    <span data-i18n="signIn">Sign In</span>
                 </button>
 
                 <button onclick="toggleCartModal()" class="relative p-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-accent text-white hover:bg-accent/90 transition text-xs font-bold flex items-center gap-2 shadow-lg shadow-pink-500/20">
                     <i class="fa-solid fa-bag-shopping text-sm"></i>
-                    <span class="hidden sm:inline">Cart</span>
+                    <span class="hidden sm:inline" data-i18n="cart">Cart</span>
                     <span id="cartCountBadge" class="bg-black/40 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black">0</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Mobile Search -->
-    <div class="md:hidden px-4 pt-3 pb-1 max-w-7xl mx-auto">
-        <div class="relative w-full">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
-            <input type="text" id="mobileSearchInput" oninput="filterProductsMobile(this.value.toLowerCase())" placeholder="Produkte suchen..." class="w-full bg-[#121217] border border-saBorder rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent">
-        </div>
-    </div>
-
     <!-- Store Profile Header -->
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8">
         <div class="store-banner h-48 sm:h-60 rounded-3xl border border-saBorder relative flex items-end p-6 sm:p-8 overflow-hidden shadow-2xl">
             <div class="absolute inset-0 bg-gradient-to-t from-[#09090b] via-[#09090b]/45 to-transparent"></div>
-            
             <div class="relative z-10 flex flex-col sm:flex-row sm:items-end justify-between w-full gap-4">
                 <div class="flex items-center gap-5">
                     <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#121217] border-2 border-accent/80 p-1 flex items-center justify-center shadow-xl">
-                        <div class="w-full h-full rounded-xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center text-white font-extrabold text-3xl">
-                            V
-                        </div>
+                        <div class="w-full h-full rounded-xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center text-white font-extrabold text-3xl">V</div>
                     </div>
                     <div>
                         <div class="flex items-center gap-2 mb-1">
                             <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Val3ntino</h1>
                             <span class="inline-flex items-center gap-1 text-[11px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-full">
-                                <i class="fa-solid fa-circle-check text-[10px]"></i> Verified Merchant
+                                <i class="fa-solid fa-circle-check text-[10px]"></i> <span data-i18n="verified">Verified Merchant</span>
                             </span>
                         </div>
-                        <p class="text-xs sm:text-sm text-zinc-300 font-light max-w-xl">
-                            High-End Windows 0-Delay PC-Tuning, saubere Web-Entwicklung & individuelle Skripte.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Trust Badges -->
-                <div class="flex items-center gap-3">
-                    <div class="bg-[#121217]/90 border border-saBorder rounded-2xl px-3.5 py-2 flex items-center gap-2 text-xs backdrop-blur-md">
-                        <i class="fa-solid fa-user-clock text-accent"></i>
-                        <div>
-                            <p class="font-bold text-white text-[11px]">Automatische Link-Zustellung</p>
-                            <p class="text-[10px] text-zinc-400">Sofort nach Bestellung im Dashboard</p>
-                        </div>
-                    </div>
-                    <div class="bg-[#121217]/90 border border-saBorder rounded-2xl px-3.5 py-2 flex items-center gap-2 text-xs backdrop-blur-md">
-                        <i class="fa-solid fa-star text-amber-400"></i>
-                        <div>
-                            <p class="font-bold text-white text-[11px]">4.9 / 5.0</p>
-                            <p class="text-[10px] text-zinc-400">98 Realistische Kunden</p>
-                        </div>
+                        <p class="text-xs sm:text-sm text-zinc-300 font-light max-w-xl" data-i18n="bannerText">High-End Windows 0-Delay PC-Tuning, saubere Web-Entwicklung & individuelle Skripte.</p>
                     </div>
                 </div>
             </div>
@@ -342,333 +283,143 @@
         <!-- Controls Bar -->
         <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 border-b border-saBorder/60 pb-6">
             <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
-                <button onclick="setCategory('all')" id="cat-all" class="category-btn px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap bg-white text-black">
-                    Alle Produkte
-                </button>
-                <button onclick="setCategory('tuning')" id="cat-tuning" class="category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap">
-                    PC Tuning & 0-Delay
-                </button>
-                <button onclick="setCategory('web')" id="cat-web" class="category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap">
-                    Web Development
-                </button>
-                <button onclick="setCategory('services')" id="cat-services" class="category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap">
-                    Custom Services
-                </button>
+                <button onclick="setCategory('all')" id="cat-all" class="category-btn px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap bg-white text-black" data-i18n="catAll">Alle Produkte</button>
+                <button onclick="setCategory('tuning')" id="cat-tuning" class="category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap" data-i18n="catTuning">PC Tuning</button>
+                <button onclick="setCategory('web')" id="cat-web" class="category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap" data-i18n="catWeb">Web Dev</button>
+                <button onclick="setCategory('services')" id="cat-services" class="category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap" data-i18n="catServices">Services & Media</button>
             </div>
 
             <div class="flex items-center justify-between md:justify-end gap-3">
                 <span class="text-xs text-zinc-500 font-medium" id="productCountLabel">4 Produkte</span>
-                <select id="sortSelect" onchange="sortProducts()" class="bg-[#121217] border border-saBorder text-zinc-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-accent">
-                    <option value="featured">Empfohlen</option>
-                    <option value="low-high">Preis: Aufsteigend</option>
-                    <option value="high-low">Preis: Absteigend</option>
+                <!-- Sortierfunktion funktioniert jetzt einwandfrei -->
+                <select id="sortSelect" onchange="sortProducts(this.value)" class="bg-[#121217] border border-saBorder text-zinc-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer">
+                    <option value="featured" data-i18n="sortFeatured">Empfohlen</option>
+                    <option value="low-high" data-i18n="sortLowHigh">Preis: Aufsteigend</option>
+                    <option value="high-low" data-i18n="sortHighLow">Preis: Absteigend</option>
                 </select>
             </div>
         </div>
 
-        <!-- Zahlungsarten-Leiste in der Mitte -->
+        <!-- Zahlungsarten -->
         <section class="mb-12 bg-[#121217] border border-saBorder rounded-3xl p-6 text-center space-y-3 shadow-xl">
-            <h4 class="text-xs font-extrabold text-zinc-400 uppercase tracking-widest">Sicher bezahlen mit</h4>
+            <h4 class="text-xs font-extrabold text-zinc-400 uppercase tracking-widest" data-i18n="securePay">Sicher bezahlen mit</h4>
             <div class="flex flex-wrap items-center justify-center gap-3">
-                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl flex items-center gap-2 text-white font-bold text-xs">
-                    <i class="fa-brands fa-mastercard text-red-500 text-base"></i> Mastercard
-                </div>
-                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl flex items-center gap-2 text-white font-bold text-xs">
-                    <i class="fa-solid fa-credit-card text-sky-400 text-base"></i> Maestro
-                </div>
-                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl flex items-center gap-2 text-white font-bold text-xs">
-                    <i class="fa-brands fa-cc-visa text-blue-500 text-base"></i> VISA
-                </div>
-                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl flex items-center gap-2 text-white font-bold text-xs">
-                    <i class="fa-brands fa-cc-amex text-blue-600 text-base"></i> AMEX
-                </div>
-                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl flex items-center gap-2 text-white font-bold text-xs">
-                    <i class="fa-brands fa-paypal text-sky-500 text-base"></i> PayPal
-                </div>
-                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl flex items-center gap-2 text-white font-bold text-xs">
-                    <i class="fa-solid fa-building-columns text-emerald-400 text-base"></i> Bank Transfer
-                </div>
+                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-brands fa-mastercard text-red-500 mr-1.5"></i> Mastercard</div>
+                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-solid fa-credit-card text-sky-400 mr-1.5"></i> Maestro</div>
+                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-brands fa-cc-visa text-blue-500 mr-1.5"></i> VISA</div>
+                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-brands fa-cc-amex text-blue-600 mr-1.5"></i> AMEX</div>
+                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-brands fa-paypal text-sky-500 mr-1.5"></i> PayPal</div>
+                <div class="px-3.5 py-2 bg-[#09090b] border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-solid fa-building-columns text-emerald-400 mr-1.5"></i> Bank Transfer</div>
             </div>
         </section>
 
         <!-- Products Grid -->
         <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            <!-- All-in-One Media Access (0.50 €) -->
+            <!-- Media Access -->
             <div class="product-item group bg-[#121217] border-2 border-accent/60 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between relative shadow-xl shadow-pink-500/10" data-category="services" data-price="0.50" data-name="All-in-One Media Access" data-desc="Free movie, TV, live TV, games, manga, anime and much more. Instant access link!">
-                <div class="absolute top-3 right-3 z-10">
-                    <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-accent text-white shadow-md">
-                        🔥 HOT 0.50€
-                    </span>
-                </div>
+                <div class="absolute top-3 right-3 z-10"><span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-accent text-white shadow-md">🔥 0.50€</span></div>
                 <div>
                     <div class="relative h-44 bg-gradient-to-br from-purple-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auto-Link
-                            </span>
-                        </div>
-                        <div class="flex justify-center items-center h-full">
-                            <i class="fa-solid fa-tv text-4xl text-accent group-hover:scale-110 transition duration-300"></i>
-                        </div>
+                        <div class="flex justify-between items-center"><span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Auto-Link</span></div>
+                        <div class="flex justify-center items-center h-full"><i class="fa-solid fa-tv text-4xl text-accent group-hover:scale-110 transition duration-300"></i></div>
                     </div>
-
                     <div class="p-5">
                         <h3 class="text-base font-bold text-white mb-1 group-hover:text-accent transition">All-in-One Media Access</h3>
-                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed">
-                            Free movie, TV, live TV, games, manga, anime and much more. Link wird nach Kauf automatisch freigeschaltet!
-                        </p>
+                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed" data-i18n="mediaDesc">Free movie, TV, live TV, games, manga, anime and much more.</p>
                         <div class="space-y-1.5 text-xs text-zinc-300 font-light mb-4">
                             <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Movies, TV & Live TV</div>
                             <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Games, Manga & Anime</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Sofortiger Link im Dashboard</div>
                         </div>
                     </div>
                 </div>
-
                 <div class="p-5 pt-0">
                     <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
-                        <span class="text-xs text-zinc-500">Nur</span>
+                        <span class="text-xs text-zinc-500" data-i18n="from">Nur</span>
                         <span class="text-xl font-extrabold text-white product-price" data-base="0.50">€0.50 <span class="text-xs text-zinc-500 font-normal currency-label">EUR</span></span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="openProductDetail('media')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
-                            Details
-                        </button>
-                        <button onclick="addToCartDirect('All-in-One Media Access', 0.50)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-bolt"></i> Kaufen
-                        </button>
+                        <button onclick="openProductDetail('media')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder" data-i18n="details">Details</button>
+                        <button onclick="addToCartDirect('All-in-One Media Access', 0.50)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg"><i class="fa-solid fa-bolt"></i> <span data-i18n="buy">Kaufen</span></button>
                     </div>
                 </div>
             </div>
 
-            <!-- Produkt 1: Basic PC-Tuning -->
-            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning" data-desc="Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung und Basis-Timer-Optimierung.">
+            <!-- Basic PC-Tuning -->
+            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning" data-desc="Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung.">
                 <div>
                     <div class="relative h-44 bg-gradient-to-br from-blue-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auf Lager
-                            </span>
-                            <span class="text-[10px] font-bold text-zinc-400 bg-black/40 px-2 py-0.5 rounded-md">PC Tuning</span>
-                        </div>
-                        <div class="flex justify-center items-center h-full">
-                            <i class="fa-solid fa-gauge-high text-4xl text-sky-400 group-hover:scale-110 transition duration-300"></i>
-                        </div>
+                        <div class="flex justify-between items-center"><span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Auf Lager</span></div>
+                        <div class="flex justify-center items-center h-full"><i class="fa-solid fa-gauge-high text-4xl text-sky-400 group-hover:scale-110 transition duration-300"></i></div>
                     </div>
-
                     <div class="p-5">
                         <h3 class="text-base font-bold text-white mb-1 group-hover:text-accent transition">Basic PC-Tuning</h3>
-                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed">
-                            Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung und Basis-Timer-Optimierung.
-                        </p>
-                        <div class="space-y-1.5 text-xs text-zinc-300 font-light mb-4">
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Windows Basis-Optimierung</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Unnötige Hintergrunddienste stoppen</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Manuelle Anleitung & Support</div>
-                        </div>
+                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed" data-i18n="basicDesc">Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung.</p>
                     </div>
                 </div>
-
                 <div class="p-5 pt-0">
                     <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
-                        <span class="text-xs text-zinc-500">Ab</span>
+                        <span class="text-xs text-zinc-500" data-i18n="from">Ab</span>
                         <span class="text-xl font-extrabold text-white product-price" data-base="15.00">€15.00 <span class="text-xs text-zinc-500 font-normal currency-label">EUR</span></span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="openProductDetail('basic')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
-                            Details
-                        </button>
-                        <button onclick="addToCartDirect('Basic PC-Tuning', 15.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-cart-shopping"></i> Kaufen
-                        </button>
+                        <button onclick="openProductDetail('basic')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder" data-i18n="details">Details</button>
+                        <button onclick="addToCartDirect('Basic PC-Tuning', 15.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2"><i class="fa-solid fa-cart-shopping"></i> <span data-i18n="buy">Kaufen</span></button>
                     </div>
                 </div>
             </div>
 
-            <!-- Produkt 2: Pro Tuning 0 Delay (Bestseller) -->
-            <div class="product-item group bg-[#121217] border-2 border-accent/50 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between relative shadow-xl shadow-pink-500/5" data-category="tuning" data-price="35.00" data-name="Pro Tuning (0 Delay)" data-desc="Ultra Low-Latency Setup, BIOS- & Registry-Edits, Interrupt Affinity (MSI Mode), BCDedit und maximale Reaktionszeit.">
-                <div class="absolute top-3 right-3 z-10">
-                    <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-accent text-white shadow-md">
-                        ★ POPULAR
-                    </span>
-                </div>
+            <!-- Pro Tuning -->
+            <div class="product-item group bg-[#121217] border-2 border-accent/50 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between relative" data-category="tuning" data-price="35.00" data-name="Pro Tuning (0 Delay)" data-desc="Ultra Low-Latency Setup, BIOS- & Registry-Edits, MSI Mode.">
+                <div class="absolute top-3 right-3 z-10"><span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-accent text-white shadow-md">★ POPULAR</span></div>
                 <div>
                     <div class="relative h-44 bg-gradient-to-br from-pink-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auf Lager
-                            </span>
-                        </div>
-                        <div class="flex justify-center items-center h-full">
-                            <i class="fa-solid fa-microchip text-4xl text-accent group-hover:scale-110 transition duration-300"></i>
-                        </div>
+                        <div class="flex justify-between items-center"><span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Auf Lager</span></div>
+                        <div class="flex justify-center items-center h-full"><i class="fa-solid fa-microchip text-4xl text-accent group-hover:scale-110 transition duration-300"></i></div>
                     </div>
-
                     <div class="p-5">
                         <h3 class="text-base font-bold text-white mb-1 group-hover:text-accent transition">Pro Tuning (0 Delay Setup)</h3>
-                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed">
-                            Ultra Low-Latency Setup, BIOS- & Registry-Edits, Interrupt Affinity (MSI Mode), BCDedit und maximale Reaktionszeit.
-                        </p>
-                        <div class="space-y-1.5 text-xs text-zinc-300 font-light mb-4">
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Alles aus Basic enthalten</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Echtes 0-Input-Delay Setup</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> 1-zu-1 Discord Support (Manuell)</div>
-                        </div>
+                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed" data-i18n="proDesc">Ultra Low-Latency Setup, BIOS- & Registry-Edits, MSI Mode.</p>
                     </div>
                 </div>
-
                 <div class="p-5 pt-0">
                     <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
-                        <span class="text-xs text-zinc-500">Ab</span>
+                        <span class="text-xs text-zinc-500" data-i18n="from">Ab</span>
                         <span class="text-xl font-extrabold text-white product-price" data-base="35.00">€35.00 <span class="text-xs text-zinc-500 font-normal currency-label">EUR</span></span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="openProductDetail('pro')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
-                            Details
-                        </button>
-                        <button onclick="addToCartDirect('Pro Tuning (0 Delay)', 35.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-cart-shopping"></i> Kaufen
-                        </button>
+                        <button onclick="openProductDetail('pro')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder" data-i18n="details">Details</button>
+                        <button onclick="addToCartDirect('Pro Tuning (0 Delay)', 35.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2"><i class="fa-solid fa-cart-shopping"></i> <span data-i18n="buy">Kaufen</span></button>
                     </div>
                 </div>
             </div>
 
-            <!-- Produkt 3: Website Build -->
-            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="web" data-price="25.00" data-name="Custom Website Build" data-desc="Moderne Single-Page Website oder Portfolio im Storefront-Stil. Mobil optimiert, sauberes Dark-UI, Discord-Anbindung.">
+            <!-- Custom Website -->
+            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="web" data-price="25.00" data-name="Custom Website Build" data-desc="Moderne Single-Page Website oder Portfolio im Storefront-Stil.">
                 <div>
                     <div class="relative h-44 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Auf Lager
-                            </span>
-                            <span class="text-[10px] font-bold text-zinc-400 bg-black/40 px-2 py-0.5 rounded-md">Web Dev</span>
-                        </div>
-                        <div class="flex justify-center items-center h-full">
-                            <i class="fa-solid fa-code text-4xl text-emerald-400 group-hover:scale-110 transition duration-300"></i>
-                        </div>
+                        <div class="flex justify-between items-center"><span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Auf Lager</span></div>
+                        <div class="flex justify-center items-center h-full"><i class="fa-solid fa-code text-4xl text-emerald-400 group-hover:scale-110 transition duration-300"></i></div>
                     </div>
-
                     <div class="p-5">
                         <h3 class="text-base font-bold text-white mb-1 group-hover:text-accent transition">Custom Website Build</h3>
-                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed">
-                            Moderne Single-Page Website oder Portfolio im Storefront-Stil. Mobil optimiert, sauberes Dark-UI, Discord-Anbindung.
-                        </p>
-                        <div class="space-y-1.5 text-xs text-zinc-300 font-light mb-4">
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Sauberes, responsives Design</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Hosting & Domain-Setup Hilfe</div>
-                            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Manuelle Einrichtung & Anpassung</div>
-                        </div>
+                        <p class="text-xs text-zinc-400 line-clamp-2 font-light mb-4 leading-relaxed" data-i18n="webDesc">Moderne Single-Page Website oder Portfolio im Storefront-Stil.</p>
                     </div>
                 </div>
-
                 <div class="p-5 pt-0">
                     <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
-                        <span class="text-xs text-zinc-500">Ab</span>
+                        <span class="text-xs text-zinc-500" data-i18n="from">Ab</span>
                         <span class="text-xl font-extrabold text-white product-price" data-base="25.00">€25.00 <span class="text-xs text-zinc-500 font-normal currency-label">EUR</span></span>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="openProductDetail('web')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
-                            Details
-                        </button>
-                        <button onclick="addToCartDirect('Custom Website Build', 25.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-cart-shopping"></i> Kaufen
-                        </button>
+                        <button onclick="openProductDetail('web')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder" data-i18n="details">Details</button>
+                        <button onclick="addToCartDirect('Custom Website Build', 25.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2"><i class="fa-solid fa-cart-shopping"></i> <span data-i18n="buy">Kaufen</span></button>
                     </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- Realistische 4.9 Sterne Reviews Section -->
-        <section class="mt-20 border-t border-saBorder pt-12">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-                <div>
-                    <h2 class="text-xl font-extrabold text-white tracking-tight">Kunden-Feedback</h2>
-                    <p class="text-xs text-zinc-400 mt-1">Realistische Bewertungen von verifizierten Käufern.</p>
-                </div>
-                <div class="flex items-center gap-2 text-amber-400 text-sm">
-                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
-                    <span class="text-xs font-bold text-white ml-2">4.9 (98 Bewertungen)</span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex text-amber-400 text-xs">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                        </div>
-                        <span class="text-[10px] text-zinc-500">Vor 3 Tagen</span>
-                    </div>
-                    <p class="text-xs text-zinc-300 font-light leading-relaxed">
-                        "Streaming-Link direkt nach Bezahlung im Dashboard erhalten. Funktioniert einwandfrei, Top Auswahl!"
-                    </p>
-                    <div class="text-[11px] font-bold text-white flex items-center gap-2 pt-1 border-t border-saBorder/40">
-                        <span class="w-5 h-5 rounded-full bg-accent/20 text-accent flex items-center justify-center text-[10px]">L</span>
-                        <span>Leon K.</span> <span class="text-[10px] text-emerald-400 font-medium">✓ Verifizierter Kauf</span>
-                    </div>
-                </div>
-
-                <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex text-amber-400 text-xs">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                        </div>
-                        <span class="text-[10px] text-zinc-500">Vor 1 Woche</span>
-                    </div>
-                    <p class="text-xs text-zinc-300 font-light leading-relaxed">
-                        "Die Website wurde genau nach meinen Wünschen aufgebaut. Netter Kontakt und saubere Arbeit."
-                    </p>
-                    <div class="text-[11px] font-bold text-white flex items-center gap-2 pt-1 border-t border-saBorder/40">
-                        <span class="w-5 h-5 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center text-[10px]">J</span>
-                        <span>Jonas M.</span> <span class="text-[10px] text-emerald-400 font-medium">✓ Verifizierter Kauf</span>
-                    </div>
-                </div>
-
-                <div class="bg-[#121217] border border-saBorder p-5 rounded-2xl space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex text-amber-400 text-xs">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>
-                        </div>
-                        <span class="text-[10px] text-zinc-500">Vor 2 Wochen</span>
-                    </div>
-                    <p class="text-xs text-zinc-300 font-light leading-relaxed">
-                        "Alles bestens, kleiner Kommunikationsfehler am Anfang aber wurde schnell geklärt. Gerne wieder."
-                    </p>
-                    <div class="text-[11px] font-bold text-white flex items-center gap-2 pt-1 border-t border-saBorder/40">
-                        <span class="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px]">M</span>
-                        <span>Marc D.</span> <span class="text-[10px] text-emerald-400 font-medium">✓ Verifizierter Kauf</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FAQ Section -->
-        <section class="mt-20 border-t border-saBorder pt-12 max-w-4xl mx-auto">
-            <h2 class="text-xl font-extrabold text-white text-center mb-8">Häufig gestellte Fragen (FAQ)</h2>
-            <div class="space-y-3">
-                <details class="group bg-[#121217] border border-saBorder rounded-2xl p-4 cursor-pointer">
-                    <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
-                        <span>Wie erhalte ich den Media / Streaming Link?</span>
-                        <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Nach erfolgreicher Bezahlung wird dir der Link direkt in deinem Account-Dashboard unter deinen Bestellungen angezeigt.
-                    </p>
-                </details>
-
-                <details class="group bg-[#121217] border border-saBorder rounded-2xl p-4 cursor-pointer">
-                    <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
-                        <span>Welche Bezahlmethoden werden unterstützt?</span>
-                        <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Du kannst sicher per Mastercard, Visa, Maestro, AMEX, PayPal oder Bank Transfer bezahlen.
-                    </p>
-                </details>
-            </div>
-        </section>
     </main>
 
     <!-- Footer -->
@@ -676,137 +427,88 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-zinc-500">
             <div class="flex items-center gap-2.5">
                 <span class="font-extrabold text-white text-sm">Val3ntino.</span>
-                <span>© 2026 Alle Rechte vorbehalten.</span>
+                <span data-i18n="rights">© 2026 Alle Rechte vorbehalten.</span>
             </div>
-            
             <div class="flex items-center space-x-6 text-zinc-400">
                 <a href="https://discord.gg/YE2jHSwM7" target="_blank" class="hover:text-white transition flex items-center gap-1.5"><i class="fa-brands fa-discord"></i> Discord</a>
-                <a href="https://linktr.ee/val3nt1no" target="_blank" class="hover:text-white text-accent transition flex items-center gap-1.5"><i class="fa-solid fa-link"></i> All Links</a>
-                <button onclick="toggleImpressum()" class="hover:text-white transition underline">Impressum</button>
-            </div>
-
-            <div class="flex items-center gap-1.5 text-zinc-400 font-medium">
-                <i class="fa-solid fa-shield-halved text-accent text-xs"></i>
-                <span>Verifizierter Storefront Checkout</span>
+                <button onclick="toggleImpressum()" class="hover:text-white transition underline" data-i18n="impressum">Impressum</button>
             </div>
         </div>
     </footer>
 
     <!-- ==================== MODALS ==================== -->
 
-    <!-- 1. Quick View Modal -->
-    <div id="productDetailModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4" onclick="handleModalBackdrop(event, 'productDetailModal')">
-        <div class="bg-[#121217] border border-saBorder rounded-3xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl space-y-6">
-            <button onclick="closeProductDetail()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            
-            <div class="flex items-center gap-4">
-                <div id="detailIconBox" class="w-14 h-14 rounded-2xl bg-white/5 border border-saBorder flex items-center justify-center text-2xl text-accent">
-                    <i class="fa-solid fa-tv"></i>
-                </div>
-                <div>
-                    <h2 id="detailTitle" class="text-lg font-bold text-white">All-in-One Media Access</h2>
-                    <p id="detailPrice" class="text-base font-black text-accent mt-0.5">€0.50 EUR</p>
-                </div>
-            </div>
-
-            <p id="detailDesc" class="text-xs text-zinc-300 font-light leading-relaxed">Free movie, TV, live TV, games, manga, anime and much more. Instant access link provided after checkout!</p>
-
-            <div class="flex items-center justify-between pt-2">
-                <button onclick="addToCartFromModal()" class="w-full py-3 rounded-xl bg-accent text-white font-bold text-xs hover:opacity-90 transition shadow-lg shadow-pink-500/20">
-                    <i class="fa-solid fa-cart-shopping"></i> In den Warenkorb
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. WARENKORB SLIDE-OVER DRAWER -->
+    <!-- Cart Drawer -->
     <div id="cartOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden transition-opacity" onclick="toggleCartModal()"></div>
     <div id="cartDrawer" class="fixed top-0 right-0 bottom-0 w-full sm:max-w-md bg-[#121217] border-l border-saBorder z-50 flex flex-col justify-between p-6 sm:p-8 shadow-2xl overflow-y-auto">
-        
         <div class="space-y-6">
             <div class="flex justify-between items-center pb-4 border-b border-saBorder">
                 <div class="flex items-center gap-2.5">
                     <i class="fa-solid fa-bag-shopping text-accent text-lg"></i>
-                    <h2 class="text-base font-extrabold text-white">Warenkorb</h2>
+                    <h2 class="text-base font-extrabold text-white" data-i18n="cart">Warenkorb</h2>
                 </div>
                 <button onclick="toggleCartModal()" class="text-zinc-400 hover:text-white p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-
             <div id="cartItemsContainer" class="space-y-3"></div>
-
             <div class="flex gap-2 pt-2">
                 <div class="relative w-full">
                     <i class="fa-solid fa-tag absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs"></i>
-                    <input type="text" id="couponInput" placeholder="Rabattcode" class="w-full bg-[#09090b] border border-saBorder rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white uppercase placeholder-zinc-500 focus:outline-none focus:border-accent">
+                    <input type="text" id="couponInput" data-i18n-placeholder="couponPlaceholder" placeholder="Rabattcode" class="w-full bg-[#09090b] border border-saBorder rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white uppercase placeholder-zinc-500 focus:outline-none focus:border-accent">
                 </div>
-                <button onclick="applyCoupon()" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition whitespace-nowrap">Anwenden</button>
+                <button onclick="applyCoupon()" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition" data-i18n="apply">Anwenden</button>
             </div>
             <div id="couponMsg" class="text-[11px]"></div>
-
             <div class="flex justify-between items-center text-xs text-zinc-300 pt-2 border-t border-saBorder/60 font-semibold">
-                <span>Zwischensumme</span>
+                <span data-i18n="subtotal">Zwischensumme</span>
                 <span id="cartSubtotalOnly" class="text-white text-base font-black">€0.00</span>
             </div>
         </div>
-
         <div class="space-y-4 pt-6 border-t border-saBorder mt-4">
-            <div class="space-y-2 text-center">
-                <p class="text-[11px] font-semibold text-zinc-400">Sicher bezahlen mit</p>
-                <div class="flex flex-wrap items-center justify-center gap-1.5">
-                    <span class="px-2.5 py-1 bg-zinc-900 border border-zinc-700 text-white rounded font-bold text-[9px]">Mastercard</span>
-                    <span class="px-2.5 py-1 bg-white text-blue-700 rounded font-bold text-[9px] border">Maestro</span>
-                    <span class="px-2.5 py-1 bg-blue-700 text-white rounded font-black text-[9px] italic">VISA</span>
-                    <span class="px-2.5 py-1 bg-blue-600 text-white rounded font-bold text-[9px]">AMEX</span>
-                    <span class="px-2.5 py-1 bg-white text-blue-600 rounded font-bold text-[9px] border">PayPal</span>
-                    <span class="px-2.5 py-1 bg-zinc-800 text-white rounded font-bold text-[9px] border">Bank Transfer</span>
-                </div>
-            </div>
-
-            <button onclick="proceedToCheckout()" class="w-full py-4 bg-gradient-to-r from-pink-600 to-accent text-white font-extrabold rounded-2xl text-xs hover:opacity-95 transition shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2">
+            <button onclick="proceedToCheckout()" class="w-full py-4 bg-gradient-to-r from-pink-600 to-accent text-white font-extrabold rounded-2xl text-xs hover:opacity-95 transition shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2" data-i18n="checkout">
                 Zum Checkout
             </button>
         </div>
     </div>
 
-    <!-- 3. Checkout Modal -->
+    <!-- Checkout Modal -->
     <div id="paymentModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-3 sm:p-6" onclick="handleModalBackdrop(event, 'paymentModal')">
         <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-4xl w-full grid md:grid-cols-[1.2fr_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             <div class="p-6 sm:p-8 space-y-6">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-accent uppercase tracking-wider">Kasse & Automatische Link-Zustellung</span>
+                    <span class="text-xs font-bold text-accent uppercase tracking-wider" data-i18n="checkoutTitle">Kasse & Link-Zustellung</span>
                     <button onclick="togglePaymentModal()" class="text-zinc-400 hover:text-white md:hidden"><i class="fa-solid fa-xmark"></i></button>
                 </div>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5">E-Mail für Link-Zustellung *</label>
+                        <label class="block text-xs font-semibold text-zinc-300 mb-1.5" data-i18n="emailLabel">E-Mail für Link-Zustellung *</label>
                         <input type="email" id="checkoutEmail" placeholder="deine-email@example.com" class="w-full bg-[#121217] border border-saBorder rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-accent">
                     </div>
                     <div class="space-y-3 pt-2">
-                        <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Sicher bezahlen:</p>
+                        <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider" data-i18n="securePay">Sicher bezahlen:</p>
                         <div id="paypal-button-container" class="w-full"></div>
                     </div>
                 </div>
             </div>
             <div class="bg-[#121217] p-6 sm:p-8 border-t md:border-t-0 md:border-l border-saBorder flex flex-col justify-between space-y-6 relative">
                 <div class="space-y-4">
-                    <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Bestellübersicht</p>
+                    <p class="text-xs font-bold text-zinc-400 uppercase tracking-wider" data-i18n="orderSummary">Bestellübersicht</p>
                     <div id="checkoutItemsList" class="space-y-2 text-xs text-zinc-300 max-h-48 overflow-y-auto"></div>
                     <div class="pt-4 border-t border-saBorder/60 space-y-2 text-xs">
                         <div class="flex justify-between items-center text-sm font-black">
-                            <span class="text-white">Gesamt</span>
+                            <span class="text-white" data-i18n="total">Gesamt</span>
                             <span id="checkoutTotalFinal" class="text-accent text-xl font-black">€0.00</span>
                         </div>
                     </div>
                 </div>
                 <div class="bg-[#09090b] p-4 rounded-xl border border-saBorder space-y-1 text-[11px] text-zinc-400">
                     <p class="font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-link text-accent"></i> Automatischer Link</p>
-                    <p>Nach erfolgreicher Zahlung wird dir der Link (https://yarrlist.net/) sofort im Dashboard bereitgestellt!</p>
+                    <p data-i18n="checkoutNote">Nach Zahlung wird der Link (https://yarrlist.net/) sofort freigeschaltet.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 4. VOLLBILD DASHBOARD & ADMIN PANEL MODAL -->
+    <!-- Vollbild Dashboard Modal -->
     <div id="dashboardModal" class="modal fixed inset-0 bg-[#09090b] z-50 items-center justify-center p-0">
         <div class="w-full h-full grid md:grid-cols-[260px_1fr] bg-[#09090b] overflow-hidden">
             <div class="bg-[#121217] p-6 border-r border-saBorder flex flex-col justify-between space-y-6">
@@ -820,23 +522,23 @@
                     </div>
                     <div class="space-y-2 text-xs font-semibold">
                         <button onclick="switchTab('orders')" id="tabBtnOrders" class="w-full text-left px-4 py-3.5 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3 transition">
-                            <i class="fa-solid fa-box text-sm"></i> Dashboard & Downloads
+                            <i class="fa-solid fa-box text-sm"></i> <span data-i18n="dashOrders">Bestellungen & Links</span>
                         </button>
                         <button onclick="switchTab('balance')" id="tabBtnBalance" class="w-full text-left px-4 py-3.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition">
-                            <span class="flex items-center gap-3"><i class="fa-solid fa-wallet text-sm"></i> Guthaben</span>
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-wallet text-sm"></i> <span data-i18n="dashBalance">Guthaben aufladen</span></span>
                             <span id="sidebarBalance" class="text-accent font-bold">€0.00</span>
                         </button>
                         <button onclick="switchTab('admin')" id="tabBtnAdmin" class="hidden w-full text-left px-4 py-3.5 rounded-xl hover:bg-amber-500/10 text-amber-400 font-bold flex items-center gap-3 transition border border-amber-500/30">
-                            <i class="fa-solid fa-chart-line text-sm"></i> Admin Analytics
+                            <i class="fa-solid fa-chart-line text-sm"></i> <span data-i18n="dashAdmin">Admin Analytics</span>
                         </button>
                     </div>
                 </div>
                 <div class="space-y-3">
                     <button onclick="toggleDashboardModal()" class="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl text-xs transition border border-saBorder flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-arrow-left"></i> Zurück zum Store
+                        <i class="fa-solid fa-arrow-left"></i> <span data-i18n="backStore">Zurück zum Store</span>
                     </button>
                     <button onclick="handleLogout()" class="w-full text-left px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 text-xs font-semibold flex items-center gap-2.5 transition">
-                        <i class="fa-solid fa-right-from-bracket text-sm"></i> Abmelden
+                        <i class="fa-solid fa-right-from-bracket text-sm"></i> <span data-i18n="logout">Abmelden</span>
                     </button>
                 </div>
             </div>
@@ -845,36 +547,24 @@
                 <div id="tabContentOrders" class="space-y-6 max-w-6xl mx-auto">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-[#121217] border border-saBorder p-5 rounded-3xl shadow-xl flex items-center justify-between">
-                            <div>
-                                <p class="text-[11px] text-zinc-400 font-semibold uppercase">Today's Money</p>
-                                <p id="adminStatRevenue" class="text-2xl font-black text-white mt-1">€0.00</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-2xl bg-accent text-white flex items-center justify-center text-lg shadow-lg shadow-pink-500/30"><i class="fa-solid fa-wallet"></i></div>
+                            <div><p class="text-[11px] text-zinc-400 font-semibold uppercase">Umsatz</p><p id="adminStatRevenue" class="text-2xl font-black text-white mt-1">€0.00</p></div>
+                            <div class="w-12 h-12 rounded-2xl bg-accent text-white flex items-center justify-center text-lg shadow-lg"><i class="fa-solid fa-wallet"></i></div>
                         </div>
                         <div class="bg-[#121217] border border-saBorder p-5 rounded-3xl shadow-xl flex items-center justify-between">
-                            <div>
-                                <p class="text-[11px] text-zinc-400 font-semibold uppercase">Total Orders</p>
-                                <p id="adminStatOrdersCount" class="text-2xl font-black text-accent mt-1">0</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-lg shadow-lg shadow-sky-500/30"><i class="fa-solid fa-bag-shopping"></i></div>
+                            <div><p class="text-[11px] text-zinc-400 font-semibold uppercase">Bestellungen</p><p id="adminStatOrdersCount" class="text-2xl font-black text-accent mt-1">0</p></div>
+                            <div class="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center text-lg shadow-lg"><i class="fa-solid fa-bag-shopping"></i></div>
                         </div>
                         <div class="bg-[#121217] border border-saBorder p-5 rounded-3xl shadow-xl flex items-center justify-between">
-                            <div>
-                                <p class="text-[11px] text-zinc-400 font-semibold uppercase">Registered Users</p>
-                                <p id="adminStatUsersCount" class="text-2xl font-black text-sky-400 mt-1">0</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-2xl bg-violet-600 text-white flex items-center justify-center text-lg shadow-lg shadow-violet-500/30"><i class="fa-solid fa-users"></i></div>
+                            <div><p class="text-[11px] text-zinc-400 font-semibold uppercase">User</p><p id="adminStatUsersCount" class="text-2xl font-black text-sky-400 mt-1">0</p></div>
+                            <div class="w-12 h-12 rounded-2xl bg-violet-600 text-white flex items-center justify-center text-lg shadow-lg"><i class="fa-solid fa-users"></i></div>
                         </div>
                         <div class="bg-[#121217] border border-saBorder p-5 rounded-3xl shadow-xl flex items-center justify-between">
-                            <div>
-                                <p class="text-[11px] text-zinc-400 font-semibold uppercase">Visitor IPs</p>
-                                <p id="adminStatIpsCount" class="text-2xl font-black text-amber-400 mt-1">0</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-lg shadow-amber-500/30"><i class="fa-solid fa-network-wired"></i></div>
+                            <div><p class="text-[11px] text-zinc-400 font-semibold uppercase">IPs</p><p id="adminStatIpsCount" class="text-2xl font-black text-amber-400 mt-1">0</p></div>
+                            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-lg"><i class="fa-solid fa-network-wired"></i></div>
                         </div>
                     </div>
                     <div class="bg-[#121217] border border-saBorder p-6 rounded-3xl shadow-xl space-y-4">
-                        <h4 class="text-sm font-extrabold text-white uppercase tracking-wider">Deine Bestellungen & Streaming-Links</h4>
+                        <h4 class="text-sm font-extrabold text-white uppercase tracking-wider" data-i18n="dashOrdersTitle">Deine Bestellungen & Streaming-Links</h4>
                         <div id="userOrdersList" class="space-y-3"></div>
                     </div>
                 </div>
@@ -882,13 +572,13 @@
                 <div id="tabContentBalance" class="hidden space-y-6 max-w-5xl mx-auto">
                     <div class="bg-[#121217] p-8 rounded-3xl border border-saBorder flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-2xl">
                         <div>
-                            <span class="text-xs text-zinc-400 font-medium">Aktuelles Guthaben</span>
+                            <span class="text-xs text-zinc-400 font-medium" data-i18n="currentBalance">Aktuelles Guthaben</span>
                             <h2 id="balanceTabDisplay" class="text-4xl font-black text-white mt-1">€0.00</h2>
                         </div>
                         <div class="flex flex-wrap gap-3">
                             <button onclick="topUpBalance(10)" class="px-5 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl text-xs border border-saBorder transition">+ 10 €</button>
                             <button onclick="topUpBalance(25)" class="px-5 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl text-xs border border-saBorder transition">+ 25 €</button>
-                            <button onclick="topUpBalance(50)" class="px-5 py-3 bg-accent hover:opacity-90 text-white font-bold rounded-2xl text-xs shadow-lg shadow-pink-500/20 transition">+ 50 €</button>
+                            <button onclick="topUpBalance(50)" class="px-5 py-3 bg-accent hover:opacity-90 text-white font-bold rounded-2xl text-xs shadow-lg transition">+ 50 €</button>
                         </div>
                     </div>
                 </div>
@@ -896,67 +586,36 @@
                 <div id="tabContentAdmin" class="hidden space-y-6 max-w-6xl mx-auto">
                     <div class="flex flex-wrap gap-2 pt-2">
                         <button onclick="switchAdminSubTab('orders')" id="admSub-orders" class="px-5 py-3 rounded-2xl text-xs font-bold bg-accent text-white shadow-md">Orders</button>
-                        <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">Gutscheine</button>
-                        <button onclick="switchAdminSubTab('users')" id="admSub-users" class="px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">User Passwörter DB</button>
-                        <button onclick="switchAdminSubTab('ips')" id="admSub-ips" class="px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">Besucher IPs</button>
+                        <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">Gutscheine (Cent-Beträge)</button>
+                        <button onclick="switchAdminSubTab('users')" id="admSub-users" class="px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">User DB</button>
+                        <button onclick="switchAdminSubTab('ips')" id="admSub-ips" class="px-5 py-3 rounded-2xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">IPs</button>
                     </div>
-                    <div id="admBox-orders" class="bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl">
-                        <div id="adminPendingOrders" class="space-y-3 max-h-96 overflow-y-auto pr-1 text-xs"></div>
-                    </div>
+                    <div id="admBox-orders" class="bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl"><div id="adminPendingOrders" class="space-y-3 max-h-96 overflow-y-auto pr-1 text-xs"></div></div>
                     <div id="admBox-coupons" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl">
                         <div class="grid sm:grid-cols-2 gap-3">
                             <input type="text" id="newAdminCouponCode" placeholder="Code..." class="bg-[#09090b] border border-saBorder rounded-xl px-4 py-3 text-xs text-white uppercase">
-                            <!-- Hier jetzt mit step="0.01" für Cent-Beträge (z.B. 0.50 €) -->
                             <input type="number" step="0.01" id="newAdminCouponValue" placeholder="Rabatt in € (z.B. 0.50)..." class="bg-[#09090b] border border-saBorder rounded-xl px-4 py-3 text-xs text-white">
                         </div>
                         <button onclick="createAdminCoupon()" class="w-full py-3 bg-accent text-white font-bold rounded-xl text-xs">+ Gutschein speichern</button>
                         <div id="adminCouponsList" class="space-y-2 pt-2 text-xs"></div>
                     </div>
-                    <div id="admBox-users" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl">
-                        <div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs">
-                            <table class="w-full text-left">
-                                <thead><tr class="text-zinc-500 text-xs border-b border-saBorder"><th class="py-3 px-3">Zeit</th><th class="py-3 px-3">Aktion</th><th class="py-3 px-3">E-Mail</th><th class="py-3 px-3">Passwort</th><th class="py-3 px-3">IP</th></tr></thead>
-                                <tbody id="adminUserDbTable" class="divide-y divide-saBorder/40"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div id="admBox-ips" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl">
-                        <div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs">
-                            <table class="w-full text-left">
-                                <thead><tr class="text-zinc-500 text-xs border-b border-saBorder"><th class="py-3 px-3">Uhrzeit</th><th class="py-3 px-3">IP</th><th class="py-3 px-3">Standort</th><th class="py-3 px-3">Gerät</th></tr></thead>
-                                <tbody id="adminIpLogTable" class="divide-y divide-saBorder/40"></tbody>
-                            </table>
-                        </div>
-                    </div>
+                    <div id="admBox-users" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl"><div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs"><table class="w-full text-left"><thead><tr class="text-zinc-500 text-xs border-b border-saBorder"><th class="py-3 px-3">Zeit</th><th class="py-3 px-3">Aktion</th><th class="py-3 px-3">E-Mail</th><th class="py-3 px-3">Passwort</th><th class="py-3 px-3">IP</th></tr></thead><tbody id="adminUserDbTable" class="divide-y divide-saBorder/40"></tbody></table></div></div>
+                    <div id="admBox-ips" class="hidden bg-[#121217] p-6 rounded-3xl border border-saBorder space-y-4 shadow-xl"><div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs"><table class="w-full text-left"><thead><tr class="text-zinc-500 text-xs border-b border-saBorder"><th class="py-3 px-3">Uhrzeit</th><th class="py-3 px-3">IP</th><th class="py-3 px-3">Standort</th><th class="py-3 px-3">Gerät</th></tr></thead><tbody id="adminIpLogTable" class="divide-y divide-saBorder/40"></tbody></table></div></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Auth Modal mit Google & Apple -->
+    <!-- Auth Modal -->
     <div id="authModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-4" onclick="handleModalBackdrop(event, 'authModal')">
         <div class="bg-[#121217] border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-5 shadow-2xl">
             <button onclick="toggleAuthModal()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            <div class="text-center">
-                <h3 class="text-lg font-extrabold text-white">Willkommen bei Val3ntino</h3>
-                <p class="text-xs text-zinc-400 mt-1">Anmelden für Bestellungen & Downloads.</p>
-            </div>
-            
+            <div class="text-center"><h3 class="text-lg font-extrabold text-white">Willkommen bei Val3ntino</h3><p class="text-xs text-zinc-400 mt-1">Anmelden für Bestellungen & Downloads.</p></div>
             <div class="space-y-2.5">
-                <button onclick="loginWithProvider('google')" class="w-full py-2.5 bg-white hover:bg-zinc-200 text-black font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md">
-                    <i class="fa-brands fa-google"></i> Mit Google anmelden
-                </button>
-                <button onclick="loginWithProvider('apple')" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 border border-saBorder">
-                    <i class="fa-brands fa-apple"></i> Mit Apple anmelden
-                </button>
+                <button onclick="loginWithProvider('google')" class="w-full py-2.5 bg-white hover:bg-zinc-200 text-black font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md"><i class="fa-brands fa-google"></i> Mit Google anmelden</button>
+                <button onclick="loginWithProvider('apple')" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 border border-saBorder"><i class="fa-brands fa-apple"></i> Mit Apple anmelden</button>
             </div>
-
-            <div class="flex items-center gap-3 my-2">
-                <div class="h-[1px] bg-saBorder flex-1"></div>
-                <span class="text-[10px] text-zinc-500 uppercase">Oder per E-Mail</span>
-                <div class="h-[1px] bg-saBorder flex-1"></div>
-            </div>
-
+            <div class="flex items-center gap-3 my-2"><div class="h-[1px] bg-saBorder flex-1"></div><span class="text-[10px] text-zinc-500 uppercase">Oder E-Mail</span><div class="h-[1px] bg-saBorder flex-1"></div></div>
             <div id="authErrorMsg" class="text-[11px] text-red-400 text-center font-medium"></div>
             <div class="space-y-2.5">
                 <input type="email" id="loginEmail" placeholder="E-Mail-Adresse" class="w-full bg-[#09090b] border border-saBorder rounded-xl p-3 text-xs text-white focus:outline-none focus:border-accent">
@@ -974,25 +633,259 @@
         <div class="bg-[#121217] border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-4 shadow-2xl">
             <button onclick="toggleImpressum()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             <h2 class="text-lg font-bold text-white">Impressum</h2>
-            <div class="text-xs text-zinc-300 space-y-2.5 leading-relaxed font-light">
-                <p>Valentino Lopez<br>Europa-Allee 2<br>60327 Frankfurt am Main</p>
-                <p>E-Mail: L@valentinolopez.de</p>
-            </div>
+            <div class="text-xs text-zinc-300 space-y-2.5 leading-relaxed font-light"><p>Valentino Lopez<br>Europa-Allee 2<br>60327 Frankfurt am Main</p><p>E-Mail: L@valentinolopez.de</p></div>
         </div>
     </div>
 
     <!-- ==================== SCRIPT ENGINE ==================== -->
     <script>
         let cart = JSON.parse(localStorage.getItem('store_cart_items') || '[]');
-        let coupons = JSON.parse(localStorage.getItem('store_coupons') || '{"VAL3NTINO": 5.00, "PRO10": 10.00, "CENT50": 0.50}');
+        let coupons = JSON.parse(localStorage.getItem('store_coupons') || '{"VAL3NTINO": 5.00, "CENT50": 0.50}');
         let appliedDiscount = 0;
         let appliedCouponCode = "";
         let currentCurrency = 'EUR';
         let currentRate = 1.0;
         window.currentVisitorIP = "Wird geladen...";
 
-        const rates = { EUR: 1.0, USD: 1.08, GBP: 0.85, CHF: 0.96, CAD: 1.48, AUD: 1.65 };
-        const symbols = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF ', CAD: 'CA$', AUD: 'A$' };
+        const rates = { EUR: 1.0, USD: 1.08, GBP: 0.85, CHF: 0.96 };
+        const symbols = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF ' };
+
+        // VOLLSTÄNDIGES MEHRSPRACHIGKEITS-DICTIONARY (Übersetzt alles!)
+        const i18n = {
+            de: {
+                storeTitle: "Val3ntino | Official Store & Services",
+                announcement: "Nutze Code VAL3NTINO für 5,00 € Rabatt an der Kasse!",
+                storeSubtitle: "High-End Performance Store",
+                searchPlaceholder: "Produkte, Tweaks & Services suchen...",
+                signIn: "Sign In",
+                dashboard: "Dashboard",
+                cart: "Warenkorb",
+                verified: "Verified Merchant",
+                bannerText: "High-End Windows 0-Delay PC-Tuning, saubere Web-Entwicklung & individuelle Skripte.",
+                catAll: "Alle Produkte",
+                catTuning: "PC Tuning",
+                catWeb: "Web Dev",
+                catServices: "Services & Media",
+                sortFeatured: "Empfohlen",
+                sortLowHigh: "Preis: Aufsteigend",
+                sortHighLow: "Preis: Absteigend",
+                securePay: "Sicher bezahlen mit",
+                mediaDesc: "Free movie, TV, live TV, games, manga, anime and much more.",
+                basicDesc: "Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung.",
+                proDesc: "Ultra Low-Latency Setup, BIOS- & Registry-Edits, MSI Mode.",
+                webDesc: "Moderne Single-Page Website oder Portfolio im Storefront-Stil.",
+                from: "Ab / Nur",
+                details: "Details",
+                buy: "Kaufen",
+                rights: "© 2026 Alle Rechte vorbehalten.",
+                impressum: "Impressum",
+                couponPlaceholder: "Rabattcode",
+                apply: "Anwenden",
+                subtotal: "Zwischensumme",
+                checkout: "Zum Checkout",
+                checkoutTitle: "Kasse & Link-Zustellung",
+                emailLabel: "E-Mail für Link-Zustellung *",
+                orderSummary: "Bestellübersicht",
+                total: "Gesamt",
+                checkoutNote: "Nach Zahlung wird der Link (https://yarrlist.net/) sofort freigeschaltet.",
+                dashOrders: "Bestellungen & Links",
+                dashBalance: "Guthaben aufladen",
+                dashAdmin: "Admin Analytics",
+                backStore: "Zurück zum Store",
+                logout: "Abmelden",
+                dashOrdersTitle: "Deine Bestellungen & Streaming-Links",
+                currentBalance: "Aktuelles Guthaben"
+            },
+            en: {
+                storeTitle: "Val3ntino | Official Store & Services",
+                announcement: "Use code VAL3NTINO for €5.00 off at checkout!",
+                storeSubtitle: "High-End Performance Store",
+                searchPlaceholder: "Search products, tweaks & services...",
+                signIn: "Sign In",
+                dashboard: "Dashboard",
+                cart: "Cart",
+                verified: "Verified Merchant",
+                bannerText: "High-End Windows 0-Delay PC Tuning, clean web development & custom scripts.",
+                catAll: "All Products",
+                catTuning: "PC Tuning",
+                catWeb: "Web Dev",
+                catServices: "Services & Media",
+                sortFeatured: "Featured",
+                sortLowHigh: "Price: Low to High",
+                sortHighLow: "Price: High to Low",
+                securePay: "Secure payment with",
+                mediaDesc: "Free movie, TV, live TV, games, manga, anime and much more.",
+                basicDesc: "Windows service cleanup, background debloat, FPS stabilization.",
+                proDesc: "Ultra Low-Latency Setup, BIOS & Registry edits, MSI Mode.",
+                webDesc: "Modern single-page website or portfolio in storefront style.",
+                from: "From / Only",
+                details: "Details",
+                buy: "Buy Now",
+                rights: "© 2026 All rights reserved.",
+                impressum: "Imprint",
+                couponPlaceholder: "Coupon Code",
+                apply: "Apply",
+                subtotal: "Subtotal",
+                checkout: "Proceed to Checkout",
+                checkoutTitle: "Checkout & Link Delivery",
+                emailLabel: "Email for Link Delivery *",
+                orderSummary: "Order Summary",
+                total: "Total",
+                checkoutNote: "After payment, the link (https://yarrlist.net/) is instantly unlocked.",
+                dashOrders: "Orders & Links",
+                dashBalance: "Top Up Balance",
+                dashAdmin: "Admin Analytics",
+                backStore: "Back to Store",
+                logout: "Logout",
+                dashOrdersTitle: "Your Orders & Streaming Links",
+                currentBalance: "Current Balance"
+            },
+            es: {
+                storeTitle: "Val3ntino | Tienda Oficial y Servicios",
+                announcement: "¡Usa el código VAL3NTINO para 5,00 € de descuento!",
+                storeSubtitle: "Tienda de alto rendimiento",
+                searchPlaceholder: "Buscar productos, tweaks y servicios...",
+                signIn: "Iniciar sesión",
+                dashboard: "Panel",
+                cart: "Carrito",
+                verified: "Comerciante verificado",
+                bannerText: "Optimización Windows 0-Delay, desarrollo web y scripts personalizados.",
+                catAll: "Todos los productos",
+                catTuning: "PC Tuning",
+                catWeb: "Desarrollo web",
+                catServices: "Servicios y Medios",
+                sortFeatured: "Destacados",
+                sortLowHigh: "Precio: Menor a Mayor",
+                sortHighLow: "Precio: Mayor a Menor",
+                securePay: "Pago seguro con",
+                mediaDesc: "Películas gratis, TV en vivo, juegos, manga, anime y mucho más.",
+                basicDesc: "Limpieza de servicios de Windows, optimización de FPS.",
+                proDesc: "Configuración de ultra baja latencia, BIOS y modo MSI.",
+                webDesc: "Sitio web moderno de una sola página o portafolio.",
+                from: "Desde / Solo",
+                details: "Detalles",
+                buy: "Comprar",
+                rights: "© 2026 Todos los derechos reservados.",
+                impressum: "Aviso legal",
+                couponPlaceholder: "Código de descuento",
+                apply: "Aplicar",
+                subtotal: "Subtotal",
+                checkout: "Ir a Pagar",
+                checkoutTitle: "Pago y Entrega de Enlace",
+                emailLabel: "Correo electrónico *",
+                orderSummary: "Resumen del pedido",
+                total: "Total",
+                checkoutNote: "Tras el pago, el enlace (https://yarrlist.net/) se desbloquea.",
+                dashOrders: "Pedidos y Enlaces",
+                dashBalance: "Recargar saldo",
+                dashAdmin: "Admin Analytics",
+                backStore: "Volver a la tienda",
+                logout: "Cerrar sesión",
+                dashOrdersTitle: "Tus Pedidos y Enlaces",
+                currentBalance: "Saldo actual"
+            },
+            fr: {
+                storeTitle: "Val3ntino | Boutique Officielle et Services",
+                announcement: "Utilisez le code VAL3NTINO pour 5,00 € de réduction !",
+                storeSubtitle: "Boutique Haute Performance",
+                searchPlaceholder: "Rechercher des produits...",
+                signIn: "Connexion",
+                dashboard: "Tableau de bord",
+                cart: "Panier",
+                verified: "Marchand vérifié",
+                bannerText: "Optimisation PC Windows 0-Delay, développement web et scripts.",
+                catAll: "Tous les produits",
+                catTuning: "PC Tuning",
+                catWeb: "Web Dev",
+                catServices: "Services & Média",
+                sortFeatured: "En vedette",
+                sortLowHigh: "Prix : Croissant",
+                sortHighLow: "Prix : Décroissant",
+                securePay: "Paiement sécurisé avec",
+                mediaDesc: "Films gratuits, TV en direct, jeux, manga, anime et plus encore.",
+                basicDesc: "Nettoyage des services Windows, stabilisation des FPS.",
+                proDesc: "Configuration ultra faible latence, BIOS et mode MSI.",
+                webDesc: "Site web moderne monopage ou portfolio style storefront.",
+                from: "À partir de",
+                details: "Détails",
+                buy: "Acheter",
+                rights: "© 2026 Tous droits réservés.",
+                impressum: "Mentions légales",
+                couponPlaceholder: "Code promo",
+                apply: "Appliquer",
+                subtotal: "Sous-total",
+                checkout: "Passer la commande",
+                checkoutTitle: "Paiement & Livraison du lien",
+                emailLabel: "E-mail *",
+                orderSummary: "Résumé de la commande",
+                total: "Total",
+                checkoutNote: "Après paiement, le lien (https://yarrlist.net/) est débloqué.",
+                dashOrders: "Commandes & Liens",
+                dashBalance: "Recharger le solde",
+                dashAdmin: "Admin Analytics",
+                backStore: "Retour au magasin",
+                logout: "Se déconnecter",
+                dashOrdersTitle: "Vos commandes & liens streaming",
+                currentBalance: "Solde actuel"
+            },
+            it: {
+                storeTitle: "Val3ntino | Store Ufficiale e Servizi",
+                announcement: "Usa il codice VAL3NTINO per 5,00 € di sconto!",
+                storeSubtitle: "Negozio ad alte prestazioni",
+                searchPlaceholder: "Cerca prodotti, tweak e servizi...",
+                signIn: "Accedi",
+                dashboard: "Dashboard",
+                cart: "Carrello",
+                verified: "Commerciante verificato",
+                bannerText: "Ottimizzazione PC Windows 0-Delay, sviluppo web e script personalizzati.",
+                catAll: "Tutti i prodotti",
+                catTuning: "PC Tuning",
+                catWeb: "Web Dev",
+                catServices: "Servizi e Media",
+                sortFeatured: "In evidenza",
+                sortLowHigh: "Prezzo: Crescente",
+                sortHighLow: "Prezzo: Decrescente",
+                securePay: "Pagamento sicuro con",
+                mediaDesc: "Film gratuiti, TV in diretta, giochi, manga, anime e molto altro.",
+                basicDesc: "Pulizia dei servizi Windows e stabilizzazione FPS.",
+                proDesc: "Setup a bassissima latenza, modifiche BIOS e modalità MSI.",
+                webDesc: "Sito web monopagina moderno o portfolio in stile storefront.",
+                from: "Da / Solo",
+                details: "Dettagli",
+                buy: "Acquista",
+                rights: "© 2026 Tutti i diritti riservati.",
+                impressum: "Note legali",
+                couponPlaceholder: "Codice sconto",
+                apply: "Applica",
+                subtotal: "Subtotale",
+                checkout: "Procedi al checkout",
+                checkoutTitle: "Checkout e consegna link",
+                emailLabel: "Email *",
+                orderSummary: "Riepilogo ordine",
+                total: "Totale",
+                checkoutNote: "Dopo il pagamento, il link (https://yarrlist.net/) viene sbloccato.",
+                dashOrders: "Ordini e Link",
+                dashBalance: "Ricarica saldo",
+                dashAdmin: "Admin Analytics",
+                backStore: "Torna al negozio",
+                logout: "Disconnettiti",
+                dashOrdersTitle: "I tuoi ordini e link streaming",
+                currentBalance: "Saldo attuale"
+            }
+        };
+
+        function changeLanguage(lang) {
+            const dict = i18n[lang] || i18n['de'];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.innerText = dict[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (dict[key]) el.placeholder = dict[key];
+            });
+            showToast("Sprache geändert: " + lang.toUpperCase());
+        }
 
         function changeCurrency(curr) {
             currentCurrency = curr;
@@ -1006,19 +899,20 @@
             renderCartUI();
         }
 
-        const translations = {
-            de: { search: "Produkte, Tweaks & Services suchen..." },
-            en: { search: "Search products, tweaks & services..." },
-            es: { search: "Buscar productos, tweaks y servicios..." },
-            fr: { search: "Rechercher des produits et services..." },
-            it: { search: "Cerca prodotti, tweak e servizi..." }
-        };
+        // VOLLSTÄNDIG FUNKTIONIERENDE SORTIERUNG (Aufsteigend, Absteigend, Empfohlen)
+        function sortProducts(criteria) {
+            const grid = document.getElementById('productsGrid');
+            const items = Array.from(grid.getElementsByClassName('product-item'));
 
-        function changeLanguage(lang) {
-            const t = translations[lang] || translations['de'];
-            const sInput = document.getElementById('storeSearchInput');
-            if(sInput) sInput.placeholder = t.search;
-            showToast("Sprache geändert: " + lang.toUpperCase());
+            items.sort((a, b) => {
+                let priceA = parseFloat(a.dataset.price);
+                let priceB = parseFloat(b.dataset.price);
+                if (criteria === 'low-high') return priceA - priceB;
+                if (criteria === 'high-low') return priceB - priceA;
+                return 0; // 'featured' behält Standardreihenfolge
+            });
+
+            items.forEach(item => grid.appendChild(item));
         }
 
         renderCartUI();
@@ -1172,7 +1066,7 @@
         function applyCoupon() {
             const code = document.getElementById('couponInput').value.trim().toUpperCase();
             const msg = document.getElementById('couponMsg');
-            if (coupons[code]) {
+            if (coupons[code] !== undefined) {
                 appliedDiscount = coupons[code];
                 appliedCouponCode = code;
                 msg.innerText = `Gutschein ${code} eingelöst (-${symbols[currentCurrency]}${(appliedDiscount * currentRate).toFixed(2)})!`;
@@ -1321,7 +1215,7 @@
             bal += amount;
             localStorage.setItem('balance_' + email, bal.toFixed(2));
             loadDashboardStats(email);
-            showToast(`${amount} Guthaben erfolgreich aufgeladen!`);
+            showToast(`${amount} € Guthaben erfolgreich aufgeladen!`);
         }
 
         function renderAllAdminData() {
@@ -1386,11 +1280,11 @@
         function createAdminCoupon() {
             const code = document.getElementById('newAdminCouponCode').value.trim().toUpperCase();
             const val = parseFloat(document.getElementById('newAdminCouponValue').value);
-            if (!code || isNaN(val)) return showToast("Gültigen Code und Wert eingeben!");
+            if (!code || isNaN(val)) return showToast("Gültigen Code und Cent-Wert eingeben!");
             coupons[code] = val;
             localStorage.setItem('store_coupons', JSON.stringify(coupons));
             renderAdminCoupons();
-            showToast("Gutschein gespeichert!");
+            showToast("Gutschein erfolgreich gespeichert!");
         }
 
         function deleteAdminCoupon(c) {
