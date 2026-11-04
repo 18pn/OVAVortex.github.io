@@ -574,7 +574,7 @@
                         <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
                     </summary>
                     <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Du kannst sicher per PayPal, Kreditkarte, Debitkarte oder SEPA bezahlen.
+                        Du kannst sicher per Mastercard, Visa, Maestro, AMEX, PayPal, Klarna oder Bank Transfer bezahlen.
                     </p>
                 </details>
 
@@ -732,15 +732,16 @@
         </div>
 
         <div class="space-y-4 pt-6 border-t border-saBorder mt-4">
-            <!-- Zahlungsarten exakt nach Wunsch (Ohne Klarna)[cite: 5] -->
+            <!-- Zahlungsarten exakt nach Screenshot (Mastercard, Maestro, Visa, AMEX, PayPal, Klarna, Bank Transfer)[cite: 5] -->
             <div class="space-y-2 text-center">
                 <p class="text-[11px] font-semibold text-zinc-400">Sicher bezahlen mit</p>
                 <div class="flex flex-wrap items-center justify-center gap-1.5">
-                    <span class="px-2.5 py-1 bg-zinc-900 border border-zinc-700 text-white rounded font-bold text-[9px]">MC</span>
+                    <span class="px-2 py-1 bg-zinc-900 border border-zinc-700 text-white rounded font-bold text-[9px]">Mastercard</span>
                     <span class="px-2.5 py-1 bg-white text-blue-700 rounded font-bold text-[9px] border">Maestro</span>
                     <span class="px-2 py-1 bg-blue-700 text-white rounded font-black text-[9px] italic">VISA</span>
-                    <span class="px-2.5 py-1 bg-blue-600 text-white rounded font-bold text-[9px]">AMEX</span>
+                    <span class="px-2 py-1 bg-blue-600 text-white rounded font-bold text-[9px]">AMEX</span>
                     <span class="px-2.5 py-1 bg-white text-blue-600 rounded font-bold text-[9px] border">PayPal</span>
+                    <span class="px-2.5 py-1 bg-pink-300 text-black rounded font-bold text-[9px]">Klarna</span>
                     <span class="px-2.5 py-1 bg-zinc-800 text-white rounded font-bold text-[9px] border">Bank Transfer</span>
                 </div>
             </div>
@@ -789,7 +790,7 @@
                             <span id="checkoutSubtotal">€0.00</span>
                         </div>
                         <div class="flex justify-between items-center text-sm pt-2 border-t border-saBorder/60 font-black">
-                            <span class="text-white">Zu zahlen</span>
+                            <span class="text-white">To pay</span>
                             <span id="checkoutTotalFinal" class="text-accent text-xl font-black">€0.00</span>
                         </div>
                     </div>
@@ -808,7 +809,7 @@
     <div id="dashboardModal" class="modal fixed inset-0 bg-[#09090b] z-50 items-center justify-center p-0">
         <div class="w-full h-full grid md:grid-cols-[260px_1fr] bg-[#09090b] overflow-hidden">
             
-            <!-- Sidebar im Creative-Tim-Stil -->
+            <!-- Sidebar (Creative Tim Style) -->
             <div class="bg-[#121217] p-6 border-r border-saBorder flex flex-col justify-between space-y-6">
                 <div class="space-y-6">
                     <div class="flex items-center gap-3.5 bg-[#09090b] p-3.5 rounded-2xl border border-saBorder">
@@ -844,7 +845,7 @@
                 </div>
             </div>
 
-            <!-- Main Fullscreen Content Area (Creative Tim UI Style) -->
+            <!-- Main Fullscreen Content Area (Creative Tim UI Style)[cite: 6] -->
             <div class="p-8 sm:p-12 relative space-y-8 overflow-y-auto bg-[#09090b]">
 
                 <!-- Top Header Bar -->
@@ -860,10 +861,9 @@
                     </div>
                 </div>
 
-                <!-- TAB 1 & Admin Overview: Creative Tim Style KPI Cards -->
+                <!-- TAB 1 & Admin Overview: Creative Tim Style KPI Cards[cite: 6] -->
                 <div id="tabContentOrders" class="space-y-6 max-w-6xl mx-auto">
                     
-                    <!-- 4 KPI Cards (Inspired by Creative Tim reference)[cite: 6] -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-[#121217] border border-saBorder p-5 rounded-3xl shadow-xl flex items-center justify-between">
                             <div>
