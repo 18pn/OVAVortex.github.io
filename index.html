@@ -366,7 +366,7 @@
             </div>
         </div>
 
-        <!-- Zahlungsarten-Leiste direkt in der Mitte -->
+        <!-- Zahlungsarten-Leiste in der Mitte -->
         <section class="mb-12 bg-[#121217] border border-saBorder rounded-3xl p-6 text-center space-y-3 shadow-xl">
             <h4 class="text-xs font-extrabold text-zinc-400 uppercase tracking-widest">Sicher bezahlen mit</h4>
             <div class="flex flex-wrap items-center justify-center gap-3">
@@ -391,10 +391,10 @@
             </div>
         </section>
 
-        <!-- Products Grid (Inkl. dem neuen Streaming/Media-Produkt mit yarrlist.net Link) -->
+        <!-- Products Grid -->
         <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            <!-- Neu: All-in-One Streaming & Media Access -->
+            <!-- Neu: All-in-One Streaming & Media Access (0.50 €) -->
             <div class="product-item group bg-[#121217] border-2 border-accent/60 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between relative shadow-xl shadow-pink-500/10" data-category="services" data-price="0.50" data-name="All-in-One Media Access" data-desc="Free movie, TV, live TV, games, manga, anime and much more. Instant access link!">
                 <div class="absolute top-3 right-3 z-10">
                     <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-accent text-white shadow-md">
@@ -712,7 +712,7 @@
             <p id="detailDesc" class="text-xs text-zinc-300 font-light leading-relaxed">Free movie, TV, live TV, games, manga, anime and much more. Instant access link provided after checkout!</p>
 
             <div class="flex items-center justify-between pt-2">
-                <button onclick="addToCartDirect('All-in-One Media Access', 0.50)" class="w-full py-3 rounded-xl bg-accent text-white font-bold text-xs hover:opacity-90 transition shadow-lg shadow-pink-500/20">
+                <button onclick="addToCartFromModal()" class="w-full py-3 rounded-xl bg-accent text-white font-bold text-xs hover:opacity-90 transition shadow-lg shadow-pink-500/20">
                     <i class="fa-solid fa-cart-shopping"></i> In den Warenkorb
                 </button>
             </div>
@@ -800,13 +800,13 @@
                 </div>
                 <div class="bg-[#09090b] p-4 rounded-xl border border-saBorder space-y-1 text-[11px] text-zinc-400">
                     <p class="font-bold text-white flex items-center gap-1.5"><i class="fa-solid fa-link text-accent"></i> Automatischer Link</p>
-                    <p>Nach erfolgreicher Zahlung wird dir der Link (https://yarrlist.net/) sofort im Dashboard und per E-Mail bereitgestellt!</p>
+                    <p>Nach erfolgreicher Zahlung wird dir der Link (https://yarrlist.net/) sofort im Dashboard bereitgestellt!</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 4. VOLLBILD DASHBOARD & ADMIN PANEL MODAL -->
+    <!-- 4. VOLLBILD DASHBOARD & ADMIN PANEL MODAL (Inkl. Google & Apple Social Login Optionen) -->
     <div id="dashboardModal" class="modal fixed inset-0 bg-[#09090b] z-50 items-center justify-center p-0">
         <div class="w-full h-full grid md:grid-cols-[260px_1fr] bg-[#09090b] overflow-hidden">
             <div class="bg-[#121217] p-6 border-r border-saBorder flex flex-col justify-between space-y-6">
@@ -932,14 +932,31 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
+    <!-- Auth Modal mit Google & Apple Login -->
     <div id="authModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-4" onclick="handleModalBackdrop(event, 'authModal')">
-        <div class="bg-[#121217] border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-4 shadow-2xl">
+        <div class="bg-[#121217] border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-5 shadow-2xl">
             <button onclick="toggleAuthModal()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             <div class="text-center">
                 <h3 class="text-lg font-extrabold text-white">Willkommen bei Val3ntino</h3>
-                <p class="text-xs text-zinc-400 mt-1">Anmelden für Bestellungen & Downloads.</p>
+                <p class="text-xs text-zinc-400 mt-1">Anmelden für Bestellungen & Guthaben.</p>
             </div>
+            
+            <!-- Social Logins (Google & Apple) -->
+            <div class="space-y-2.5">
+                <button onclick="loginWithProvider('google')" class="w-full py-2.5 bg-white hover:bg-zinc-200 text-black font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md">
+                    <i class="fa-brands fa-google"></i> Mit Google anmelden
+                </button>
+                <button onclick="loginWithProvider('apple')" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 border border-saBorder">
+                    <i class="fa-brands fa-apple"></i> Mit Apple anmelden
+                </button>
+            </div>
+
+            <div class="flex items-center gap-3 my-2">
+                <div class="h-[1px] bg-saBorder flex-1"></div>
+                <span class="text-[10px] text-zinc-500 uppercase">Oder per E-Mail</span>
+                <div class="h-[1px] bg-saBorder flex-1"></div>
+            </div>
+
             <div id="authErrorMsg" class="text-[11px] text-red-400 text-center font-medium"></div>
             <div class="space-y-2.5">
                 <input type="email" id="loginEmail" placeholder="E-Mail-Adresse" class="w-full bg-[#09090b] border border-saBorder rounded-xl p-3 text-xs text-white focus:outline-none focus:border-accent">
@@ -1208,8 +1225,6 @@
         function recordOrder(email, method, status) {
             const total = symbols[currentCurrency] + getCartTotal();
             const items = cart.map(i => `${i.qty}x ${i.name}`).join(', ');
-            
-            // Link automatisch bei Bestellung mit anhängen
             const digitalLink = "https://yarrlist.net/";
 
             const newOrder = {
