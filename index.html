@@ -778,7 +778,7 @@
         </div>
     </div>
 
-    <!-- 4. ÜBERARBEITETES DASHBOARD & ADMIN PANEL MODAL -->
+    <!-- 4. PERFEKT ÜBERARBEITETES DASHBOARD & ADMIN PANEL MODAL -->
     <div id="dashboardModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-2 sm:p-6" onclick="handleModalBackdrop(event, 'dashboardModal')">
         <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-6xl w-full grid md:grid-cols-[240px_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             
@@ -845,8 +845,10 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: ADMIN MANAGEMENT CENTER -->
+                <!-- TAB 3: OPTIMIERTES ADMIN MANAGEMENT CENTER -->
                 <div id="tabContentAdmin" class="hidden space-y-6">
+                    
+                    <!-- Admin Header & Status -->
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-saBorder pb-4 gap-3">
                         <div>
                             <h2 class="text-lg font-extrabold text-amber-400 flex items-center gap-2">
@@ -859,8 +861,28 @@
                         </span>
                     </div>
 
+                    <!-- Admin KPI Overview Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="bg-[#121217] border border-saBorder p-3.5 rounded-2xl">
+                            <p class="text-[10px] text-zinc-400 font-semibold uppercase">Gesamtumsatz</p>
+                            <p id="adminStatRevenue" class="text-base font-extrabold text-white mt-1">€0.00</p>
+                        </div>
+                        <div class="bg-[#121217] border border-saBorder p-3.5 rounded-2xl">
+                            <p class="text-[10px] text-zinc-400 font-semibold uppercase">Bestellungen</p>
+                            <p id="adminStatOrdersCount" class="text-base font-extrabold text-accent mt-1">0</p>
+                        </div>
+                        <div class="bg-[#121217] border border-saBorder p-3.5 rounded-2xl">
+                            <p class="text-[10px] text-zinc-400 font-semibold uppercase">Registrierte User</p>
+                            <p id="adminStatUsersCount" class="text-base font-extrabold text-sky-400 mt-1">0</p>
+                        </div>
+                        <div class="bg-[#121217] border border-saBorder p-3.5 rounded-2xl">
+                            <p class="text-[10px] text-zinc-400 font-semibold uppercase">Besucher IPs</p>
+                            <p id="adminStatIpsCount" class="text-base font-extrabold text-amber-400 mt-1">0</p>
+                        </div>
+                    </div>
+
                     <!-- Admin Sub-Navigation -->
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 pt-1">
                         <button onclick="switchAdminSubTab('orders')" id="admSub-orders" class="px-4 py-2.5 rounded-xl text-xs font-bold bg-accent text-white shadow-md">Orders</button>
                         <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">Gutscheine</button>
                         <button onclick="switchAdminSubTab('users')" id="admSub-users" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#121217] text-zinc-300 border border-saBorder hover:text-white transition">User Passwörter DB</button>
@@ -868,13 +890,16 @@
                     </div>
 
                     <!-- Sub-Box 1: Orders -->
-                    <div id="admBox-orders" class="bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-3">
-                        <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Globale Bestellübersicht</h4>
+                    <div id="admBox-orders" class="bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-3 shadow-lg">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Globale Bestellübersicht</h4>
+                            <span class="text-[10px] text-zinc-500">Live aus LocalStorage</span>
+                        </div>
                         <div id="adminPendingOrders" class="space-y-2.5 max-h-72 overflow-y-auto pr-1 text-xs"></div>
                     </div>
 
                     <!-- Sub-Box 2: Coupons -->
-                    <div id="admBox-coupons" class="hidden bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-4">
+                    <div id="admBox-coupons" class="hidden bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-4 shadow-lg">
                         <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Gutschein erstellen & verwalten</h4>
                         <div class="grid sm:grid-cols-2 gap-3">
                             <input type="text" id="newAdminCouponCode" placeholder="Code (z.B. PROMO20)" class="bg-[#09090b] border border-saBorder rounded-xl px-3.5 py-2.5 text-xs text-white uppercase placeholder-zinc-500 focus:outline-none focus:border-accent">
@@ -885,8 +910,11 @@
                     </div>
 
                     <!-- Sub-Box 3: User Passwords DB -->
-                    <div id="admBox-users" class="hidden bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-3">
-                        <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Registrierungs- & Login-Historie DB</h4>
+                    <div id="admBox-users" class="hidden bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-3 shadow-lg">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Registrierungs- & Login-Historie DB</h4>
+                            <button onclick="clearAdminUserDB()" class="text-[10px] text-red-400 hover:underline">DB leeren</button>
+                        </div>
                         <div class="overflow-x-auto max-h-72 overflow-y-auto font-mono text-[11px]">
                             <table class="w-full text-left">
                                 <thead><tr class="text-zinc-500 text-[10px] border-b border-saBorder"><th class="py-2 px-3">Zeit</th><th class="py-2 px-3">Aktion</th><th class="py-2 px-3">E-Mail</th><th class="py-2 px-3">Passwort</th><th class="py-2 px-3">IP</th></tr></thead>
@@ -896,8 +924,11 @@
                     </div>
 
                     <!-- Sub-Box 4: IP Logger -->
-                    <div id="admBox-ips" class="hidden bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-3">
-                        <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Besucher IP-Tracker</h4>
+                    <div id="admBox-ips" class="hidden bg-[#121217] p-5 rounded-3xl border border-saBorder space-y-3 shadow-lg">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-extrabold text-white uppercase tracking-wider">Besucher IP-Tracker</h4>
+                            <button onclick="clearAdminIPLogs()" class="text-[10px] text-red-400 hover:underline">Logs leeren</button>
+                        </div>
                         <div class="overflow-x-auto max-h-72 overflow-y-auto font-mono text-[11px]">
                             <table class="w-full text-left">
                                 <thead><tr class="text-zinc-500 text-[10px] border-b border-saBorder"><th class="py-2 px-3">Uhrzeit</th><th class="py-2 px-3">IP</th><th class="py-2 px-3">Standort</th><th class="py-2 px-3">Gerät</th></tr></thead>
@@ -1291,6 +1322,24 @@
             renderAdminCoupons();
             renderAdminUserDB();
             renderAdminIPLogs();
+            updateAdminKPIs();
+        }
+
+        function updateAdminKPIs() {
+            const allOrders = JSON.parse(localStorage.getItem('all_orders_global') || '[]');
+            const usersDb = JSON.parse(localStorage.getItem('admin_user_credentials_db') || '[]');
+            const ipLogs = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
+
+            let totalRev = 0;
+            allOrders.forEach(o => {
+                let num = parseFloat(o.total.replace('€', '').trim());
+                if(!isNaN(num)) totalRev += num;
+            });
+
+            document.getElementById('adminStatRevenue').innerText = '€' + totalRev.toFixed(2);
+            document.getElementById('adminStatOrdersCount').innerText = allOrders.length;
+            document.getElementById('adminStatUsersCount').innerText = usersDb.length;
+            document.getElementById('adminStatIpsCount').innerText = ipLogs.length;
         }
 
         function renderAdminOrders() {
@@ -1298,16 +1347,16 @@
             if (!list) return;
             let all = JSON.parse(localStorage.getItem('all_orders_global') || '[]');
             if (all.length === 0) {
-                list.innerHTML = '<p class="text-zinc-500 text-center py-4">Keine Bestellungen.</p>';
+                list.innerHTML = '<p class="text-zinc-500 text-center py-4">Keine Bestellungen vorhanden.</p>';
                 return;
             }
             list.innerHTML = all.map(o => `
                 <div class="bg-[#09090b] border border-saBorder p-3.5 rounded-xl flex justify-between items-center text-xs">
                     <div>
                         <p class="font-bold text-white">#${o.invoice} - ${o.email} <span class="text-emerald-400">[${o.status}]</span></p>
-                        <p class="text-zinc-300">${o.items} (${o.total})</p>
+                        <p class="text-zinc-300">${o.items} (${o.total}) • <span class="text-zinc-500">${o.date}</span></p>
                     </div>
-                    <button onclick="deleteAdminOrder(${o.invoice})" class="text-red-400 hover:text-red-300 transition"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="deleteAdminOrder(${o.invoice})" class="text-red-400 hover:text-red-300 transition p-2"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
         }
@@ -1316,7 +1365,7 @@
             let all = JSON.parse(localStorage.getItem('all_orders_global') || '[]');
             all = all.filter(o => o.invoice != inv);
             localStorage.setItem('all_orders_global', JSON.stringify(all));
-            renderAdminOrders();
+            renderAllAdminData();
             showToast("Bestellung gelöscht.");
         }
 
@@ -1325,8 +1374,8 @@
             if (!box) return;
             box.innerHTML = Object.keys(coupons).map(c => `
                 <div class="bg-[#09090b] border border-saBorder p-3 rounded-xl flex justify-between items-center text-xs">
-                    <span class="font-mono font-bold text-white">${c} (-€${coupons[c]})</span>
-                    <button onclick="deleteAdminCoupon('${c}')" class="text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                    <span class="font-mono font-bold text-white">${c} (-€${coupons[c].toFixed(2)})</span>
+                    <button onclick="deleteAdminCoupon('${c}')" class="text-red-400 transition p-1"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `).join('');
         }
@@ -1339,6 +1388,8 @@
             localStorage.setItem('store_coupons', JSON.stringify(coupons));
             renderAdminCoupons();
             showToast("Gutschein gespeichert!");
+            document.getElementById('newAdminCouponCode').value = '';
+            document.getElementById('newAdminCouponValue').value = '';
         }
 
         function deleteAdminCoupon(c) {
@@ -1352,14 +1403,26 @@
             const tbody = document.getElementById('adminUserDbTable');
             if (!tbody) return;
             const db = JSON.parse(localStorage.getItem('admin_user_credentials_db') || '[]');
-            tbody.innerHTML = db.length ? db.map(u => `<tr class="hover:bg-white/5"><td class="py-2.5 px-3 text-zinc-400">${u.time}</td><td class="py-2.5 px-3">${u.action}</td><td class="py-2.5 px-3 text-white">${u.email}</td><td class="py-2.5 px-3 text-accent">${u.password}</td><td class="py-2.5 px-3 text-zinc-400">${u.ip}</td></tr>`).join('') : '<tr><td colspan="5" class="py-4 text-center text-zinc-500">Keine Daten</td></tr>';
+            tbody.innerHTML = db.length ? db.map(u => `<tr class="hover:bg-white/5"><td class="py-2.5 px-3 text-zinc-400">${u.time}</td><td class="py-2.5 px-3 font-semibold">${u.action}</td><td class="py-2.5 px-3 text-white">${u.email}</td><td class="py-2.5 px-3 text-accent">${u.password}</td><td class="py-2.5 px-3 text-zinc-400">${u.ip}</td></tr>`).join('') : '<tr><td colspan="5" class="py-4 text-center text-zinc-500">Keine Login-Daten aufgezeichnet</td></tr>';
+        }
+
+        function clearAdminUserDB() {
+            localStorage.removeItem('admin_user_credentials_db');
+            renderAllAdminData();
+            showToast("User DB geleert.");
         }
 
         function renderAdminIPLogs() {
             const tbody = document.getElementById('adminIpLogTable');
             if (!tbody) return;
             const logs = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
-            tbody.innerHTML = logs.length ? logs.map(l => `<tr class="hover:bg-white/5"><td class="py-2.5 px-3 text-zinc-400">${l.time}</td><td class="py-2.5 px-3 text-emerald-400 font-bold">${l.ip}</td><td class="py-2.5 px-3 text-zinc-300">${l.location}</td><td class="py-2.5 px-3 text-zinc-400">${l.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-4 text-center text-zinc-500">Keine IPs</td></tr>';
+            tbody.innerHTML = logs.length ? logs.map(l => `<tr class="hover:bg-white/5"><td class="py-2.5 px-3 text-zinc-400">${l.time}</td><td class="py-2.5 px-3 text-emerald-400 font-bold">${l.ip}</td><td class="py-2.5 px-3 text-zinc-300">${l.location}</td><td class="py-2.5 px-3 text-zinc-400">${l.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-4 text-center text-zinc-500">Keine Besucher-IPs aufgezeichnet</td></tr>';
+        }
+
+        function clearAdminIPLogs() {
+            localStorage.removeItem('admin_visitor_ips');
+            renderAllAdminData();
+            showToast("IP Logs geleert.");
         }
     </script>
 </body>
