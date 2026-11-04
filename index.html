@@ -381,8 +381,8 @@
                         <button onclick="openProductDetail('basic')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
                             Details
                         </button>
-                        <button onclick="buyNowDirect('Basic PC-Tuning', 15.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-bolt"></i> Kaufen
+                        <button onclick="addToCartDirect('Basic PC-Tuning', 15.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
+                            <i class="fa-solid fa-cart-shopping"></i> Kaufen
                         </button>
                     </div>
                 </div>
@@ -429,8 +429,8 @@
                         <button onclick="openProductDetail('pro')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
                             Details
                         </button>
-                        <button onclick="buyNowDirect('Pro Tuning (0 Delay)', 35.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-bolt"></i> Kaufen
+                        <button onclick="addToCartDirect('Pro Tuning (0 Delay)', 35.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
+                            <i class="fa-solid fa-cart-shopping"></i> Kaufen
                         </button>
                     </div>
                 </div>
@@ -473,8 +473,8 @@
                         <button onclick="openProductDetail('web')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-semibold transition border border-saBorder">
                             Details
                         </button>
-                        <button onclick="buyNowDirect('Custom Website Build', 25.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
-                            <i class="fa-solid fa-bolt"></i> Kaufen
+                        <button onclick="addToCartDirect('Custom Website Build', 25.00)" class="w-full py-2.5 rounded-xl bg-accent hover:opacity-95 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-pink-500/20">
+                            <i class="fa-solid fa-cart-shopping"></i> Kaufen
                         </button>
                     </div>
                 </div>
@@ -566,7 +566,7 @@
                         <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
                     </summary>
                     <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Du kannst bequem per PayPal (Freunde & Familie), Crypto (Litecoin, Solana, Bitcoin, Ethereum) ohne zusätzliche Gebühren oder direkt über dein vorab aufgeladenes Account-Guthaben bezahlen.
+                        Du kannst bequem per PayPal, paysafecard, Kreditkarte (Visa, Mastercard, Apple Pay, Google Pay) oder direkt über dein vorab aufgeladenes Account-Guthaben bezahlen.
                     </p>
                 </details>
 
@@ -630,18 +630,23 @@
             <button onclick="closeProductDetail()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             
             <div class="flex items-center gap-4">
-                <div id="detailIconBox" class="w-14 h-14 rounded-2xl bg-white/5 border border-saBorder flex items-center justify-center text-2xl"></div>
+                <div id="detailIconBox" class="w-14 h-14 rounded-2xl bg-white/5 border border-saBorder flex items-center justify-center text-2xl text-accent">
+                    <i class="fa-solid fa-microchip"></i>
+                </div>
                 <div>
-                    <h2 id="detailTitle" class="text-lg font-bold text-white"></h2>
-                    <p id="detailPrice" class="text-base font-black text-accent mt-0.5"></p>
+                    <h2 id="detailTitle" class="text-lg font-bold text-white">Pro Tuning (0 Delay Setup)</h2>
+                    <p id="detailPrice" class="text-base font-black text-accent mt-0.5">€35.00 EUR</p>
                 </div>
             </div>
 
-            <p id="detailDesc" class="text-xs text-zinc-300 font-light leading-relaxed"></p>
+            <p id="detailDesc" class="text-xs text-zinc-300 font-light leading-relaxed">Ultra Low-Latency Setup, BIOS- & Registry-Edits, Interrupt Affinity (MSI Mode), BCDedit und maximale Reaktionszeit.</p>
 
             <div class="bg-[#09090b] p-4 rounded-2xl border border-saBorder space-y-2 text-xs">
                 <p class="font-bold text-white uppercase tracking-wider text-[10px]">Enthaltene Features:</p>
-                <div id="detailFeatures" class="space-y-1.5 text-zinc-300"></div>
+                <div id="detailFeatures" class="space-y-1.5 text-zinc-300">
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> Echtes 0-Input-Delay Setup</div>
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-check text-accent text-[11px]"></i> 1-zu-1 Discord Remote Support</div>
+                </div>
             </div>
 
             <div class="flex items-center justify-between pt-2">
@@ -650,57 +655,106 @@
                     <span id="detailQty" class="px-3 font-bold text-white text-xs">1</span>
                     <button onclick="adjustDetailQty(1)" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center"><i class="fa-solid fa-plus text-[10px]"></i></button>
                 </div>
-                <button id="detailAddToCartBtn" class="px-5 py-2.5 rounded-xl bg-accent text-white font-bold text-xs hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-pink-500/20">
+                <button onclick="addToCartFromModal()" class="px-5 py-2.5 rounded-xl bg-accent text-white font-bold text-xs hover:opacity-90 transition flex items-center gap-2 shadow-lg shadow-pink-500/20">
                     <i class="fa-solid fa-cart-shopping"></i> In den Warenkorb
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- 2. Warenkorb Modal -->
+    <!-- 2. WARENKORB MODAL (Exakt nach Screenshot-Design) -->
     <div id="cartModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4" onclick="handleModalBackdrop(event, 'cartModal')">
-        <div class="bg-[#121217] border border-saBorder rounded-3xl max-w-lg w-full p-6 sm:p-8 relative space-y-5 shadow-2xl">
+        <div class="bg-[#121217] border border-saBorder rounded-3xl max-w-lg w-full p-6 sm:p-8 relative space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            
+            <!-- Header -->
             <div class="flex justify-between items-center pb-3 border-b border-saBorder">
                 <div class="flex items-center gap-2.5">
-                    <i class="fa-solid fa-bag-shopping text-accent"></i>
-                    <h2 class="text-base font-extrabold text-white">Dein Warenkorb</h2>
+                    <i class="fa-solid fa-bag-shopping text-accent text-lg"></i>
+                    <h2 class="text-base font-extrabold text-white">Warenkorb</h2>
                 </div>
-                <button onclick="toggleCartModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+                <button onclick="toggleCartModal()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
-            <div id="cartItemsContainer" class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
-                <p class="text-xs text-zinc-500 text-center py-8">Dein Warenkorb ist leer.</p>
+            <!-- Items List -->
+            <div id="cartItemsContainer" class="space-y-3">
+                <!-- Wird per JS dynamisch gerendert -->
             </div>
 
-            <div class="bg-[#09090b] p-4 rounded-2xl border border-saBorder space-y-2 text-xs">
-                <div class="flex justify-between text-zinc-400">
-                    <span>Zwischensumme</span>
-                    <span id="cartSubtotalOnly" class="font-bold text-white">€0.00</span>
+            <!-- EXTRAS / OPTIONAL DAZUBUCHEN -->
+            <div class="space-y-2 pt-2 border-t border-saBorder/60">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="font-bold text-white uppercase tracking-wider text-[11px]">Extras</span>
+                    <span class="text-zinc-400 text-[10px]">Optional dazubuchen</span>
                 </div>
-                <div id="discountRow" class="flex justify-between text-emerald-400" style="display: none;">
-                    <span>Rabatt (<span id="discountName"></span>)</span>
-                    <span id="discountAmount">-€0.00</span>
-                </div>
-                <div class="flex justify-between items-center text-sm pt-2 border-t border-saBorder/60">
-                    <span class="text-white font-extrabold">Gesamtbetrag</span>
-                    <span id="cartTotalDisplay" class="text-accent font-black text-lg">€0.00</span>
+
+                <!-- Extra 1: Windows Custom Installation -->
+                <div class="bg-[#09090b] border border-saBorder rounded-2xl p-3.5 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent text-sm shrink-0">
+                            <i class="fa-solid fa-desktop"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-white text-xs">Windows Custom Installation</p>
+                            <p class="text-[10px] text-zinc-400 line-clamp-1">Kompletter Installationsprozess vorbereitet, live Betreuung.</p>
+                            <p class="text-xs font-bold text-white mt-1">20,00 €</p>
+                        </div>
+                    </div>
+                    <button onclick="addExtraToCart('Windows Custom Installation', 20.00)" class="px-3.5 py-2 rounded-xl bg-accent/10 hover:bg-accent hover:text-white text-accent border border-accent/30 text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus text-[10px]"></i> Hinzufügen
+                    </button>
                 </div>
             </div>
 
-            <div class="flex gap-2">
-                <input type="text" id="couponInput" placeholder="Gutscheincode (z.B. VAL3NTINO)" class="w-full bg-[#09090b] border border-saBorder rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-accent">
-                <button onclick="applyCoupon()" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition">Einlösen</button>
+            <!-- Gutschein / Rabattcode -->
+            <div class="flex gap-2 pt-2">
+                <div class="relative w-full">
+                    <i class="fa-solid fa-tag absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs"></i>
+                    <input type="text" id="couponInput" placeholder="Rabattcode" class="w-full bg-[#09090b] border border-saBorder rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white uppercase placeholder-zinc-500 focus:outline-none focus:border-accent">
+                </div>
+                <button onclick="applyCoupon()" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs transition whitespace-nowrap">Anwenden</button>
             </div>
             <div id="couponMsg" class="text-[11px]"></div>
 
-            <label class="flex items-center gap-2.5 text-xs text-zinc-400 cursor-pointer">
-                <input type="checkbox" id="agbCheck" onchange="toggleCheckoutBtn()" class="accent-accent w-4 h-4 rounded">
-                <span>Ich stimme den Bedingungen & der digitalen Bereitstellung zu.</span>
-            </label>
+            <!-- Zwischensumme -->
+            <div class="flex justify-between items-center text-xs text-zinc-300 pt-2 border-t border-saBorder/60 font-semibold">
+                <span>Zwischensumme</span>
+                <span id="cartSubtotalOnly" class="text-white text-base font-black">€0.00</span>
+            </div>
+            <div id="discountRow" class="flex justify-between text-emerald-400 text-xs" style="display: none;">
+                <span>Rabatt (<span id="discountName"></span>)</span>
+                <span id="discountAmount">-€0.00</span>
+            </div>
 
-            <button onclick="proceedToCheckout()" id="checkoutBtn" disabled class="w-full py-3.5 bg-accent text-white font-extrabold rounded-xl text-xs opacity-50 cursor-not-allowed transition shadow-lg shadow-pink-500/20">
-                Zur Kasse gehen →
-            </button>
+            <!-- SICHER BEZAHLEN MIT BADGES -->
+            <div class="space-y-2 pt-2 text-center border-t border-saBorder/60">
+                <p class="text-[11px] font-semibold text-zinc-400">Sicher bezahlen mit</p>
+                <div class="flex flex-wrap items-center justify-center gap-1.5 text-2xl">
+                    <span class="px-2 py-1 bg-blue-600 text-white rounded text-[10px] font-black italic">VISA</span>
+                    <span class="px-2 py-1 bg-zinc-900 border border-zinc-700 text-white rounded text-[10px] font-bold">MC</span>
+                    <span class="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold">Maestro</span>
+                    <span class="px-2 py-1 bg-blue-800 text-white rounded text-[10px] font-bold">AMEX</span>
+                    <span class="px-2 py-1 bg-sky-500 text-white rounded text-[10px] font-bold">PayPal</span>
+                    <span class="px-2 py-1 bg-pink-600 text-white rounded text-[10px] font-bold">Klarna</span>
+                    <span class="px-2 py-1 bg-white text-black rounded text-[10px] font-black">Pay</span>
+                    <span class="px-2 py-1 bg-zinc-800 text-white rounded text-[10px] font-bold">GPay</span>
+                </div>
+            </div>
+
+            <!-- CHECKOUT BUTTONS -->
+            <div class="space-y-3 pt-2">
+                <button onclick="proceedToCheckout()" class="w-full py-3.5 bg-gradient-to-r from-pink-600 to-accent text-white font-extrabold rounded-2xl text-xs hover:opacity-95 transition shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2">
+                    Zum Checkout
+                </button>
+                <p class="text-[10px] text-zinc-400 text-center">Unter 18? Bitte kauf nur mit dem Einverständnis deiner Eltern.</p>
+
+                <!-- paysafecard Button -->
+                <button onclick="payWithPaysafecard()" class="w-full py-3 bg-[#18181b] hover:bg-saHover border border-saBorder text-white font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-ticket text-amber-400"></i> Mit paysafecard bezahlen
+                </button>
+                <p class="text-[9px] text-zinc-500 text-center leading-tight">
+                    Bis 50 € pro Bestellung, nur ab 18 Jahren, nicht für die Monatslizenz. Rabattcodes gelten nur beim normalen Checkout.
+                </p>
+            </div>
         </div>
     </div>
 
@@ -756,7 +810,7 @@
         </div>
     </div>
 
-    <!-- 4. Dashboard & Vollwertiges Admin Panel Modal -->
+    <!-- 4. DASHBOARD & VOLLWERTIGES ADMIN PANEL MODAL (Clean Design) -->
     <div id="dashboardModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-2 sm:p-6" onclick="handleModalBackdrop(event, 'dashboardModal')">
         <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-6xl w-full grid md:grid-cols-[240px_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             
@@ -772,15 +826,15 @@
                     </div>
 
                     <div class="space-y-1.5 text-xs font-semibold">
-                        <button onclick="switchTab('orders')" id="tabBtnOrders" class="w-full text-left px-3 py-2.5 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-2.5">
+                        <button onclick="switchTab('orders')" id="tabBtnOrders" class="w-full text-left px-3.5 py-3 rounded-xl bg-accent/20 text-accent font-bold flex items-center gap-3 transition">
                             <i class="fa-solid fa-box text-sm"></i> Bestellungen
                         </button>
-                        <button onclick="switchTab('balance')" id="tabBtnBalance" class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition">
-                            <span class="flex items-center gap-2.5"><i class="fa-solid fa-wallet text-sm"></i> Guthaben</span>
+                        <button onclick="switchTab('balance')" id="tabBtnBalance" class="w-full text-left px-3.5 py-3 rounded-xl hover:bg-white/5 text-zinc-400 hover:text-white flex items-center justify-between transition">
+                            <span class="flex items-center gap-3"><i class="fa-solid fa-wallet text-sm"></i> Guthaben</span>
                             <span id="sidebarBalance" class="text-accent font-bold">€0.00</span>
                         </button>
                         <!-- Admin Button -->
-                        <button onclick="switchTab('admin')" id="tabBtnAdmin" class="hidden w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/5 text-amber-400 font-bold flex items-center gap-2.5 transition border border-amber-500/30">
+                        <button onclick="switchTab('admin')" id="tabBtnAdmin" class="hidden w-full text-left px-3.5 py-3 rounded-xl hover:bg-white/5 text-amber-400 font-bold flex items-center gap-3 transition border border-amber-500/30">
                             <i class="fa-solid fa-shield-halved text-sm"></i> Admin Panel
                         </button>
                     </div>
@@ -925,7 +979,6 @@
         let appliedCouponCode = "";
         window.currentVisitorIP = "Wird geladen...";
 
-        // Initial Cart UI Render on page load
         renderCartUI();
 
         async function trackVisitorIP() {
@@ -960,7 +1013,6 @@
             setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
         }
 
-        // Backdrop click to close modal
         function handleModalBackdrop(event, modalId) {
             if (event.target.id === modalId) {
                 document.getElementById(modalId).classList.remove('active');
@@ -979,7 +1031,6 @@
             });
         }
 
-        // Live Search Filter
         function filterProducts() {
             const query = document.getElementById('storeSearchInput').value.toLowerCase().trim();
             let count = 0;
@@ -1011,14 +1062,6 @@
             document.getElementById('productCountLabel').innerText = count + " Produkte";
         }
 
-        // Sofortkauf per "Kaufen" Button
-        function buyNowDirect(name, price) {
-            cart = [{ name, price, qty: 1 }];
-            localStorage.setItem('store_cart_items', JSON.stringify(cart));
-            renderCartUI();
-            proceedToCheckout();
-        }
-
         function addToCartDirect(name, price) {
             const found = cart.find(i => i.name === name);
             if (found) found.qty++;
@@ -1026,6 +1069,25 @@
             localStorage.setItem('store_cart_items', JSON.stringify(cart));
             renderCartUI();
             showToast(`${name} zum Warenkorb hinzugefügt!`);
+            toggleCartModal();
+        }
+
+        function addExtraToCart(name, price) {
+            const found = cart.find(i => i.name === name);
+            if (found) found.qty++;
+            else cart.push({ name, price, qty: 1 });
+            localStorage.setItem('store_cart_items', JSON.stringify(cart));
+            renderCartUI();
+            showToast(`Extra "${name}" hinzugefügt!`);
+        }
+
+        function updateCartQty(idx, change) {
+            cart[idx].qty += change;
+            if (cart[idx].qty <= 0) {
+                cart.splice(idx, 1);
+            }
+            localStorage.setItem('store_cart_items', JSON.stringify(cart));
+            renderCartUI();
         }
 
         function removeFromCart(idx) { 
@@ -1045,10 +1107,10 @@
             let totalCount = 0, subtotal = 0;
 
             if (cart.length === 0) {
-                container.innerHTML = '<p class="text-xs text-zinc-500 text-center py-8">Dein Warenkorb ist leer.</p>';
+                container.innerHTML = '<p class="text-xs text-zinc-500 text-center py-6">Dein Warenkorb ist leer.</p>';
                 subtotalOnly.innerText = '€0.00';
-                totalDisplay.innerText = '€0.00';
-                discountRow.style.display = 'none';
+                if(totalDisplay) totalDisplay.innerText = '€0.00';
+                if(discountRow) discountRow.style.display = 'none';
             } else {
                 container.innerHTML = '';
                 cart.forEach((item, idx) => {
@@ -1056,20 +1118,30 @@
                     let itemTotal = item.price * item.qty;
                     subtotal += itemTotal;
                     container.innerHTML += `
-                        <div class="bg-[#09090b] p-3 rounded-xl border border-saBorder flex justify-between items-center text-xs">
-                            <div>
-                                <p class="font-bold text-white">${item.name}</p>
-                                <p class="text-zinc-500 text-[10px]">Menge: ${item.qty} × €${item.price.toFixed(2)}</p>
-                            </div>
+                        <div class="bg-[#09090b] p-3.5 rounded-2xl border border-saBorder flex items-center justify-between gap-3 text-xs">
                             <div class="flex items-center gap-3">
-                                <span class="font-bold text-accent">€${itemTotal.toFixed(2)}</span>
-                                <button onclick="removeFromCart(${idx})" class="text-zinc-500 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button>
+                                <div class="w-10 h-10 rounded-xl bg-accent/20 text-accent border border-accent/30 flex items-center justify-center font-black text-sm shrink-0">
+                                    V
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white">${item.name}</p>
+                                    <p class="text-zinc-400 text-[10px]">Digital Delivery</p>
+                                    <div class="flex items-center gap-2 mt-1.5 bg-[#121217] border border-saBorder rounded-lg px-2 py-0.5 w-max">
+                                        <button onclick="updateCartQty(${idx}, -1)" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-minus text-[9px]"></i></button>
+                                        <span class="font-bold text-white px-1">${item.qty}</span>
+                                        <button onclick="updateCartQty(${idx}, 1)" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-plus text-[9px]"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <span class="font-black text-white text-sm">€${itemTotal.toFixed(2)}</span>
+                                <button onclick="removeFromCart(${idx})" class="text-zinc-500 hover:text-red-400 transition"><i class="fa-solid fa-trash text-xs"></i></button>
                             </div>
                         </div>`;
                 });
                 subtotalOnly.innerText = '€' + subtotal.toFixed(2);
                 let finalTotal = Math.max(0, subtotal - appliedDiscount);
-                totalDisplay.innerText = '€' + finalTotal.toFixed(2);
+                if(totalDisplay) totalDisplay.innerText = '€' + finalTotal.toFixed(2);
             }
             badge.innerText = totalCount;
         }
@@ -1096,6 +1168,7 @@
         }
 
         function proceedToCheckout() {
+            if(cart.length === 0) return showToast("Dein Warenkorb ist leer!");
             if (document.getElementById('cartModal').classList.contains('active')) toggleCartModal();
             const list = document.getElementById('checkoutItemsList');
             let subtotal = 0;
@@ -1108,6 +1181,18 @@
             document.getElementById('checkoutSubtotal').innerText = '€' + subtotal.toFixed(2);
             document.getElementById('checkoutTotalFinal').innerText = '€' + finalTotal.toFixed(2);
             togglePaymentModal();
+        }
+
+        function payWithPaysafecard() {
+            if(cart.length === 0) return showToast("Dein Warenkorb ist leer!");
+            showToast("paysafecard Zahlungsfenster wird geöffnet...");
+            setTimeout(() => {
+                const email = document.getElementById('checkoutEmail').value.trim() || 'kunde@val3ntino.de';
+                recordOrder(email, 'paysafecard', 'PSC-Voucher-Code', 'Completed');
+                toggleCartModal();
+                showToast("Zahlung per paysafecard erfolgreich verifiziert!");
+                toggleDashboardModal();
+            }, 1500);
         }
 
         // PAYPAL SDK AUTOMATISCHE ZAHLUNG
@@ -1168,6 +1253,18 @@
             renderAllAdminData();
         }
         function toggleImpressum() { document.getElementById('impressumModal').classList.toggle('active'); }
+        function closeProductDetail() { document.getElementById('productDetailModal').classList.remove('active'); }
+        function openProductDetail(type) { document.getElementById('productDetailModal').classList.add('active'); }
+
+        let detailQtyVal = 1;
+        function adjustDetailQty(val) {
+            detailQtyVal = Math.max(1, detailQtyVal + val);
+            document.getElementById('detailQty').innerText = detailQtyVal;
+        }
+        function addToCartFromModal() {
+            addToCartDirect('Pro Tuning (0 Delay Setup)', 35.00);
+            closeProductDetail();
+        }
 
         function switchTab(t) {
             document.getElementById('tabContentOrders').classList.toggle('hidden', t !== 'orders');
@@ -1307,11 +1404,6 @@
             if (!tbody) return;
             const logs = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
             tbody.innerHTML = logs.length ? logs.map(l => `<tr><td class="py-2.5 px-3 text-zinc-400">${l.time}</td><td class="py-2.5 px-3 text-emerald-400 font-bold">${l.ip}</td><td class="py-2.5 px-3 text-zinc-300">${l.location}</td><td class="py-2.5 px-3 text-zinc-400">${l.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-4 text-center text-zinc-500">Keine IPs</td></tr>';
-        }
-
-        // Dummy stub for details modal open if needed
-        function openProductDetail(type) {
-            showToast("Details werden geladen...");
         }
     </script>
 </body>
