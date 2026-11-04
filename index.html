@@ -235,7 +235,7 @@
                 </div>
             </div>
 
-            <!-- Actions (Currency, Language, Discord, Auth, Cart) -->
+            <!-- Actions (Währung, Sprache, Discord, Auth, Cart) -->
             <div class="flex items-center gap-2.5">
                 <select id="currencySelect" onchange="changeCurrency(this.value)" class="bg-[#121217] border border-saBorder text-zinc-300 text-xs rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-accent font-semibold cursor-pointer">
                     <option value="EUR">EUR (€)</option>
@@ -581,7 +581,7 @@
                         <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
                     </summary>
                     <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Du kannst sicher per Mastercard, Visa, Maestro, AMEX, PayPal, Klarna oder Bank Transfer bezahlen.
+                        Du kannst sicher per Mastercard, Maestro, Visa, AMEX, PayPal, Klarna oder Bank Transfer bezahlen.
                     </p>
                 </details>
             </div>
@@ -635,7 +635,7 @@
         </div>
     </div>
 
-    <!-- 2. WARENKORB SLIDE-OVER DRAWER -->
+    <!-- 2. WARENKORB SLIDE-OVER DRAWER (Mit originalen Logos nach deinen Bildern[cite: 5]) -->
     <div id="cartOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden transition-opacity" onclick="toggleCartModal()"></div>
     <div id="cartDrawer" class="fixed top-0 right-0 bottom-0 w-full sm:max-w-md bg-[#121217] border-l border-saBorder z-50 flex flex-col justify-between p-6 sm:p-8 shadow-2xl overflow-y-auto">
         
@@ -666,16 +666,17 @@
         </div>
 
         <div class="space-y-4 pt-6 border-t border-saBorder mt-4">
+            <!-- EXAKTE ZAHLUNGSARTEN-BILDER AUS DEINEM SCREENSHOT[cite: 5] -->
             <div class="space-y-2 text-center">
                 <p class="text-[11px] font-semibold text-zinc-400">Sicher bezahlen mit</p>
-                <div class="flex flex-wrap items-center justify-center gap-1.5">
-                    <span class="px-2.5 py-1 bg-zinc-900 border border-zinc-700 text-white rounded font-bold text-[9px]">Mastercard</span>
-                    <span class="px-2.5 py-1 bg-white text-blue-700 rounded font-bold text-[9px] border">Maestro</span>
-                    <span class="px-2.5 py-1 bg-blue-700 text-white rounded font-black text-[9px] italic">VISA</span>
-                    <span class="px-2.5 py-1 bg-blue-600 text-white rounded font-bold text-[9px]">AMEX</span>
-                    <span class="px-2.5 py-1 bg-white text-blue-600 rounded font-bold text-[9px] border">PayPal</span>
-                    <span class="px-2.5 py-1 bg-pink-300 text-black rounded font-bold text-[9px]">Klarna</span>
-                    <span class="px-2.5 py-1 bg-zinc-800 text-white rounded font-bold text-[9px] border">Bank Transfer</span>
+                <div class="flex flex-wrap items-center justify-center gap-2 bg-[#09090b] p-3 rounded-2xl border border-saBorder">
+                    <img src="https://images.credibro.com/payment-methods/mastercard.svg" alt="Mastercard" class="h-5">
+                    <img src="https://images.credibro.com/payment-methods/maestro.svg" alt="Maestro" class="h-5">
+                    <img src="https://images.credibro.com/payment-methods/visa.svg" alt="Visa" class="h-5">
+                    <img src="https://images.credibro.com/payment-methods/amex.svg" alt="AMEX" class="h-5">
+                    <img src="https://images.credibro.com/payment-methods/paypal.svg" alt="PayPal" class="h-5">
+                    <img src="https://images.credibro.com/payment-methods/klarna.svg" alt="Klarna" class="h-5">
+                    <img src="https://images.credibro.com/payment-methods/bank-transfer.svg" alt="Bank Transfer" class="h-5">
                 </div>
             </div>
 
