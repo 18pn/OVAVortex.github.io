@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Offizielles PayPal JS SDK -->
     <script src="https://www.paypal.com/sdk/js?client-id=test&buyer-country=DE&currency=EUR&components=buttons&enable-funding=venmo,paylater,card"></script>
-    <!-- Firebase SDKs & Auth Core (Korrigierte Imports) -->
+    <!-- Firebase SDKs & Auth Core -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
@@ -544,7 +544,7 @@
                         <span class="text-[10px] text-zinc-500">Vor 2 Wochen</span>
                     </div>
                     <p class="text-xs text-zinc-300 font-light leading-relaxed">
-                        "Per PayPal-Karte problemlos gezahlt, sofort alle Daten und Anweisungen erhalten. Sehr seriös und unkompliziert."
+                        "Per Karte problemlos gezahlt, sofort alle Daten und Anweisungen erhalten. Sehr seriös und unkompliziert."
                     </p>
                     <div class="text-[11px] font-bold text-white flex items-center gap-2 pt-1 border-t border-saBorder/40">
                         <span class="w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px]">M</span>
@@ -574,7 +574,7 @@
                         <i class="fa-solid fa-chevron-down text-xs text-zinc-400 group-open:rotate-180 transition"></i>
                     </summary>
                     <p class="text-xs text-zinc-400 mt-3 font-light leading-relaxed">
-                        Du kannst sicher per PayPal, Kreditkarte, Debitkarte oder SEPA bezahlen.
+                        Du kannst sicher per Mastercard, Visa, Maestro, AMEX, PayPal, Klarna, Apple Pay, Google Pay, Shop Pay oder paysafecard bezahlen.
                     </p>
                 </details>
 
@@ -670,7 +670,7 @@
         </div>
     </div>
 
-    <!-- 2. WARENKORB SLIDE-OVER DRAWER (Mit exakter Bezahl-Leiste nach Wunsch) -->
+    <!-- 2. WARENKORB SLIDE-OVER DRAWER (Mit originalen Logos nach Wunsch) -->
     <div id="cartOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden transition-opacity" onclick="toggleCartModal()"></div>
     <div id="cartDrawer" class="fixed top-0 right-0 bottom-0 w-full sm:max-w-md bg-[#121217] border-l border-saBorder z-50 flex flex-col justify-between p-6 sm:p-8 shadow-2xl overflow-y-auto">
         
@@ -732,7 +732,7 @@
         </div>
 
         <div class="space-y-4 pt-6 border-t border-saBorder mt-4">
-            <!-- EXAKTE BEZAHL-BADGES MIT BILDERN NACH WUNSCH (Visa, Mastercard, Maestro, AMEX, PayPal, Klarna, Apple Pay, Google Pay, Shop, Paysafecard) -->
+            <!-- Zahlungsarten exakt nach Wunsch mit Bildern/Logos aus dem Screenshot[cite: 4] -->
             <div class="space-y-2 text-center">
                 <p class="text-[11px] font-semibold text-zinc-400">Sicher bezahlen mit</p>
                 <div class="flex flex-wrap items-center justify-center gap-1.5">
@@ -747,6 +747,9 @@
                     <span class="px-2.5 py-1 bg-violet-600 text-white rounded font-bold text-[9px]">shop</span>
                     <span class="px-2.5 py-1 bg-white text-black rounded font-bold text-[9px] border">paysafecard</span>
                 </div>
+                <p class="text-[9px] text-zinc-500 mt-1 leading-tight">
+                    paysafecard geht bis 50 € pro Bestellung. Nur ab 18 Jahren. Die Monatslizenz kannst du nicht mit paysafecard bezahlen.[cite: 4]
+                </p>
             </div>
 
             <button onclick="proceedToCheckout()" class="w-full py-4 bg-gradient-to-r from-pink-600 to-accent text-white font-extrabold rounded-2xl text-xs hover:opacity-95 transition shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2">
