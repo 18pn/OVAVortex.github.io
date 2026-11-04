@@ -261,7 +261,7 @@
     <div class="md:hidden px-4 pt-3 pb-1 max-w-7xl mx-auto">
         <div class="relative w-full">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
-            <input type="text" oninput="applySearch(this.value.toLowerCase())" placeholder="Produkte suchen..." class="w-full bg-[#121217] border border-saBorder rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent">
+            <input type="text" id="mobileSearchInput" oninput="filterProductsMobile(this.value.toLowerCase())" placeholder="Produkte suchen..." class="w-full bg-[#121217] border border-saBorder rounded-xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-accent">
         </div>
     </div>
 
@@ -345,7 +345,7 @@
         <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             
             <!-- Produkt 1: Basic PC-Tuning -->
-            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning">
+            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning" data-desc="Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung und Basis-Timer-Optimierung.">
                 <div>
                     <div class="relative h-44 bg-gradient-to-br from-blue-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
                         <div class="flex justify-between items-center">
@@ -389,7 +389,7 @@
             </div>
 
             <!-- Produkt 2: Pro Tuning 0 Delay (Bestseller) -->
-            <div class="product-item group bg-[#121217] border-2 border-accent/50 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between relative shadow-xl shadow-pink-500/5" data-category="tuning" data-price="35.00" data-name="Pro Tuning (0 Delay)">
+            <div class="product-item group bg-[#121217] border-2 border-accent/50 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between relative shadow-xl shadow-pink-500/5" data-category="tuning" data-price="35.00" data-name="Pro Tuning (0 Delay)" data-desc="Ultra Low-Latency Setup, BIOS- & Registry-Edits, Interrupt Affinity (MSI Mode), BCDedit und maximale Reaktionszeit.">
                 <div class="absolute top-3 right-3 z-10">
                     <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-accent text-white shadow-md">
                         ★ POPULAR
@@ -437,7 +437,7 @@
             </div>
 
             <!-- Produkt 3: Website Build -->
-            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="web" data-price="25.00" data-name="Custom Website Build">
+            <div class="product-item group bg-[#121217] border border-saBorder hover:border-saBorder/80 rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between" data-category="web" data-price="25.00" data-name="Custom Website Build" data-desc="Moderne Single-Page Website oder Portfolio im Storefront-Stil. Mobil optimiert, sauberes Dark-UI, Discord-Anbindung.">
                 <div>
                     <div class="relative h-44 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-[#121217] p-4 flex flex-col justify-between border-b border-saBorder">
                         <div class="flex justify-between items-center">
@@ -625,7 +625,7 @@
     <!-- ==================== MODALS ==================== -->
 
     <!-- 1. Quick View Modal -->
-    <div id="productDetailModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4">
+    <div id="productDetailModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4" onclick="handleModalBackdrop(event, 'productDetailModal')">
         <div class="bg-[#121217] border border-saBorder rounded-3xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl space-y-6">
             <button onclick="closeProductDetail()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             
@@ -658,7 +658,7 @@
     </div>
 
     <!-- 2. Warenkorb Modal -->
-    <div id="cartModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4">
+    <div id="cartModal" class="modal fixed inset-0 bg-black/80 backdrop-blur-md z-50 items-center justify-center p-4" onclick="handleModalBackdrop(event, 'cartModal')">
         <div class="bg-[#121217] border border-saBorder rounded-3xl max-w-lg w-full p-6 sm:p-8 relative space-y-5 shadow-2xl">
             <div class="flex justify-between items-center pb-3 border-b border-saBorder">
                 <div class="flex items-center gap-2.5">
@@ -705,7 +705,7 @@
     </div>
 
     <!-- 3. Checkout Modal mit PayPal SDK -->
-    <div id="paymentModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-3 sm:p-6">
+    <div id="paymentModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-3 sm:p-6" onclick="handleModalBackdrop(event, 'paymentModal')">
         <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-4xl w-full grid md:grid-cols-[1.2fr_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             
             <div class="p-6 sm:p-8 space-y-6">
@@ -757,7 +757,7 @@
     </div>
 
     <!-- 4. Dashboard & Vollwertiges Admin Panel Modal -->
-    <div id="dashboardModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-2 sm:p-6">
+    <div id="dashboardModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-2 sm:p-6" onclick="handleModalBackdrop(event, 'dashboardModal')">
         <div class="bg-[#09090b] border border-saBorder rounded-3xl max-w-6xl w-full grid md:grid-cols-[240px_1fr] shadow-2xl overflow-hidden max-h-[92vh] overflow-y-auto">
             
             <!-- Sidebar -->
@@ -779,7 +779,7 @@
                             <span class="flex items-center gap-2.5"><i class="fa-solid fa-wallet text-sm"></i> Guthaben</span>
                             <span id="sidebarBalance" class="text-accent font-bold">€0.00</span>
                         </button>
-                        <!-- Admin Button (sichtbar für l@valentinolopez.de) -->
+                        <!-- Admin Button -->
                         <button onclick="switchTab('admin')" id="tabBtnAdmin" class="hidden w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/5 text-amber-400 font-bold flex items-center gap-2.5 transition border border-amber-500/30">
                             <i class="fa-solid fa-shield-halved text-sm"></i> Admin Panel
                         </button>
@@ -886,7 +886,7 @@
     </div>
 
     <!-- Auth Modal -->
-    <div id="authModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-4">
+    <div id="authModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-4" onclick="handleModalBackdrop(event, 'authModal')">
         <div class="bg-[#121217] border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-4 shadow-2xl">
             <button onclick="toggleAuthModal()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             <div class="text-center">
@@ -906,7 +906,7 @@
     </div>
 
     <!-- Impressum Modal -->
-    <div id="impressumModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-4">
+    <div id="impressumModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-50 items-center justify-center p-4" onclick="handleModalBackdrop(event, 'impressumModal')">
         <div class="bg-[#121217] border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-4 shadow-2xl">
             <button onclick="toggleImpressum()" class="absolute top-6 right-6 text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             <h2 class="text-lg font-bold text-white">Impressum</h2>
@@ -919,11 +919,14 @@
 
     <!-- ==================== SCRIPT ENGINE ==================== -->
     <script>
-        let cart = [];
+        let cart = JSON.parse(localStorage.getItem('store_cart_items') || '[]');
         let coupons = JSON.parse(localStorage.getItem('store_coupons') || '{"VAL3NTINO": 5.00, "PRO10": 10.00}');
         let appliedDiscount = 0;
         let appliedCouponCode = "";
         window.currentVisitorIP = "Wird geladen...";
+
+        // Initial Cart UI Render on page load
+        renderCartUI();
 
         async function trackVisitorIP() {
             try {
@@ -957,15 +960,62 @@
             setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
         }
 
+        // Backdrop click to close modal
+        function handleModalBackdrop(event, modalId) {
+            if (event.target.id === modalId) {
+                document.getElementById(modalId).classList.remove('active');
+            }
+        }
+
         function setCategory(cat) {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.className = "category-btn px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-saCard transition whitespace-nowrap";
+            });
+            const activeBtn = document.getElementById('cat-' + cat);
+            if(activeBtn) activeBtn.className = "category-btn px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap bg-white text-black";
+
             document.querySelectorAll('.product-item').forEach(item => {
                 item.style.display = (cat === 'all' || item.dataset.category === cat) ? 'flex' : 'none';
             });
         }
 
+        // Live Search Filter
+        function filterProducts() {
+            const query = document.getElementById('storeSearchInput').value.toLowerCase().trim();
+            let count = 0;
+            document.querySelectorAll('.product-item').forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                const desc = item.dataset.desc.toLowerCase();
+                if (name.includes(query) || desc.includes(query)) {
+                    item.style.display = 'flex';
+                    count++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            document.getElementById('productCountLabel').innerText = count + " Produkte";
+        }
+
+        function filterProductsMobile(query) {
+            let count = 0;
+            document.querySelectorAll('.product-item').forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                const desc = item.dataset.desc.toLowerCase();
+                if (name.includes(query) || desc.includes(query)) {
+                    item.style.display = 'flex';
+                    count++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            document.getElementById('productCountLabel').innerText = count + " Produkte";
+        }
+
         // Sofortkauf per "Kaufen" Button
         function buyNowDirect(name, price) {
             cart = [{ name, price, qty: 1 }];
+            localStorage.setItem('store_cart_items', JSON.stringify(cart));
+            renderCartUI();
             proceedToCheckout();
         }
 
@@ -973,13 +1023,19 @@
             const found = cart.find(i => i.name === name);
             if (found) found.qty++;
             else cart.push({ name, price, qty: 1 });
+            localStorage.setItem('store_cart_items', JSON.stringify(cart));
             renderCartUI();
             showToast(`${name} zum Warenkorb hinzugefügt!`);
         }
 
-        function removeFromCart(idx) { cart.splice(idx, 1); renderCartUI(); }
+        function removeFromCart(idx) { 
+            cart.splice(idx, 1); 
+            localStorage.setItem('store_cart_items', JSON.stringify(cart));
+            renderCartUI(); 
+        }
 
         function renderCartUI() {
+            localStorage.setItem('store_cart_items', JSON.stringify(cart));
             const container = document.getElementById('cartItemsContainer');
             const badge = document.getElementById('cartCountBadge');
             const subtotalOnly = document.getElementById('cartSubtotalOnly');
@@ -1048,7 +1104,7 @@
                 return `<div class="flex justify-between items-center py-1"><span>${i.qty}× ${i.name}</span><span class="font-bold text-white">€${(i.price*i.qty).toFixed(2)}</span></div>`;
             }).join('');
 
-            const finalTotal = Math.max(0, subtotal - appliedDiscount);
+            let finalTotal = Math.max(0, subtotal - appliedDiscount);
             document.getElementById('checkoutSubtotal').innerText = '€' + subtotal.toFixed(2);
             document.getElementById('checkoutTotalFinal').innerText = '€' + finalTotal.toFixed(2);
             togglePaymentModal();
@@ -1097,6 +1153,7 @@
             localStorage.setItem('all_orders_global', JSON.stringify(all));
 
             cart = [];
+            localStorage.removeItem('store_cart_items');
             appliedDiscount = 0;
             renderCartUI();
             loadDashboardStats(email);
@@ -1250,6 +1307,11 @@
             if (!tbody) return;
             const logs = JSON.parse(localStorage.getItem('admin_visitor_ips') || '[]');
             tbody.innerHTML = logs.length ? logs.map(l => `<tr><td class="py-2.5 px-3 text-zinc-400">${l.time}</td><td class="py-2.5 px-3 text-emerald-400 font-bold">${l.ip}</td><td class="py-2.5 px-3 text-zinc-300">${l.location}</td><td class="py-2.5 px-3 text-zinc-400">${l.device}</td></tr>`).join('') : '<tr><td colspan="4" class="py-4 text-center text-zinc-500">Keine IPs</td></tr>';
+        }
+
+        // Dummy stub for details modal open if needed
+        function openProductDetail(type) {
+            showToast("Details werden geladen...");
         }
     </script>
 </body>
