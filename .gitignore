@@ -1,0 +1,22 @@
+# Abhängigkeiten und Build-Ausgaben
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.wrangler/
+**/.wrangler/
+
+# Geheimnisse – niemals committen
+admin-scripts/service-account.json
+worker/admin-scripts/service-account.json
+**/service-account*.json
+*.key.json
+.dev.vars
+**/.dev.vars
+.env
+**/.env
+.env.*
+**/.env.*
+!.env.example
+!**/.env.example
+!**/.dev.vars.example
