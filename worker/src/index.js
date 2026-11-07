@@ -10,7 +10,7 @@ import * as sol from './solana.js';
 import { paypalCreateOrder, paypalCaptureAndVerify } from './paypal.js';
 import { buildDelivery } from './delivery.js';
 import { randomBase32, verifyTotp } from './totp.js';
-import { GUIDES, PLACEHOLDER_PNG, readAsset } from './guides.js';
+import { GUIDES, PLACEHOLDER_PNG, coverKey, pdfKey, pdfFilename, readAsset, readAssetMeta } from './guides.js';
 
 const CRYPTO_EXPIRY_MS = 30 * 60 * 1000;
 const MIN_PAYMENT_CENTS = 50;
@@ -23,7 +23,7 @@ function sanitizeCms(data) {
   if (!data || typeof data !== 'object') return clean;
   for (const [k, v] of Object.entries(data)) {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,32}$/.test(k)) continue;
-    if (typeof v === 'string') clean[k] = v.slice(0, /legal|impressum|privacy|terms/i.test(k) ? 8000 : 2000);
+    if (typeof v === 'string') clean[k] = v.slice(0, /legal|impressum|privacy|terms|widerruf/i.test(k) ? 8000 : 2000);
     else if (typeof v === 'boolean') clean[k] = v;
     else if (typeof v === 'number' && Number.isFinite(v)) clean[k] = v;
     else if (Array.isArray(v)) clean[k] = v.filter(x => typeof x === 'string').slice(0, 8).map(s => s.slice(0, 400));
@@ -51,7 +51,13 @@ async function liveProducts(env) {
       const price = Math.round(Number(d.data && d.data.priceCents));
       if (!d.id || !Number.isFinite(price) || price < 1) continue;
       if (d.data.active === false) { delete map[d.id]; continue; }
-      map[d.id] = { id: d.id, name: String(d.data.name || (map[d.id] && map[d.id].name) || d.id).slice(0, 80), priceCents: price, crypto: d.data.crypto !== false };
+      map[d.id] = {
+        id: d.id,
+        name: String(d.data.name || (map[d.id] && map[d.id].name) || d.id).slice(0, 120),
+        priceCents: price,
+        crypto: true,
+        deliveryType: d.data.deliveryType || (GUIDES[d.id] ? 'pdf' : ''),
+      };
     }
   } catch { /* Fallback: fest eingebaute Produkte */ }
   return map;
@@ -71,11 +77,13 @@ async function bundleDiscount(env, lines) {
 }
 
 async function assertGuidesReady(env, lines) {
+  const products = await liveProducts(env);
   for (const line of lines || []) {
-    const spec = GUIDES[line.productId];
-    if (!spec) continue;
-    const bytes = await readAsset(env, spec.pdf);
-    if (!bytes) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im Speicher. Bitte upload-assets.js ausführen.');
+    const product = products[line.productId];
+    const needsPdf = !!(GUIDES[line.productId] || (product && product.deliveryType === 'pdf'));
+    if (!needsPdf) continue;
+    const bytes = await readAsset(env, pdfKey(line.productId));
+    if (!bytes) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im Speicher. Bitte upload-assets.js ausführen oder die Datei im Admin hochladen.');
   }
 }
 
@@ -428,17 +436,46 @@ const routes = {
   // Anzeige-Daten (Bestand, Text). Preise für die Zahlung bleiben in catalog.js.
   async adminSaveProduct(env, user, b) {
     await assertAdmin(env, user, b);
-    const id = str(b.id, 40).trim().toLowerCase();
-    if (!/^[a-z0-9_-]{2,32}$/.test(id)) throw new HttpError(400, 'Ungültige Produkt-ID.');
+    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Produkte ändern.');
+    const id = str(b.id, 48).trim().toLowerCase();
+    if (!/^[a-z0-9_-]{2,48}$/.test(id)) throw new HttpError(400, 'Ungültige Produkt-ID.');
     const stock = Math.max(0, Math.min(9999, Math.round(Number(b.stock))));
     if (!Number.isFinite(stock)) throw new HttpError(400, 'Ungültiger Bestand.');
-    await fsCommit(env, [writeDoc(env, `shopProducts/${id}`, {
-      name: str(b.name, 80),
-      blurb: str(b.blurb, 280),
-      stock,
-      active: b.active !== false,
-    }, { serverTime: ['updatedAt'] })]);
+    const name = str(b.name, 120);
+    const blurb = str(b.blurb, 600);
+    const active = b.active !== false;
+    const writes = [writeDoc(env, `shopProducts/${id}`, { name, blurb, stock, active }, { serverTime: ['updatedAt'] })];
+    if (b.priceCents != null && b.priceCents !== '') {
+      const priceCents = Math.round(Number(b.priceCents));
+      if (!Number.isInteger(priceCents) || priceCents < 1 || priceCents > 500000) throw new HttpError(400, 'Ungültiger Preis.');
+      const deliveryType = ['pdf', 'link', 'termin'].includes(str(b.deliveryType, 20)) ? str(b.deliveryType, 20) : (GUIDES[id] ? 'pdf' : 'termin');
+      const sort = Math.max(0, Math.min(999, Math.round(Number(b.sort) || 0)));
+      writes.push(writeDoc(env, `catalog/${id}`, {
+        name, blurb, priceCents, stock, active, crypto: true, sort,
+        category: str(b.category, 24) || 'guides',
+        deliveryType,
+        downloadKey: deliveryType === 'pdf' ? id : '',
+        image: str(b.image, 300),
+      }, { serverTime: ['updatedAt'] }));
+    }
+    await fsCommit(env, writes);
     return { ok: true, id };
+  },
+
+  async adminDeleteProduct(env, user, b) {
+    await assertAdmin(env, user, b);
+    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Produkte ändern.');
+    const id = str(b.id, 48).trim().toLowerCase();
+    if (!/^[a-z0-9_-]{2,48}$/.test(id)) throw new HttpError(400, 'Ungültige Produkt-ID.');
+    if (PRODUCTS[id]) {
+      await fsCommit(env, [
+        writeDoc(env, `catalog/${id}`, { active: false }, { merge: true, serverTime: ['updatedAt'] }),
+        writeDoc(env, `shopProducts/${id}`, { active: false }, { merge: true, serverTime: ['updatedAt'] }),
+      ]);
+      return { ok: true, hidden: true };
+    }
+    await fsCommit(env, [deleteDoc(env, `catalog/${id}`), deleteDoc(env, `shopProducts/${id}`)]);
+    return { ok: true, hidden: false };
   },
 
   async redeemGiftCard(env, user, b) {
@@ -629,12 +666,12 @@ const routes = {
 
   async issueDownload(env, user, b) {
     const orderId = str(b.orderId, 40);
-    const productId = str(b.productId, 40);
+    const productId = str(b.productId, 48);
     const order = await getOwnOrder(env, user, orderId);
     if (order.status !== 'bezahlt' && order.status !== 'geliefert') throw new HttpError(402, 'Die Bestellung ist noch nicht bezahlt.');
     const owns = (order.items || []).some(l => l.productId === productId) || (order.delivery || []).some(d => d.downloadKey === productId || d.productId === productId);
-    if (!owns || !GUIDES[productId]) throw new HttpError(404, 'Kein PDF für diese Bestellung.');
-    if (!(await readAsset(env, GUIDES[productId].pdf))) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im Speicher.');
+    if (!owns) throw new HttpError(404, 'Kein PDF für diese Bestellung.');
+    if (!(await readAsset(env, pdfKey(productId)))) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im Speicher.');
     const token = await signDownload(env, { orderId, productId, uid: user.uid, exp: Date.now() + 15 * 60 * 1000 });
     return { token, productId, orderId };
   },
@@ -673,6 +710,23 @@ export async function recheckOpenCryptoOrders(env) {
   return { checked: docs.length, paid, expired };
 }
 
+async function handleAdminAsset(request, env, cors) {
+  const user = await verifyFirebaseToken(request, env);
+  const url = new URL(request.url);
+  await assertAdmin(env, user, { totp: url.searchParams.get('totp') || '' });
+  if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Dateien hochladen.');
+  if (!env.ASSETS) throw new HttpError(503, 'KV-Namespace ASSETS ist nicht gebunden.');
+  const key = str(url.searchParams.get('key'), 64);
+  if (!/^(cover|pdf):[a-z0-9-]{2,48}$/.test(key)) throw new HttpError(400, 'Ungültiger Dateischlüssel.');
+  const type = (request.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
+  if (key.startsWith('pdf:') && type !== 'application/pdf') throw new HttpError(400, 'PDF braucht Content-Type application/pdf.');
+  if (key.startsWith('cover:') && !['image/png', 'image/jpeg', 'image/webp'].includes(type)) throw new HttpError(400, 'Cover braucht PNG, JPEG oder WebP.');
+  const bytes = await request.arrayBuffer();
+  if (!bytes.byteLength || bytes.byteLength > 8000000) throw new HttpError(413, 'Datei fehlt oder ist größer als 8 MB.');
+  await env.ASSETS.put(key, bytes, { metadata: { contentType: type } });
+  return json({ ok: true, key, bytes: bytes.byteLength }, 200, cors);
+}
+
 async function servePaidPdf(request, env, orderId, url, cors) {
   const ip = request.headers.get('CF-Connecting-IP') || 'local';
   if (!rateLimit(ip, 'download', 30, 60_000)) return json({ error: 'Zu viele Downloads.' }, 429, cors);
@@ -684,14 +738,14 @@ async function servePaidPdf(request, env, orderId, url, cors) {
     if (!order || order.data.uid !== payload.uid) return json({ error: 'Bestellung nicht gefunden.' }, 404, cors);
     if (order.data.status !== 'bezahlt' && order.data.status !== 'geliefert') return json({ error: 'Bestellung ist nicht bezahlt.' }, 402, cors);
     const owns = (order.data.items || []).some(l => l.productId === productId);
-    const bytes = await readAsset(env, GUIDES[productId].pdf);
+    const bytes = await readAsset(env, pdfKey(productId));
     if (!owns || !bytes) return json({ error: 'Keine passende Datei.' }, 404, cors);
     return new Response(bytes, {
       status: 200,
       headers: {
         ...cors,
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${GUIDES[productId].filename}"`,
+        'Content-Disposition': `attachment; filename="${pdfFilename(productId)}"`,
         'Cache-Control': 'private, no-store',
       },
     });
@@ -708,14 +762,24 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: cors['Access-Control-Allow-Origin'] ? 204 : 403, headers: cors });
     const url = new URL(request.url);
     if (url.pathname === '/health') return json({ ok: true, manual: { ETH: env.ETH_ADDRESS || '', BTC: env.BTC_ADDRESS || '' }, push: !!env.VAPID_PUBLIC_KEY }, 200, cors);
-    const coverMatch = url.pathname.match(/^\/asset\/cover\/([a-z0-9-]+)$/);
+    const coverMatch = url.pathname.match(/^\/asset\/cover\/([a-z0-9_-]+)$/);
     if (coverMatch && request.method === 'GET') {
-      const spec = GUIDES[coverMatch[1]];
-      const bytes = spec ? await readAsset(env, spec.cover) : null;
-      return new Response(bytes || PLACEHOLDER_PNG, {
+      const asset = await readAssetMeta(env, coverKey(coverMatch[1]));
+      return new Response((asset && asset.bytes) || PLACEHOLDER_PNG, {
         status: 200,
-        headers: { ...cors, 'Content-Type': 'image/png', 'Cache-Control': bytes ? 'public, max-age=3600' : 'no-store' },
+        headers: {
+          ...cors,
+          'Content-Type': (asset && asset.contentType) || 'image/png',
+          'Cache-Control': asset ? 'public, max-age=3600' : 'no-store',
+        },
       });
+    }
+    if (url.pathname === '/api/admin-asset' && request.method === 'POST') {
+      try { return await handleAdminAsset(request, env, cors); }
+      catch (e) {
+        if (e instanceof HttpError) return json({ error: e.message }, e.status, cors);
+        return json({ error: 'Upload fehlgeschlagen.' }, 500, cors);
+      }
     }
     const downloadMatch = url.pathname.match(/^\/api\/download\/([A-Za-z0-9]{10,40})$/);
     if (downloadMatch && request.method === 'GET') return servePaidPdf(request, env, downloadMatch[1], url, cors);

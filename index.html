@@ -59,9 +59,9 @@
             }
         }
     </script>
-    <!-- Offizielles PayPal JS SDK (defer). WICHTIG: client-id=test durch die eigene PayPal-Client-ID ersetzen –
-         sie muss zur PAYPAL_CLIENT_ID im Cloudflare Worker (wrangler.toml) passen (Sandbox bzw. Live). -->
-    <script defer src="https://www.paypal.com/sdk/js?client-id=BAAG-tugo2HjXVgrKwLwBtRX-BXO2ftGLsfoacn0acpjI9xXIp09omgmOp_6-rtVkUjNuagLj8E4eoU6GA&buyer-country=DE&currency=EUR&components=buttons&enable-funding=venmo,paylater,card"></script>
+    <!-- PayPal JS SDK mit der öffentlichen Live-Client-ID. Muss zu PAYPAL_CLIENT_ID in worker/wrangler.toml passen.
+         Das Secret bleibt Worker-Secret PAYPAL_CLIENT_SECRET und steht nicht in dieser Datei. -->
+    <script defer src="https://www.paypal.com/sdk/js?client-id=BAAcpQPHWqavlDSj1GlAmn1RfyXzEWqbRkVIfKkxin6EurDH8Zmrnuvgs9uMHkuF-KPfzOWM_asLiZsSUY&currency=EUR&components=buttons&enable-funding=venmo,paylater,card"></script>
     <!-- Firebase SDKs & Auth -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -139,7 +139,24 @@
             try { const s = await getDoc(doc(db, 'coupons', code)); return s.exists() ? s.data() : null; } catch (e) { return null; }
         };
         // Gutscheine verwalten nur über den Worker (prüft Custom Claim admin==true)
-        window.adminSaveCoupon = (code, valueCents) => window.callServer('adminSaveCoupon', { code, valueCents, active: true });
+        window.adminSaveCoupon = (code, valueCents, active = true) => window.callServer('adminSaveCoupon', { code, valueCents, active: active !== false });
+        window.uploadShopAsset = async function(key, file) {
+            const user = auth.currentUser;
+            if (!user) throw new Error('Bitte melde dich an.');
+            const idToken = await user.getIdToken();
+            const type = file.type || (key.indexOf('pdf:') === 0 ? 'application/pdf' : 'image/png');
+            let res;
+            try {
+                res = await fetch(WORKER_URL + '/api/admin-asset?key=' + encodeURIComponent(key), {
+                    method: 'POST',
+                    headers: { Authorization: 'Bearer ' + idToken, 'Content-Type': type },
+                    body: file
+                });
+            } catch (e) { throw new Error('Server nicht erreichbar. Bitte später erneut versuchen.'); }
+            const j = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(j.error || ('Upload fehlgeschlagen (' + res.status + ')'));
+            return j;
+        };
         window.adminDeleteCoupon = (code) => window.callServer('adminDeleteCoupon', { code });
         window.persistHelpChat = async (messages) => {
             const slice = (messages || []).slice(-40);
@@ -574,7 +591,32 @@
         html[data-theme="light"] .store-banner .text-zinc-100,
         html[data-theme="light"] .store-banner .kicker { color: #fff; }
         html[data-theme="light"] .logo-mark { background: #18181b; color: #fff; }
-        html[data-brand="custom"] .btn-primary { background: var(--brand); }
+        :root { --brand: #ec4899; --brand-2: #d946ef; --shadow: 0 30px 70px -40px rgba(0, 0, 0, .9); }
+        html[data-brand="custom"] .btn-primary, .btn-primary { background: var(--brand); }
+        .btn-primary:hover { filter: brightness(1.08); }
+        .hero-copy {
+            max-width: 44rem;
+            padding: 1.25rem 1.35rem;
+            border-radius: 1.5rem;
+            background: linear-gradient(180deg, rgba(10, 10, 14, .55), rgba(10, 10, 14, .28));
+            border: 1px solid rgba(255, 255, 255, .12);
+            box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .08);
+            backdrop-filter: blur(16px);
+        }
+        .store-banner { min-height: 22rem; }
+        .trust-item i { width: 2rem; text-align: center; font-size: 1.05rem; }
+        .review-card { position: relative; }
+        .review-card::before { content: "“"; position: absolute; top: .35rem; right: 1rem; font-size: 3rem; line-height: 1; color: rgba(236, 72, 153, .35); font-family: Georgia, serif; }
+        .cms-replaced { display: none !important; }
+        .reveal { animation: rise .7s cubic-bezier(.16, 1, .3, 1) both; }
+        @keyframes rise { from { transform: translateY(10px); } to { transform: none; } }
+        .pay-panel { min-height: 9.5rem; }
+        .pay-option { min-height: 4.6rem; }
+        .checkout-note { display: flex; gap: .6rem; align-items: flex-start; padding: .75rem .9rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03); color: #d4d4d8; font-size: .75rem; }
+        .site-footer { padding-top: 3.5rem; padding-bottom: 3.5rem; }
+        #orderDetailModal .detail-grid { display: grid; grid-template-columns: 8rem 1fr; gap: .35rem .75rem; font-size: .875rem; }
+        #orderDetailModal dt { color: #a1a1aa; }
+        #orderDetailModal dd { color: #fff; word-break: break-word; }
         .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); gap: .25rem; padding: .4rem .4rem calc(.4rem + env(safe-area-inset-bottom)); background: rgba(9,9,11,.92); border-top: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); }
         .bottom-nav a, .bottom-nav button { color: #d4d4d8; font-size: .68rem; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: .15rem; min-height: 2.75rem; }
         @media (min-width: 768px) { .bottom-nav { display: none; } body { padding-bottom: 0; } }
@@ -623,6 +665,10 @@
 
             <div class="header-actions flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
                 <button type="button" id="themeToggle" class="linktree-btn" aria-label="Helles Design einschalten"><i class="fa-solid fa-sun" aria-hidden="true"></i></button>
+                <a data-discord href="https://discord.gg/KZgBuDzRx7" target="_blank" rel="noopener noreferrer" class="linktree-btn" aria-label="Discord beitreten">
+                    <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                    <span class="hidden xl:inline">Discord</span>
+                </a>
                 <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="linktree-btn" aria-label="Alle Links auf Linktree">
                     <i class="fa-solid fa-link" aria-hidden="true"></i>
                     <span class="hidden lg:inline">Alle Links</span>
@@ -673,7 +719,7 @@
             <video id="heroVideo" class="hero-video" poster="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop" autoplay muted loop playsinline preload="none"></video>
             <!-- Video-Datei selbst hosten und hier src setzen, z. B. src="hero.webm". Ohne Datei läuft die CSS-Bewegung. -->
             <div class="absolute inset-0 bg-gradient-to-t from-saBg/85 via-saBg/25 to-transparent" aria-hidden="true"></div>
-            <div class="relative z-10 flex items-center gap-4 sm:gap-6 w-full">
+            <div class="hero-copy relative z-10 flex items-center gap-4 sm:gap-6 w-full">
                 <div class="w-16 h-16 sm:w-24 sm:h-24 shrink-0 rounded-2xl bg-saCard/80 border border-white/15 p-1 flex items-center justify-center shadow-xl backdrop-blur-sm" aria-hidden="true">
                     <div class="w-full h-full rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500 flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl">V</div>
                 </div>
@@ -691,6 +737,9 @@
                         <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="btn btn-secondary !py-2.5 !px-4">
                             <i class="fa-solid fa-link" aria-hidden="true"></i> Alle Links
                         </a>
+                        <a data-discord href="https://discord.gg/KZgBuDzRx7" target="_blank" rel="noopener noreferrer" class="btn btn-secondary !py-2.5 !px-4">
+                            <i class="fa-brands fa-discord" aria-hidden="true"></i> Discord beitreten
+                        </a>
                     </div>
                 </div>
             </div>
@@ -704,7 +753,17 @@
                 <span class="logo-pill">Performance</span>
             </div>
         </div>
-        <ul class="trust-bar mt-4" aria-label="Vertrauen">
+        <a id="discordWidget" data-discord href="https://discord.gg/KZgBuDzRx7" target="_blank" rel="noopener noreferrer" class="card mt-4 p-4 sm:p-5 flex items-center justify-between gap-4 hover:border-pink-400/40 transition">
+            <span class="flex items-center gap-3 min-w-0">
+                <span class="w-11 h-11 shrink-0 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center" aria-hidden="true"><i class="fa-brands fa-discord text-lg"></i></span>
+                <span class="min-w-0">
+                    <span class="block text-sm font-extrabold text-white">Discord beitreten</span>
+                    <span class="block text-xs text-zinc-400 truncate">Community, Support und Updates. Der Link ist im Admin änderbar.</span>
+                </span>
+            </span>
+            <span class="btn btn-primary shrink-0 !py-2">Beitreten</span>
+        </a>
+        <ul class="trust-bar reveal mt-4" aria-label="Vertrauen">
             <li class="trust-item"><i class="fa-brands fa-paypal text-sky-400" aria-hidden="true"></i><span class="text-sm font-semibold text-white">PayPal, Karte, SEPA</span></li>
             <li class="trust-item"><i class="fa-solid fa-coins text-violet-300" aria-hidden="true"></i><span class="text-sm font-semibold text-white">Solana, on-chain geprüft</span></li>
             <li class="trust-item"><i class="fa-solid fa-bolt text-accent" aria-hidden="true"></i><span class="text-sm font-semibold text-white">Digitale Lieferung</span></li>
@@ -973,7 +1032,7 @@
             </ul>
         </section>
 
-        <section class="mt-16" aria-labelledby="reviewHeading">
+        <section class="reveal mt-16" aria-labelledby="reviewHeading">
             <div class="section-head">
                 <p class="kicker">Stimmen</p>
                 <h2 id="reviewHeading" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">Was Kundinnen und Kunden sagen</h2>
@@ -997,7 +1056,7 @@
             </div>
         </section>
 
-        <section id="faqSection" class="mt-16" aria-labelledby="faqHeading">
+        <section id="faqSection" class="reveal mt-16" aria-labelledby="faqHeading">
             <div class="section-head"><p class="kicker">FAQ</p><h2 id="faqHeading" class="text-2xl font-extrabold text-white mt-2">Fragen zu den Produkten</h2></div>
             <div id="faqList" class="card p-5 space-y-2">
                 <details class="border-b border-white/10 py-2"><summary class="font-semibold text-white">Wann ist die Krypto-Zahlung fertig?</summary><p class="text-sm text-zinc-400 mt-2">SOL und USDC werden on-chain geprüft. ETH und BTC bestätigt der Shop manuell.</p></details>
@@ -1041,7 +1100,7 @@
     <footer class="site-footer border-t border-white/10 py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)] md:items-start text-sm text-zinc-400">
             <div class="max-w-md text-center md:text-left mx-auto md:mx-0">
-                <p class="font-extrabold text-white text-lg tracking-tight">Val3ntino.</p>
+                <p class="font-extrabold text-white text-lg tracking-tight" data-brand-name>Val3ntino.</p>
                 <p class="mt-2 leading-relaxed">Windows-PC-Tuning, Websites und individuelle Skripte.</p>
                 <p class="mt-4 text-xs text-zinc-500" data-i18n="rights">© 2026 Alle Rechte vorbehalten.</p>
             </div>
@@ -1050,7 +1109,7 @@
                 <a href="#partner" class="hover:text-white transition rounded-lg">Partner</a>
                 <a href="#status" class="hover:text-white transition rounded-lg">Status</a>
                 <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-link" aria-hidden="true"></i> Alle Links</a>
-                <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-brands fa-discord" aria-hidden="true"></i> Discord</a>
+                <a data-discord href="https://discord.gg/KZgBuDzRx7" target="_blank" rel="noopener noreferrer" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-brands fa-discord" aria-hidden="true"></i> Discord beitreten</a>
                 <a href="mailto:L@valentinolopez.de" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-envelope" aria-hidden="true"></i> <span data-i18n="contact">Kontakt</span></a>
                 <button onclick="toggleImpressum()" class="hover:text-white transition underline underline-offset-4 rounded-lg" data-i18n="impressum">Impressum</button>
                 <button onclick="toggleLegal('datenschutzModal')" class="hover:text-white transition underline underline-offset-4 rounded-lg">Datenschutz</button>
@@ -1181,6 +1240,7 @@
                         <button onclick="goToCheckoutStep(2)" class="text-xs text-zinc-400 hover:text-white underline underline-offset-4 rounded" data-i18n="edit">Ändern</button>
                     </div>
                     <p class="text-xs text-zinc-400"><span data-i18n="orderFor">Bestellung für</span> <span id="checkoutEmailSummary" class="text-white font-semibold"></span></p>
+                    <p class="checkout-note"><i class="fa-solid fa-shield-halved text-emerald-300 mt-0.5" aria-hidden="true"></i><span>PayPal und Krypto stehen gleichberechtigt. PayPal bucht über die Live-API, Solana wird on-chain geprüft. Danach liegt die Lieferung im Kundenportal.</span></p>
 
                     <div id="checkoutMediaNote" class="hidden text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><i class="fa-solid fa-circle-info mr-1.5" aria-hidden="true"></i>Für „All-in-One Media Access“ ist Guthaben nicht verfügbar. PayPal und Krypto (Solana) kannst du weiter nutzen.</div>
                     <p id="checkoutServerNote" class="text-xs text-zinc-400" aria-live="polite"></p>
@@ -1558,7 +1618,7 @@
                             <span class="w-11 h-11 rounded-2xl bg-accent/15 text-accent flex items-center justify-center" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
                             <span><span class="block text-sm font-bold text-white" data-i18n="supportMail">E-Mail-Support</span><span class="block text-xs text-zinc-400">L@valentinolopez.de</span></span>
                         </a>
-                        <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="card p-5 hover:border-pink-400/40 transition flex items-center gap-4">
+                        <a data-discord href="https://discord.gg/KZgBuDzRx7" target="_blank" rel="noopener noreferrer" class="card p-5 hover:border-pink-400/40 transition flex items-center gap-4">
                             <span class="w-11 h-11 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center" aria-hidden="true"><i class="fa-brands fa-discord"></i></span>
                             <span><span class="block text-sm font-bold text-white">Discord</span><span class="block text-xs text-zinc-400" data-i18n="supportDiscord">Schnelle Hilfe in der Community</span></span>
                         </a>
@@ -1697,6 +1757,13 @@
                             <h3 class="text-sm font-extrabold text-white uppercase tracking-wider">Nach Zahlungsart</h3>
                             <div id="adminRevenueByMethod" class="space-y-2.5 text-sm"></div>
                         </div>
+                        <div class="card p-4 sm:p-6 space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-sm font-extrabold text-white uppercase tracking-wider">Top-Produkte</h3>
+                                <span id="revCount" class="text-xs text-zinc-400">0 Verkäufe</span>
+                            </div>
+                            <div id="adminTopProducts" class="space-y-2.5 text-sm"></div>
+                        </div>
                     </div>
 
                     <!-- Produkte -->
@@ -1708,13 +1775,26 @@
                             </table>
                         </div>
                         <form id="shopProductForm" class="grid sm:grid-cols-2 gap-3 pt-2" onsubmit="event.preventDefault(); saveShopProductAdmin();">
-                            <div><label class="field-label" for="spId">ID</label><input id="spId" class="field" required pattern="[A-Za-z0-9_-]{2,32}" placeholder="basic"></div>
-                            <div><label class="field-label" for="spName">Name</label><input id="spName" class="field" required maxlength="80"></div>
-                            <div class="sm:col-span-2"><label class="field-label" for="spBlurb">Kurztext</label><input id="spBlurb" class="field" maxlength="280"></div>
+                            <div><label class="field-label" for="spId">ID</label><input id="spId" class="field" required pattern="[A-Za-z0-9_-]{2,48}" placeholder="mein-produkt"></div>
+                            <div><label class="field-label" for="spName">Titel</label><input id="spName" class="field" required maxlength="120"></div>
+                            <div class="sm:col-span-2"><label class="field-label" for="spBlurb">Beschreibung</label><textarea id="spBlurb" class="field" maxlength="600" rows="3"></textarea></div>
+                            <div><label class="field-label" for="spPrice">Preis in €</label><input id="spPrice" type="number" min="0.01" step="0.01" class="field" placeholder="19.90"></div>
                             <div><label class="field-label" for="spStock">Bestand</label><input id="spStock" type="number" min="0" max="9999" class="field" value="99"></div>
-                            <label class="flex items-center gap-2 text-sm text-zinc-300"><input id="spActive" type="checkbox" checked class="accent-pink-500"> sichtbar</label>
-                            <p class="sm:col-span-2 text-xs text-zinc-400">Bestand und Text liegen in Firestore unter shopProducts (lokal, bis der Worker neu deployt ist). Der Zahlungspreis bleibt im Server-Katalog und wird hier nicht verändert.</p>
-                            <button type="submit" class="btn btn-primary sm:col-span-2">Produkt speichern</button>
+                            <div><label class="field-label" for="spSort">Reihenfolge</label><input id="spSort" type="number" min="0" max="999" class="field" value="10"></div>
+                            <div><label class="field-label" for="spCategory">Kategorie</label>
+                                <select id="spCategory" class="field"><option value="tuning">PC-Tuning</option><option value="web">Webentwicklung</option><option value="services">Services</option><option value="guides" selected>Ratgeber</option></select>
+                            </div>
+                            <div><label class="field-label" for="spDelivery">Lieferung</label>
+                                <select id="spDelivery" class="field"><option value="termin">Termin / manuell</option><option value="link">Link</option><option value="pdf">PDF nach Zahlung</option></select>
+                            </div>
+                            <label class="flex items-center gap-2 text-sm text-zinc-300"><input id="spActive" type="checkbox" checked class="accent-pink-500"> aktiv</label>
+                            <div><label class="field-label" for="spCover">Cover (PNG, JPEG, WebP)</label><input id="spCover" type="file" accept="image/png,image/jpeg,image/webp" class="field"></div>
+                            <div><label class="field-label" for="spPdf">PDF (nur bei Lieferung PDF)</label><input id="spPdf" type="file" accept="application/pdf" class="field"></div>
+                            <p class="sm:col-span-2 text-xs text-zinc-400">Preis und Text liegen in Firestore (`catalog`). Cover und PDF gehen in das KV-Namespace ASSETS. Die drei Ratgeber behalten die Schlüssel cover:krypto / pdf:krypto, cover:discord / pdf:discord und cover:business / pdf:business. Krypto bleibt für jedes Produkt an.</p>
+                            <div class="sm:col-span-2 flex flex-wrap gap-2">
+                                <button type="submit" class="btn btn-primary">Produkt speichern</button>
+                                <button type="button" class="btn btn-danger" onclick="deleteShopProductAdmin()">Deaktivieren oder löschen</button>
+                            </div>
                         </form>
                     </div>
 
@@ -1731,14 +1811,66 @@
                             </div>
                             <button type="submit" class="btn btn-primary !py-3"><i class="fa-solid fa-plus" aria-hidden="true"></i> Speichern</button>
                         </form>
+                        <p class="text-xs text-zinc-400">Deaktivieren lässt den Code stehen, die Kasse ignoriert ihn. Löschen entfernt ihn.</p>
                         <div id="adminCouponsList" class="space-y-2 pt-2 text-sm"></div>
                     </div>
 
                     <!-- IPs (unverändert) -->
                     <div id="admBox-ips" class="hidden card p-4 sm:p-6 space-y-4 shadow-xl" role="tabpanel"><div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs"><table class="w-full text-left"><thead><tr class="text-zinc-400 text-xs border-b border-saBorder"><th class="py-3 px-3">Uhrzeit</th><th class="py-3 px-3">IP</th><th class="py-3 px-3">Standort</th><th class="py-3 px-3">Gerät</th></tr></thead><tbody id="adminIpLogTable" class="divide-y divide-saBorder/40"></tbody></table></div></div>
-                    <div id="admBox-studio" class="hidden card p-4 sm:p-6 space-y-4" role="tabpanel">
-                        <h3 class="text-sm font-extrabold text-white">Inhalte aus Firestore</h3>
-                        <p class="text-xs text-zinc-400">Nur das Konto l@valentinolopez.de mit Admin-Claim. Die Seite nutzt diese Daten, sonst die eingebauten Texte. Zahlungsprüfung bleibt im Worker.</p>
+                    <div id="admBox-studio" class="hidden card p-4 sm:p-6 space-y-6" role="tabpanel">
+                        <div>
+                            <h3 class="text-sm font-extrabold text-white">Design und Marke</h3>
+                            <p class="text-xs text-zinc-400 mt-1">Nur l@valentinolopez.de mit Admin-Claim. Leere Felder lassen den bisherigen Text stehen.</p>
+                        </div>
+                        <form class="grid sm:grid-cols-2 gap-3" onsubmit="event.preventDefault(); saveThemeSettings();">
+                            <div><label class="field-label" for="themeBrand">Markenname</label><input id="themeBrand" class="field" maxlength="80"></div>
+                            <div><label class="field-label" for="themeHeroTitle">Hero-Überschrift</label><input id="themeHeroTitle" class="field" maxlength="80"></div>
+                            <div class="sm:col-span-2"><label class="field-label" for="themeHeroText">Hero-Text</label><textarea id="themeHeroText" class="field" rows="3" maxlength="400"></textarea></div>
+                            <div><label class="field-label" for="themeAccent">Akzentfarbe</label><input id="themeAccent" type="color" class="field !h-12 !p-1" value="#ec4899"></div>
+                            <div><label class="field-label" for="themeAccent2">Zweite Akzentfarbe</label><input id="themeAccent2" type="color" class="field !h-12 !p-1" value="#d946ef"></div>
+                            <div><label class="field-label" for="themeLinktree">Linktree</label><input id="themeLinktree" class="field" placeholder="https://linktr.ee/val3nt1no"></div>
+                            <div><label class="field-label" for="themeDiscord">Discord-Einladung</label><input id="themeDiscord" class="field" placeholder="https://discord.gg/KZgBuDzRx7" value="https://discord.gg/KZgBuDzRx7"></div>
+                            <div class="sm:col-span-2"><label class="field-label" for="themePromo">Aktionszeile</label><input id="themePromo" class="field" maxlength="180"></div>
+                            <button class="btn btn-primary sm:col-span-2" type="submit">Design speichern</button>
+                        </form>
+                        <form class="grid gap-3" onsubmit="event.preventDefault(); saveSeoSettings();">
+                            <h3 class="text-sm font-extrabold text-white">SEO</h3>
+                            <div><label class="field-label" for="seoTitle">Title</label><input id="seoTitle" class="field" maxlength="120"></div>
+                            <div><label class="field-label" for="seoDescription">Meta-Description</label><textarea id="seoDescription" class="field" rows="2" maxlength="300"></textarea></div>
+                            <div><label class="field-label" for="ogImage">OG-Image URL</label><input id="ogImage" class="field" placeholder="https://…"></div>
+                            <button class="btn btn-primary" type="submit">SEO speichern</button>
+                        </form>
+                        <form class="grid gap-3" onsubmit="event.preventDefault(); saveLegalSettings();">
+                            <h3 class="text-sm font-extrabold text-white">Rechtstexte</h3>
+                            <p class="text-xs text-zinc-400">Ein ausgefülltes Feld ersetzt die Vorlage im jeweiligen Fenster. Leer lassen behält die eingebaute Vorlage.</p>
+                            <label class="field-label" for="legalImpressum">Impressum</label><textarea id="legalImpressum" class="field" rows="4"></textarea>
+                            <label class="field-label" for="legalPrivacy">Datenschutz</label><textarea id="legalPrivacy" class="field" rows="4"></textarea>
+                            <label class="field-label" for="legalTerms">AGB</label><textarea id="legalTerms" class="field" rows="4"></textarea>
+                            <label class="field-label" for="legalWithdrawal">Widerruf</label><textarea id="legalWithdrawal" class="field" rows="4"></textarea>
+                            <button class="btn btn-primary" type="submit">Rechtstexte speichern</button>
+                        </form>
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-extrabold text-white">Stimmen</h3>
+                            <div id="reviewAdminList" class="space-y-2 text-sm"></div>
+                            <form class="grid sm:grid-cols-2 gap-2" onsubmit="event.preventDefault(); saveReviewAdmin();">
+                                <input id="reviewId" class="field" placeholder="ID" required pattern="[A-Za-z0-9_-]{1,40}" aria-label="Stimmen-ID">
+                                <input id="reviewName" class="field" placeholder="Name" required maxlength="80" aria-label="Name">
+                                <textarea id="reviewQuote" class="field sm:col-span-2" placeholder="Zitat" required maxlength="500" aria-label="Zitat"></textarea>
+                                <button class="btn btn-secondary sm:col-span-2" type="submit">Stimme speichern</button>
+                            </form>
+                        </div>
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-extrabold text-white">FAQ</h3>
+                            <div id="faqAdminList" class="space-y-2 text-sm"></div>
+                            <form class="grid gap-2" onsubmit="event.preventDefault(); saveFaqAdmin();">
+                                <input id="faqId" class="field" placeholder="ID" required pattern="[A-Za-z0-9_-]{1,40}" aria-label="FAQ-ID">
+                                <input id="faqQ" class="field" placeholder="Frage" required maxlength="200" aria-label="Frage">
+                                <textarea id="faqA" class="field" placeholder="Antwort" required maxlength="800" aria-label="Antwort"></textarea>
+                                <button class="btn btn-secondary" type="submit">FAQ speichern</button>
+                            </form>
+                        </div>
+                        <h3 class="text-sm font-extrabold text-white">Weitere Inhalte</h3>
+                        <p class="text-xs text-zinc-400">Journal, Partner und Mengenrabatt. Zahlungsprüfung bleibt im Worker.</p>
                         <label class="field-label" for="cmsCollection">Bereich</label>
                         <select id="cmsCollection" class="field" onchange="renderCmsEditor()">
                             <option value="siteSettings">Einstellungen</option>
@@ -1818,6 +1950,15 @@
         </div>
     </div>
 
+    <div id="orderDetailModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-[70] items-end sm:items-center justify-center p-0 sm:p-4" onclick="handleModalBackdrop(event, 'orderDetailModal')" role="dialog" aria-modal="true" aria-labelledby="orderDetailTitle">
+        <div class="bg-saCard border border-saBorder p-6 sm:p-8 rounded-t-3xl sm:rounded-3xl max-w-lg w-full relative shadow-2xl max-h-[92vh] overflow-y-auto">
+            <button onclick="closeModalById('orderDetailModal')" class="icon-btn absolute top-4 right-4" aria-label="Bestellung schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            <p class="eyebrow">Bestellung</p>
+            <h2 id="orderDetailTitle" class="text-xl font-extrabold text-white mt-1 pr-10">Details</h2>
+            <dl id="orderDetailBody" class="detail-grid mt-4"></dl>
+        </div>
+    </div>
+
     <!-- Krypto-Zahlung (Solana Pay / Phantom) -->
     <div id="cryptoModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-[60] items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="cryptoModalTitle">
         <div class="bg-saCard border border-saBorder p-5 sm:p-7 rounded-t-3xl sm:rounded-3xl max-w-md w-full relative space-y-4 shadow-2xl max-h-[94vh] overflow-y-auto">
@@ -1852,6 +1993,7 @@
         <article class="bg-saCard border border-saBorder p-6 sm:p-8 sm:rounded-3xl max-w-3xl w-full relative shadow-2xl min-h-full sm:min-h-0 sm:max-h-[90vh] overflow-y-auto text-sm text-zinc-300 leading-relaxed space-y-4">
             <button onclick="toggleLegal('datenschutzModal')" class="icon-btn absolute top-4 right-4" aria-label="Datenschutzerklärung schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="dsTitle" class="text-xl font-extrabold text-white pr-10">Datenschutzerklärung</h2>
+            <div id="legalPrivacyCustom" class="hidden whitespace-pre-wrap text-zinc-200"></div>
             <div class="legal-en hidden space-y-3">
                 <p><b>Controller:</b> Valentino Lopez, Europa-Allee 2, 60327 Frankfurt am Main, L@valentinolopez.de.</p>
                 <p>We store shop preferences in your browser. Login uses Firebase. Payments use PayPal or a Solana transaction, which is public on the blockchain. Orders are kept as required for tax records.</p>
@@ -1892,6 +2034,7 @@
         <article class="bg-saCard border border-saBorder p-6 sm:p-8 sm:rounded-3xl max-w-3xl w-full relative shadow-2xl min-h-full sm:min-h-0 sm:max-h-[90vh] overflow-y-auto text-sm text-zinc-300 leading-relaxed space-y-4">
             <button onclick="toggleLegal('agbModal')" class="icon-btn absolute top-4 right-4" aria-label="AGB schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="agbTitle" class="text-xl font-extrabold text-white pr-10">Allgemeine Geschäftsbedingungen (AGB)</h2>
+            <div id="legalTermsCustom" class="hidden whitespace-pre-wrap text-zinc-200"></div>
             <div class="legal-en hidden space-y-3">
                 <p>Prices are in euro. Digital access is provided after payment. By starting digital delivery early you waive the withdrawal right for that content, as stated at checkout.</p>
                 <p>SOL and USDC are confirmed on-chain. ETH and BTC are confirmed manually. Network fees are yours.</p>
@@ -1925,6 +2068,7 @@
         <article class="bg-saCard border border-saBorder p-6 sm:p-8 sm:rounded-3xl max-w-3xl w-full relative shadow-2xl min-h-full sm:min-h-0 sm:max-h-[90vh] overflow-y-auto text-sm text-zinc-300 leading-relaxed space-y-4">
             <button onclick="toggleLegal('widerrufModal')" class="icon-btn absolute top-4 right-4" aria-label="Widerrufsbelehrung schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="wrTitle" class="text-xl font-extrabold text-white pr-10">Widerrufsbelehrung</h2>
+            <div id="legalWithdrawalCustom" class="hidden whitespace-pre-wrap text-zinc-200"></div>
             <div class="legal-en hidden space-y-3">
                 <p>Consumers may withdraw within 14 days. For digital content the right ends once delivery has started with your express consent. Email L@valentinolopez.de to withdraw.</p>
             </div>
@@ -2503,7 +2647,7 @@
         function getProfile(email) { return JSON.parse(localStorage.getItem('profile_' + email) || '{}'); }
 
         /* ---------- Modals: Öffnen/Schließen, Scroll-Lock, ESC, Fokus ---------- */
-        const MODAL_IDS = ['paymentModal', 'authModal', 'dashboardModal', 'impressumModal', 'productDetailModal', 'cryptoModal', 'datenschutzModal', 'agbModal', 'widerrufModal'];
+        const MODAL_IDS = ['paymentModal', 'authModal', 'dashboardModal', 'impressumModal', 'productDetailModal', 'cryptoModal', 'datenschutzModal', 'agbModal', 'widerrufModal', 'orderDetailModal'];
         let lastFocused = null;
         function syncBodyScroll() {
             const anyOpen = MODAL_IDS.some(id => document.getElementById(id).classList.contains('active')) || document.getElementById('cartDrawer').classList.contains('active');
@@ -2534,7 +2678,7 @@
             if (e.key !== 'Escape') return;
             if (document.getElementById('cartDrawer').classList.contains('active')) return toggleCartModal();
             if (document.getElementById('cryptoModal').classList.contains('active')) return closeCryptoModal();
-            for (const id of ['agbModal', 'widerrufModal', 'datenschutzModal', 'productDetailModal', 'authModal', 'impressumModal', 'paymentModal', 'dashboardModal']) {
+            for (const id of ['orderDetailModal', 'agbModal', 'widerrufModal', 'datenschutzModal', 'productDetailModal', 'authModal', 'impressumModal', 'paymentModal', 'dashboardModal']) {
                 if (document.getElementById(id).classList.contains('active')) return closeModalById(id);
             }
             if (document.getElementById('helpChat') && document.getElementById('helpChat').classList.contains('is-open')) closeHelpChat();
@@ -2829,7 +2973,9 @@
                 coupon: o.coupon || '', method: o.methodLabel || o.method, status: o.status,
                 link: '', delivery: Array.isArray(o.delivery) ? o.delivery : null,
                 ts: d ? d.toISOString() : null, date: d ? d.toLocaleString('de-DE') : '—',
-                signature: o.signature || null
+                signature: o.signature || null,
+                paypalOrderId: o.paypal && o.paypal.orderId || '',
+                captureId: o.paypal && o.paypal.captureId || ''
             };
         }
 
@@ -3471,7 +3617,7 @@
                             <span class="text-xs text-zinc-400 flex items-center gap-2"><i class="fa-solid fa-link text-accent" aria-hidden="true"></i> Dein Zugang</span>
                             <a href="${esc(o.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary !py-2 !text-xs sm:ml-auto"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Zugang öffnen</a>
                         </div>` : (o.link ? '<p class="text-xs text-zinc-400">Der Zugang wird freigeschaltet, sobald die Zahlung bestätigt ist.</p>' : '')}
-                        ${(o._server && (st === 'bezahlt' || st === 'geliefert') ? (o.itemsDetail || []).filter(i => ['krypto-einsteiger-2026','discord-server-playbook','digitale-produkte-business-guide'].includes(i.productId)).map(i => `<button type="button" class="btn btn-primary !py-2 !text-xs" onclick="downloadPaidGuide('${esc(o.id)}','${esc(i.productId)}')">PDF herunterladen</button>`).join('') : '')}
+                        ${(o._server && (st === 'bezahlt' || st === 'geliefert') ? (o.itemsDetail || []).filter(i => isPdfProduct(i.productId)).map(i => `<button type="button" class="btn btn-primary !py-2 !text-xs" onclick="downloadPaidGuide('${esc(o.id)}','${esc(i.productId)}')">PDF herunterladen</button>`).join('') : '')}
                         <div class="flex flex-wrap gap-3">
                             <button type="button" onclick="downloadReceipt('${esc(o.invoice)}')" class="text-xs text-accent hover:text-white underline underline-offset-4 rounded">Beleg als PDF</button>
                             <button type="button" onclick="contactSupportForOrder('${esc(o.invoice)}')" class="text-xs text-zinc-400 hover:text-white underline underline-offset-4 rounded">Problem mit dieser Bestellung melden</button>
@@ -3673,6 +3819,7 @@
             renderAdminRevenue();
             renderAdminProducts();
             updateAdminKPIs();
+            fillStudioForms();
         }
 
         function updateAdminKPIs() {
@@ -3738,6 +3885,7 @@
                         <select id="st-${esc(o.invoice)}" onchange="setOrderStatus(${Number(o.invoice)}, this.value)" class="field-sm !py-2">
                             ${Object.keys(STATUS).map(k => `<option value="${k}" ${k === st ? 'selected' : ''}>${STATUS[k].label}</option>`).join('')}
                         </select>
+                        <button type="button" class="btn btn-secondary !py-2" onclick="openOrderDetail('${esc(String(o.invoice))}')">Details</button>
                         ${o._server ? (o.signature ? `<a href="https://solscan.io/tx/${esc(o.signature)}" target="_blank" rel="noopener noreferrer" class="icon-btn" aria-label="Transaktion auf Solscan ansehen"><i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></a>` : '') : `<button onclick="if(confirm('Bestellung #${Number(o.invoice)} wirklich löschen?')) deleteAdminOrder(${Number(o.invoice)})" class="icon-btn hover:!text-red-400" aria-label="Bestellung #${esc(o.invoice)} löschen"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>`}
                     </div>
                 </div>`;
@@ -3777,6 +3925,8 @@
             document.getElementById('rev7').innerText = fmt(r7);
             document.getElementById('rev30').innerText = fmt(r30);
             document.getElementById('revAll').innerText = fmt(rAll);
+            const countEl = document.getElementById('revCount');
+            if (countEl) countEl.textContent = valid.length + (valid.length === 1 ? ' Verkauf' : ' Verkäufe');
 
             const W = 700, H = 220, padL = 44, padB = 28, padT = 12;
             const max = Math.max(1, ...days.map(x => x.v));
@@ -3805,6 +3955,43 @@
                     <div class="flex justify-between text-xs mb-1"><span class="text-zinc-300">${esc(m)}</span><span class="text-white font-bold">${fmt(v)}</span></div>
                     <div class="h-2 rounded-full bg-saBg border border-saBorder overflow-hidden"><div class="h-full bg-gradient-to-r from-accent to-accentGlow" style="width:${rAll ? (v / rAll * 100).toFixed(1) : 0}%"></div></div>
                 </div>`).join('') : '<p class="text-zinc-400 text-sm">Noch keine Umsätze.</p>';
+            const top = {};
+            valid.forEach(o => orderItems(o).forEach(i => {
+                const name = i.name || 'Produkt';
+                const row = top[name] || (top[name] = { qty: 0, rev: 0 });
+                row.qty += Number(i.qty) || 1;
+                if (i.price != null) row.rev += Number(i.price) * (Number(i.qty) || 1);
+            }));
+            const topBox = document.getElementById('adminTopProducts');
+            const ranked = Object.entries(top).sort((a, b) => b[1].rev - a[1].rev || b[1].qty - a[1].qty).slice(0, 6);
+            const maxRev = Math.max(1, ...ranked.map(([, v]) => v.rev));
+            if (topBox) topBox.innerHTML = ranked.length ? ranked.map(([name, v]) => `
+                <div>
+                    <div class="flex justify-between text-xs mb-1 gap-3"><span class="text-zinc-200">${esc(name)}</span><span class="text-white font-bold shrink-0">${v.qty}× · ${fmt(v.rev)}</span></div>
+                    <div class="h-2 rounded-full bg-saBg border border-saBorder overflow-hidden"><div class="h-full" style="width:${(v.rev / maxRev * 100).toFixed(1)}%;background:linear-gradient(90deg,var(--brand),var(--brand-2))"></div></div>
+                </div>`).join('') : '<p class="text-zinc-400 text-sm">Noch keine Verkäufe.</p>';
+        }
+
+        function openOrderDetail(invoice) {
+            const o = getAdminOrders().find(x => String(x.invoice) === String(invoice));
+            const box = document.getElementById('orderDetailBody');
+            if (!o || !box) return;
+            const rows = [
+                ['Status', (STATUS[normalizeStatus(o.status)] || {}).label || o.status],
+                ['Produkt', o.items || '—'],
+                ['Betrag', o.total || '—'],
+                ['Zahlungsart', o.method || '—'],
+                ['Datum', o.date || '—'],
+                ['Rechnungsnr.', o.invoice || '—'],
+                ['Bestell-ID', o.id || '—'],
+                ['PayPal-Order', o.paypalOrderId || '—'],
+                ['Capture', o.captureId || '—'],
+                ['Tx-Hash', o.signature || '—'],
+                ['E-Mail', o.email || '—']
+            ];
+            box.innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
+            document.getElementById('orderDetailTitle').textContent = 'Bestellung #' + o.invoice;
+            openModalById('orderDetailModal');
         }
 
         function renderAdminProducts() {
@@ -3823,7 +4010,7 @@
                 const name = c.dataset.name, price = parseFloat(c.dataset.price);
                 const s = stats[name] || { qty: 0, rev: 0 };
                 const rev = s.rev || s.qty * price;
-                return `<tr class="hover:bg-white/5"><td class="py-3 px-3 text-white font-semibold">${esc(name)}</td><td class="py-3 px-3 text-zinc-300">${esc(CATEGORY_LABELS[c.dataset.category] || c.dataset.category)}</td><td class="py-3 px-3 text-right text-zinc-300">${fmt(price)}</td><td class="py-3 px-3 text-right text-white font-bold">${s.qty}</td><td class="py-3 px-3 text-right text-accent font-bold">${fmt(rev)}</td></tr>`;
+                return `<tr class="hover:bg-white/5"><td class="py-3 px-3 text-white font-semibold">${esc(name)}</td><td class="py-3 px-3 text-zinc-300">${esc(CATEGORY_LABELS[c.dataset.category] || c.dataset.category)}</td><td class="py-3 px-3 text-right text-zinc-300">${fmt(price)}</td><td class="py-3 px-3 text-right text-white font-bold">${s.qty}</td><td class="py-3 px-3 text-right text-accent font-bold">${fmt(rev)}</td><td class="py-3 px-3 text-right"><button type="button" class="btn btn-secondary !py-1.5 !text-xs" onclick="fillProductForm('${esc(c.dataset.key)}')">Bearbeiten</button></td></tr>`;
             }).join('');
         }
 
@@ -3834,12 +4021,30 @@
             getAdminOrders().forEach(o => { if (o.coupon) usage[o.coupon] = (usage[o.coupon] || 0) + 1; });
             if (window.adminServerCoupons) Object.entries(window.adminServerCoupons).forEach(([k, v]) => { coupons[k] = (Number(v.valueCents) || 0) / 100; });
             const codes = Object.keys(coupons);
-            box.innerHTML = codes.length ? codes.map(c => `
+            box.innerHTML = codes.length ? codes.map(c => {
+                const server = window.adminServerCoupons && window.adminServerCoupons[c];
+                const off = !!(server && server.active === false);
+                return `
                 <div class="bg-saBg border border-saBorder p-3.5 rounded-xl flex justify-between items-center gap-3">
-                    <div class="min-w-0"><span class="font-mono font-bold text-white">${esc(c)}</span> <span class="chip bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 ml-1">−${Number(coupons[c]).toFixed(2)} €</span> <span class="text-xs text-zinc-400 ml-1">${usage[c] || 0}× genutzt</span> ${window.adminServerCoupons && window.adminServerCoupons[c] ? '<span class="chip bg-white/5 text-zinc-300 border border-saBorder ml-1">Server</span>' : '<span class="chip bg-amber-500/10 text-amber-300 border border-amber-500/30 ml-1">nur lokal</span>'}</div>
-                    <button onclick="deleteAdminCoupon(${esc(JSON.stringify(c))})" class="icon-btn hover:!text-red-400" aria-label="Gutschein ${esc(c)} löschen"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
-                </div>
-            `).join('') : '<p class="text-zinc-400 text-center py-4">Keine Gutscheine angelegt.</p>';
+                    <div class="min-w-0"><span class="font-mono font-bold text-white">${esc(c)}</span> <span class="chip ${off ? 'bg-zinc-500/15 text-zinc-300 border border-saBorder' : 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'} ml-1">${off ? 'inaktiv' : '−' + Number(coupons[c]).toFixed(2) + ' €'}</span> <span class="text-xs text-zinc-400 ml-1">${usage[c] || 0}× genutzt</span> ${server ? '<span class="chip bg-white/5 text-zinc-300 border border-saBorder ml-1">Server</span>' : '<span class="chip bg-amber-500/10 text-amber-300 border border-amber-500/30 ml-1">nur lokal</span>'}</div>
+                    <span class="flex gap-1 shrink-0">
+                        <button type="button" onclick="setCouponActive(${esc(JSON.stringify(c))}, ${off ? 'true' : 'false'})" class="btn btn-secondary !py-1.5 !text-xs">${off ? 'Aktivieren' : 'Deaktivieren'}</button>
+                        <button onclick="deleteAdminCoupon(${esc(JSON.stringify(c))})" class="icon-btn hover:!text-red-400" aria-label="Gutschein ${esc(c)} löschen"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                    </span>
+                </div>`;
+            }).join('') : '<p class="text-zinc-400 text-center py-4">Keine Gutscheine angelegt.</p>';
+        }
+
+        function setCouponActive(code, active) {
+            const eur = Number(coupons[code]);
+            if (!Number.isFinite(eur)) return;
+            if (window.isAdminClaim && window.adminSaveCoupon) {
+                window.adminSaveCoupon(code, Math.round(eur * 100), active).then(() => {
+                    if (window.adminServerCoupons && window.adminServerCoupons[code]) window.adminServerCoupons[code].active = active;
+                    renderAdminCoupons();
+                    showToast(active ? 'Gutschein aktiv.' : 'Gutschein deaktiviert.');
+                }).catch(e => showToast(friendlyErr(e)));
+            } else showToast('Dafür brauchst du den Admin-Login.');
         }
 
         function createAdminCoupon() {
@@ -4000,23 +4205,75 @@
                 }
             });
         };
-        function saveShopProductAdmin() {
+        function isPdfProduct(id) {
+            if (GUIDE_ASSET[id]) return true;
+            const row = window.cms && window.cms.catalog && window.cms.catalog[id];
+            return !!(row && (row.deliveryType === 'pdf' || row.downloadKey));
+        }
+        const GUIDE_ASSET = {
+            'krypto-einsteiger-2026': { cover: 'cover:krypto', pdf: 'pdf:krypto' },
+            'discord-server-playbook': { cover: 'cover:discord', pdf: 'pdf:discord' },
+            'digitale-produkte-business-guide': { cover: 'cover:business', pdf: 'pdf:business' }
+        };
+        function assetKeyFor(id, kind) {
+            const known = GUIDE_ASSET[id];
+            return known ? known[kind] : kind + ':' + id;
+        }
+        function fillProductForm(id) {
+            const card = document.querySelector('.product-item[data-key="' + id + '"]');
+            const row = (window.cms && window.cms.catalog && window.cms.catalog[id]) || {};
+            document.getElementById('spId').value = id;
+            document.getElementById('spName').value = (row.name || (card && card.dataset.name) || '');
+            document.getElementById('spBlurb').value = (row.blurb || (card && card.dataset.desc) || '');
+            document.getElementById('spPrice').value = row.priceCents ? (Number(row.priceCents) / 100).toFixed(2) : (card ? card.dataset.price : '');
+            document.getElementById('spStock').value = row.stock != null ? row.stock : (card && card.dataset.stock ? card.dataset.stock : 99);
+            document.getElementById('spSort').value = row.sort != null ? row.sort : (card && card.dataset.order ? card.dataset.order : 10);
+            document.getElementById('spCategory').value = row.category || (card && card.dataset.category) || 'guides';
+            document.getElementById('spDelivery').value = row.deliveryType || (GUIDE_ASSET[id] ? 'pdf' : 'termin');
+            document.getElementById('spActive').checked = row.active !== false && !(card && card.dataset.inactive === '1');
+            switchAdminSubTab('products');
+        }
+        async function saveShopProductAdmin() {
             const id = document.getElementById('spId').value.trim().toLowerCase();
+            const priceEur = Number(document.getElementById('spPrice').value);
             const rec = {
+                id,
                 name: document.getElementById('spName').value.trim(),
                 blurb: document.getElementById('spBlurb').value.trim(),
                 stock: Math.max(0, Math.min(9999, Math.round(Number(document.getElementById('spStock').value) || 0))),
-                active: document.getElementById('spActive').checked
+                active: document.getElementById('spActive').checked,
+                sort: Math.max(0, Math.min(999, Math.round(Number(document.getElementById('spSort').value) || 0))),
+                category: document.getElementById('spCategory').value,
+                deliveryType: document.getElementById('spDelivery').value,
+                priceCents: Math.round(priceEur * 100),
+                image: (window.WORKER_URL || '') + '/asset/cover/' + id
             };
+            if (!/^[a-z0-9_-]{2,48}$/.test(id) || !rec.name || !Number.isFinite(rec.priceCents) || rec.priceCents < 1) return showToast('ID, Titel und Preis prüfen.');
             const all = JSON.parse(localStorage.getItem('store_shop_products') || '{}');
             all[id] = rec;
             localStorage.setItem('store_shop_products', JSON.stringify(all));
             window.shopProducts = Object.assign({}, window.shopProducts || {}, { [id]: rec });
             applyShopProducts();
-            // Firestore-Schreibweg: nur mit Admin-Claim. Preise der Zahlung bleiben in catalog.js.
-            if (window.isAdminClaim && window.callServer) {
-                window.callServer('adminSaveProduct', { id, ...rec }).then(() => showToast('In Firestore gespeichert.')).catch(e => showToast(friendlyErr(e)));
-            } else showToast('Lokal gespeichert. Firestore braucht einen Admin-Login und den deployten Worker.');
+            if (!(window.isAdminClaim && window.callServer)) return showToast('Lokal gespeichert. Firestore braucht einen Admin-Login und den deployten Worker.');
+            try {
+                const cover = document.getElementById('spCover').files[0];
+                const pdf = document.getElementById('spPdf').files[0];
+                if (cover && window.uploadShopAsset) await window.uploadShopAsset(assetKeyFor(id, 'cover'), cover);
+                if (pdf && window.uploadShopAsset) await window.uploadShopAsset(assetKeyFor(id, 'pdf'), pdf);
+                await window.callServer('adminSaveProduct', rec);
+                showToast('Produkt in Firestore gespeichert.');
+                document.getElementById('spCover').value = '';
+                document.getElementById('spPdf').value = '';
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function deleteShopProductAdmin() {
+            const id = document.getElementById('spId').value.trim().toLowerCase();
+            if (!id || !confirm('Produkt ' + id + ' deaktivieren oder löschen?')) return;
+            if (!(window.isAdminClaim && window.callServer)) return showToast('Dafür brauchst du den Admin-Login.');
+            try {
+                const r = await window.callServer('adminDeleteProduct', { id });
+                showToast(r.hidden ? 'Produkt ist ausgeblendet.' : 'Produkt gelöscht.');
+            } catch (e) { showToast(friendlyErr(e)); }
         }
         async function downloadPaidGuide(orderId, productId) {
             try {
@@ -4307,7 +4564,7 @@
             }
         }
         const CMS_FIELDS = {
-            siteSettings: ['heroTitle', 'heroText', 'promoText', 'accent', 'linktree', 'paypalPlanId', 'unitsSold', 'payments', 'legalName', 'legalStreet', 'legalZipCity', 'legalEmail', 'impressumDe', 'impressumEn'],
+            siteSettings: ['heroTitle', 'heroText', 'promoText', 'accent', 'accent2', 'brandName', 'linktree', 'discord', 'paypalPlanId', 'unitsSold', 'payments', 'legalName', 'legalStreet', 'legalZipCity', 'legalEmail', 'impressumDe', 'impressumEn', 'privacyDe', 'termsDe', 'widerrufDe', 'seoTitle', 'seoDescription', 'ogImage'],
             catalog: ['name', 'blurb', 'priceCents', 'stock', 'image', 'video', 'deliveryType', 'downloadKey', 'crypto', 'active'],
             reviews: ['name', 'quote'],
             posts: ['title', 'date', 'body'],
@@ -4316,6 +4573,128 @@
             bundles: ['name', 'productId', 'minQty', 'percent']
         };
         function escHtml(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+        const DEFAULT_DISCORD = 'https://discord.gg/KZgBuDzRx7';
+        function discordHref(value) {
+            const url = String(value || '').trim();
+            return /^https:\/\/(discord\.gg|discord\.com)\//i.test(url) ? url : DEFAULT_DISCORD;
+        }
+        function applyDiscordInvite(value) {
+            const href = discordHref(value);
+            document.querySelectorAll('[data-discord]').forEach(el => { el.href = href; });
+            if (typeof HELP_TOPICS !== 'undefined') {
+                const topic = HELP_TOPICS.find(t => t.id === 'contact');
+                const link = topic && topic.links && topic.links.find(l => /discord/i.test(l.label + l.href));
+                if (link) link.href = href;
+            }
+        }
+        function setIfIdle(id, value) {
+            const el = document.getElementById(id);
+            if (el && document.activeElement !== el) el.value = value == null ? '' : String(value);
+        }
+        function fillStudioForms() {
+            const s = (window.cms && window.cms.siteSettings && window.cms.siteSettings.main) || {};
+            setIfIdle('themeBrand', s.brandName || '');
+            setIfIdle('themeHeroTitle', s.heroTitle || '');
+            setIfIdle('themeHeroText', s.heroText || '');
+            setIfIdle('themeLinktree', s.linktree || '');
+            setIfIdle('themeDiscord', s.discord || DEFAULT_DISCORD);
+            setIfIdle('themePromo', s.promoText || '');
+            setIfIdle('seoTitle', s.seoTitle || '');
+            setIfIdle('seoDescription', s.seoDescription || '');
+            setIfIdle('ogImage', s.ogImage || '');
+            setIfIdle('legalImpressum', s.impressumDe || '');
+            setIfIdle('legalPrivacy', s.privacyDe || '');
+            setIfIdle('legalTerms', s.termsDe || '');
+            setIfIdle('legalWithdrawal', s.widerrufDe || '');
+            if (s.accent && document.activeElement !== document.getElementById('themeAccent')) {
+                const el = document.getElementById('themeAccent'); if (el) el.value = s.accent;
+            }
+            if (s.accent2 && document.activeElement !== document.getElementById('themeAccent2')) {
+                const el = document.getElementById('themeAccent2'); if (el) el.value = s.accent2;
+            }
+            renderReviewAdmin();
+            renderFaqAdmin();
+        }
+        async function saveThemeSettings() {
+            const discord = discordHref(document.getElementById('themeDiscord').value);
+            const data = {
+                brandName: document.getElementById('themeBrand').value.trim(),
+                heroTitle: document.getElementById('themeHeroTitle').value.trim(),
+                heroText: document.getElementById('themeHeroText').value.trim(),
+                accent: document.getElementById('themeAccent').value,
+                accent2: document.getElementById('themeAccent2').value,
+                linktree: document.getElementById('themeLinktree').value.trim(),
+                discord,
+                promoText: document.getElementById('themePromo').value.trim()
+            };
+            try {
+                await window.callServer('adminUpsert', { collection: 'siteSettings', id: 'main', data });
+                applyDiscordInvite(discord);
+                showToast('Design gespeichert. Discord-Link ist live.');
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function saveSeoSettings() {
+            const data = {
+                seoTitle: document.getElementById('seoTitle').value.trim(),
+                seoDescription: document.getElementById('seoDescription').value.trim(),
+                ogImage: document.getElementById('ogImage').value.trim()
+            };
+            try { await window.callServer('adminUpsert', { collection: 'siteSettings', id: 'main', data }); showToast('SEO gespeichert.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function saveLegalSettings() {
+            const data = {
+                impressumDe: document.getElementById('legalImpressum').value.trim(),
+                privacyDe: document.getElementById('legalPrivacy').value.trim(),
+                termsDe: document.getElementById('legalTerms').value.trim(),
+                widerrufDe: document.getElementById('legalWithdrawal').value.trim()
+            };
+            try { await window.callServer('adminUpsert', { collection: 'siteSettings', id: 'main', data }); showToast('Rechtstexte gespeichert.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        function renderReviewAdmin() {
+            const box = document.getElementById('reviewAdminList');
+            if (!box) return;
+            const rows = (window.cms && window.cms.reviews) || {};
+            box.innerHTML = Object.keys(rows).length ? Object.entries(rows).map(([id, r]) => `<div class="flex justify-between gap-2"><span class="text-zinc-200">${escHtml(r.name)}: ${escHtml(r.quote)}</span><button type="button" class="btn btn-secondary !py-1 !text-xs" onclick="deleteNamedDoc('reviews','${escHtml(id)}')">Löschen</button></div>`).join('') : '<p class="text-xs text-zinc-500">Noch keine eigenen Stimmen. Die eingebauten bleiben sichtbar.</p>';
+        }
+        function renderFaqAdmin() {
+            const box = document.getElementById('faqAdminList');
+            if (!box) return;
+            const rows = (window.cms && window.cms.faqs) || {};
+            box.innerHTML = Object.keys(rows).length ? Object.entries(rows).map(([id, r]) => `<div class="flex justify-between gap-2"><span class="text-zinc-200">${escHtml(r.q)}</span><button type="button" class="btn btn-secondary !py-1 !text-xs" onclick="deleteNamedDoc('faqs','${escHtml(id)}')">Löschen</button></div>`).join('') : '<p class="text-xs text-zinc-500">Noch keine eigenen FAQ-Einträge.</p>';
+        }
+        async function saveReviewAdmin() {
+            const id = document.getElementById('reviewId').value.trim();
+            try {
+                await window.callServer('adminUpsert', { collection: 'reviews', id, data: { name: document.getElementById('reviewName').value.trim(), quote: document.getElementById('reviewQuote').value.trim() } });
+                showToast('Stimme gespeichert.');
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function saveFaqAdmin() {
+            const id = document.getElementById('faqId').value.trim();
+            try {
+                await window.callServer('adminUpsert', { collection: 'faqs', id, data: { q: document.getElementById('faqQ').value.trim(), a: document.getElementById('faqA').value.trim() } });
+                showToast('FAQ gespeichert.');
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function deleteNamedDoc(collection, id) {
+            try { await window.callServer('adminDeleteContent', { collection, id }); showToast('Gelöscht.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        function showLegalCustom(id, text) {
+            const box = document.getElementById(id);
+            if (!box) return;
+            const article = box.parentElement;
+            const hide = !!(text && String(text).trim());
+            box.textContent = hide ? text : '';
+            box.classList.toggle('hidden', !hide);
+            if (!article) return;
+            Array.from(article.children).forEach(el => {
+                if (el === box || el.tagName === 'BUTTON' || el.tagName === 'H2') return;
+                el.classList.toggle('cms-replaced', hide);
+            });
+        }
         function applyPublicCms() {
             const cms = window.cms || {};
             const settings = (cms.siteSettings && cms.siteSettings.main) || {};
@@ -4332,6 +4711,27 @@
                 if (a) a.textContent = settings.promoText;
             }
             if (settings.linktree) document.querySelectorAll('a[href^="https://linktr.ee/"]').forEach(el => { el.href = settings.linktree; });
+            applyDiscordInvite(settings.discord || DEFAULT_DISCORD);
+            if (settings.brandName) document.querySelectorAll('[data-brand-name]').forEach(el => { el.textContent = settings.brandName; });
+            if (settings.accent2 && /^#[0-9a-fA-F]{6}$/.test(settings.accent2)) document.documentElement.style.setProperty('--brand-2', settings.accent2);
+            if (settings.seoTitle) {
+                document.title = settings.seoTitle;
+                const og = document.querySelector('meta[property="og:title"]');
+                if (og) og.setAttribute('content', settings.seoTitle);
+            }
+            if (settings.seoDescription) {
+                const meta = document.querySelector('meta[name="description"]');
+                if (meta) meta.setAttribute('content', settings.seoDescription);
+                const ogd = document.querySelector('meta[property="og:description"]');
+                if (ogd) ogd.setAttribute('content', settings.seoDescription);
+            }
+            if (settings.ogImage) {
+                const ogi = document.querySelector('meta[property="og:image"]');
+                if (ogi) ogi.setAttribute('content', settings.ogImage);
+            }
+            showLegalCustom('legalPrivacyCustom', settings.privacyDe);
+            showLegalCustom('legalTermsCustom', settings.termsDe);
+            showLegalCustom('legalWithdrawalCustom', settings.widerrufDe);
             if (settings.accent && /^#[0-9a-fA-F]{6}$/.test(settings.accent)) {
                 document.documentElement.style.setProperty('--brand', settings.accent);
                 document.documentElement.dataset.brand = 'custom';
@@ -4585,7 +4985,7 @@
                 text: 'Alle Links stehen gesammelt auf Linktree. Discord und E-Mail erreichst du auch direkt. Impressum, Datenschutz, AGB und Widerruf findest du unten auf dieser Seite.',
                 links: [
                     { href: 'https://linktr.ee/val3nt1no', label: 'Alle Links (Linktree)' },
-                    { href: 'https://discord.gg/YE2jHSwM7', label: 'Discord' },
+                    { href: 'https://discord.gg/KZgBuDzRx7', label: 'Discord' },
                     { href: 'mailto:L@valentinolopez.de', label: 'L@valentinolopez.de' }
                 ]
             },

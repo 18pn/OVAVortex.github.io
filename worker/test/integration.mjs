@@ -32,7 +32,8 @@ globalThis.fetch = async (input, init = {}) => {
   if (url.includes('securetoken@system')) return resp({ keys: [jwk] });
   if (url === 'https://oauth2.googleapis.com/token') return resp({ access_token: 'at', expires_in: 3600 });
   if (url.includes('coingecko')) return resp({ solana: { eur: 150 }, 'usd-coin': { eur: 0.92 } });
-  if (url.includes('api-m.sandbox.paypal.com')) {
+  if (url.includes('api-m.sandbox.paypal.com') || url.includes('api-m.paypal.com')) {
+    globalThis.__ppHost = url.includes('api-m.sandbox.paypal.com') ? 'sandbox' : 'live';
     if (url.endsWith('/v1/oauth2/token')) return resp({ access_token: 'pp' });
     if (url.endsWith('/v2/checkout/orders')) { const b = JSON.parse(body); globalThis.__pp = b; return resp({ id: 'PP123' }); }
     if (url.endsWith('/capture')) { paypalCaptured = true; const pu = globalThis.__pp.purchase_units[0];
@@ -149,4 +150,12 @@ ok(cr.expired === 1 && store.get(PFX + 'orders/' + r2.body.orderId).status.strin
 ok((await call('adminSetOrderStatus', { orderId: cId, status: 'storniert' }, t)).status === 403, 'Status ändern ohne Admin -> 403');
 ok((await call('adminSetOrderStatus', { orderId: cId, status: 'storniert' }, adminT)).status === 200 && store.get(PFX + 'orders/' + cId).status.stringValue === 'storniert', 'Admin setzt Status');
 ok((await call('adminDeleteCoupon', { code: 'SAVE5' }, adminT)).status === 200 && !store.has(PFX + 'coupons/SAVE5'), 'Admin löscht Gutschein');
+const asset = await worker.fetch(new Request('https://api.example/api/admin-asset?key=cover:krypto', { method: 'POST', headers: { Origin: 'https://valentinolopez.de', 'Content-Type': 'image/png' }, body: 'x' }), env);
+ok(asset.status === 401, 'Asset-Upload ohne Token -> 401');
+env.PAYPAL_ENV = 'production';
+r = await call('createPayPalOrder', { kind: 'topup', amountEUR: 20 }, t);
+ok(r.status === 200 && globalThis.__ppHost === 'live', 'PAYPAL_ENV=production nutzt api-m.paypal.com');
+env.PAYPAL_ENV = 'sandbox';
+r = await call('createPayPalOrder', { kind: 'topup', amountEUR: 20 }, t);
+ok(r.status === 200 && globalThis.__ppHost === 'sandbox', 'PAYPAL_ENV=sandbox nutzt api-m.sandbox.paypal.com');
 process.exit(fail ? 1 : 0);

@@ -9,7 +9,26 @@ export const GUIDES = {
 // Neutrales 48×48-PNG, falls das Cover in KV noch fehlt.
 export const PLACEHOLDER_PNG = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAIAAADYYG7QAAAAOUlEQVR42u3OMQ0AAAgDsAnZiX+NuCAcTSqgaeeVCAkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQndWQbWPC5f2iSbAAAAAElFTkSuQmCC'), c => c.charCodeAt(0));
 
+export function coverKey(productId) {
+  return (GUIDES[productId] && GUIDES[productId].cover) || 'cover:' + productId;
+}
+
+export function pdfKey(productId) {
+  return (GUIDES[productId] && GUIDES[productId].pdf) || 'pdf:' + productId;
+}
+
+export function pdfFilename(productId) {
+  return (GUIDES[productId] && GUIDES[productId].filename) || (productId + '.pdf');
+}
+
 export async function readAsset(env, key) {
   if (!env.ASSETS || !key) return null;
   return env.ASSETS.get(key, { type: 'arrayBuffer' });
+}
+
+export async function readAssetMeta(env, key) {
+  if (!env.ASSETS || !key) return null;
+  const got = await env.ASSETS.getWithMetadata(key, { type: 'arrayBuffer' });
+  if (!got || got.value == null) return null;
+  return { bytes: got.value, contentType: (got.metadata && got.metadata.contentType) || 'image/png' };
 }

@@ -1,7 +1,12 @@
 // PayPal REST (Orders v2) – Client-Secret nur aus Worker-Secret PAYPAL_CLIENT_SECRET.
 import { HttpError } from './util.js';
 
-const base = (env) => env.PAYPAL_ENV === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+// production und live nutzen die echte PayPal-API. sandbox bleibt die Test-API.
+export function paypalApiBase(env) {
+  const mode = String((env && env.PAYPAL_ENV) || '').toLowerCase();
+  return mode === 'production' || mode === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+}
+const base = paypalApiBase;
 
 async function token(env) {
   if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_CLIENT_SECRET) throw new HttpError(503, 'PayPal ist noch nicht eingerichtet.');
