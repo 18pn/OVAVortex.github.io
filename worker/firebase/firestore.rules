@@ -38,6 +38,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Bestand und Anzeigetext. Schreiben nur der Worker. Preise der Kasse bleiben im Worker-Katalog.
+    match /shopProducts/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

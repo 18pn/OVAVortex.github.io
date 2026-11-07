@@ -247,6 +247,22 @@ const routes = {
     await fsCommit(env, [deleteDoc(env, `coupons/${code}`)]);
     return { ok: true };
   },
+
+  // Anzeige-Daten (Bestand, Text). Preise für die Zahlung bleiben in catalog.js.
+  async adminSaveProduct(env, user, b) {
+    requireAdmin(user);
+    const id = str(b.id, 40).trim().toLowerCase();
+    if (!/^[a-z0-9_-]{2,32}$/.test(id)) throw new HttpError(400, 'Ungültige Produkt-ID.');
+    const stock = Math.max(0, Math.min(9999, Math.round(Number(b.stock))));
+    if (!Number.isFinite(stock)) throw new HttpError(400, 'Ungültiger Bestand.');
+    await fsCommit(env, [writeDoc(env, `shopProducts/${id}`, {
+      name: str(b.name, 80),
+      blurb: str(b.blurb, 280),
+      stock,
+      active: b.active !== false,
+    }, { serverTime: ['updatedAt'] })]);
+    return { ok: true, id };
+  },
 };
 routes.verifyTopUp = routes.verifyCryptoOrder;            // Alias: Krypto-Aufladung prüfen
 routes.createPayPalTopUp = (env, u, b) => routes.createPayPalOrder(env, u, { ...b, kind: 'topup' });

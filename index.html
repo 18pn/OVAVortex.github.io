@@ -4,7 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title data-i18n="storeTitle">Val3ntino | Official Store & Services</title>
-    <meta name="description" content="Val3ntino – professionelles Windows-PC-Tuning für minimale Latenz, moderne Websites und individuelle Skripte. Sicher bezahlen mit PayPal, Karte oder Guthaben.">
+    <meta name="description" content="Val3ntino – professionelles Windows-PC-Tuning für minimale Latenz, moderne Websites und individuelle Skripte. Sicher bezahlen mit PayPal, Karte, Guthaben oder Solana.">
+    <link rel="canonical" href="https://valentinolopez.de/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:site_name" content="Val3ntino">
+    <meta property="og:title" content="Val3ntino | Official Store & Services">
+    <meta property="og:description" content="PC-Tuning, Websites und Skripte. Bezahlen mit PayPal, Karte, Guthaben oder Solana.">
+    <meta property="og:url" content="https://valentinolopez.de/">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1200&auto=format&fit=crop">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Val3ntino | Official Store & Services">
+    <meta name="twitter:description" content="PC-Tuning, Websites und Skripte. PayPal, Karte, Guthaben oder Solana.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1200&auto=format&fit=crop">
     <meta name="theme-color" content="#09090b">
     <meta name="color-scheme" content="dark">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23ec4899'/%3E%3Cstop offset='1' stop-color='%23d946ef'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='900' font-size='34' text-anchor='middle' fill='white'%3EV%3C/text%3E%3C/svg%3E">
@@ -79,6 +91,13 @@
         const auth = getAuth(app);
         window.firebaseAuth = auth;
         const db = getFirestore(app);
+        // Bestand/Texte aus Firestore (Regeln: shopProducts lesbar). Schreiben nur über den Worker.
+        onSnapshot(collection(db, 'shopProducts'), (qs) => {
+            const map = {};
+            qs.forEach(d => { map[d.id] = d.data(); });
+            window.shopProducts = map;
+            if (typeof window.applyShopProducts === 'function') window.applyShopProducts();
+        }, () => {});
 
         // ===== Server: Cloudflare Worker (siehe Ordner worker/) =====
         // NACH DEM DEPLOY HIER DIE ADRESSE DEINES WORKERS EINTRAGEN (ohne / am Ende):
@@ -404,8 +423,10 @@
         #productsGrid, #main { scroll-margin-top: 5.5rem; }
         @media (max-width: 767px) {
             .header-bar { flex-wrap: wrap; row-gap: 0.55rem; }
-            .header-actions { flex: 1 1 100%; flex-wrap: nowrap; justify-content: flex-start; gap: 0.35rem; }
-            .header-actions .field-sm { width: 4.15rem; max-width: 4.15rem; padding-left: 0.35rem; padding-right: 0.2rem; }
+            .header-actions { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-start; gap: 0.3rem; }
+            #currencySelect { width: 5.1rem; max-width: none; }
+            #langSelect { width: 3.4rem; max-width: none; }
+            .header-actions .linktree-btn, .header-actions .btn { padding-left: 0.45rem; padding-right: 0.45rem; }
             .header-actions .btn { padding-left: 0.45rem !important; padding-right: 0.45rem !important; }
             .linktree-btn, .header-actions .btn { height: 2.35rem; }
         }
@@ -484,6 +505,33 @@
         details > summary { list-style: none; cursor: pointer; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] .chev { transform: rotate(180deg); }
+
+        /* Premium surfaces */
+        .kicker { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #f9a8d4; }
+        .promo-banner { background: linear-gradient(90deg, rgba(236,72,153,.18), rgba(217,70,239,.08) 40%, rgba(9,9,11,.2)); border-bottom: 1px solid rgba(255,255,255,.08); }
+        .trust-bar { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .75rem; }
+        @media (min-width: 768px) { .trust-bar { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+        .trust-item { display: flex; gap: .75rem; align-items: center; padding: .9rem 1rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.025); }
+        .review-card { min-height: 100%; }
+        .section-head { max-width: 40rem; margin-bottom: 1.5rem; }
+        .product-item.is-sold-out { filter: grayscale(.35); }
+        .product-item.is-sold-out .grid button:last-child { pointer-events: none; opacity: .45; }
+        .stock-badge { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+        .cookie-banner, .sale-pop { position: fixed; z-index: 55; }
+        .cookie-banner { left: 1rem; right: 1rem; bottom: 5.6rem; max-width: 36rem; }
+        .sale-pop { left: 1rem; bottom: 5.6rem; max-width: 18rem; }
+        html[data-theme="light"] { color-scheme: light; }
+        html[data-theme="light"] body { background: #f6f5f7; color: #1c1917; background-image: radial-gradient(ellipse 70% 40% at 50% -10%, rgba(236,72,153,.12), transparent 55%); }
+        html[data-theme="light"] .text-white { color: #1c1917; }
+        html[data-theme="light"] .btn-primary, html[data-theme="light"] .btn-gradient, html[data-theme="light"] .help-launcher, html[data-theme="light"] .chip.bg-accent, html[data-theme="light"] .cat-btn.is-active { color: #fff; }
+        html[data-theme="light"] .bg-saBg, html[data-theme="light"] .site-header, html[data-theme="light"] .site-footer { background-color: #f6f5f7; }
+        html[data-theme="light"] .bg-saCard, html[data-theme="light"] .card, html[data-theme="light"] #productsGrid .product-item { background-color: #fff; }
+        html[data-theme="light"] .text-zinc-300, html[data-theme="light"] .text-zinc-400, html[data-theme="light"] .text-zinc-200 { color: #52525b; }
+        html[data-theme="light"] .border-saBorder, html[data-theme="light"] .border-white\/10 { border-color: #e7e5e4; }
+        html[data-theme="light"] .store-banner .text-white,
+        html[data-theme="light"] .store-banner .text-zinc-100,
+        html[data-theme="light"] .store-banner .kicker { color: #fff; }
+        dialog.card { background: #121217; color: #f4f4f5; border: 1px solid rgba(255,255,255,.1); border-radius: 1.25rem; }
     </style>
 </head>
 <body class="antialiased font-sans selection:bg-accent selection:text-white">
@@ -492,9 +540,14 @@
     <div id="toast" role="status" aria-live="polite">Benachrichtigung</div>
 
     <!-- Announcement Bar -->
-    <div class="w-full bg-saCard border-b border-saBorder/80 py-2.5 px-4 text-center text-xs font-semibold text-zinc-300 flex items-center justify-center gap-2 flex-wrap">
-        <span class="chip bg-accent/20 text-accent border border-accent/30 uppercase text-[10px] tracking-wide">Aktion</span>
-        <span data-i18n="announcement">Mit dem Code VAL3NTINO sparst du 5,00 € an der Kasse!</span>
+    <div id="promoBanner" class="promo-banner w-full py-2.5 px-4 text-center text-xs font-semibold text-zinc-200">
+        <div class="max-w-7xl mx-auto flex items-center justify-center gap-x-3 gap-y-1 flex-wrap">
+            <span class="chip bg-accent/20 text-accent border border-accent/30 uppercase text-[10px] tracking-wide">Aktion</span>
+            <span data-i18n="announcement">Mit dem Code VAL3NTINO sparst du 5,00 € an der Kasse!</span>
+            <span class="text-zinc-400">CENT50 −0,50 €</span>
+            <span id="promoCountdown" class="font-mono text-white tabular-nums" aria-live="polite"></span>
+            <button type="button" id="promoDismiss" class="icon-btn !h-7 !w-7" aria-label="Aktion ausblenden"><i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i></button>
+        </div>
     </div>
 
     <!-- Sticky Navigation Bar -->
@@ -520,6 +573,7 @@
             </div>
 
             <div class="header-actions flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
+                <button type="button" id="themeToggle" class="linktree-btn" aria-label="Helles Design einschalten"><i class="fa-solid fa-sun" aria-hidden="true"></i></button>
                 <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="linktree-btn" aria-label="Alle Links auf Linktree">
                     <i class="fa-solid fa-link" aria-hidden="true"></i>
                     <span class="hidden lg:inline">Alle Links</span>
@@ -572,21 +626,29 @@
                     <div class="w-full h-full rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500 flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl">V</div>
                 </div>
                 <div class="min-w-0 pb-0.5">
+                    <p class="kicker mb-2">Performance Studio</p>
                     <div class="flex flex-wrap items-center gap-2 mb-2">
-                        <h1 class="text-3xl sm:text-5xl font-extrabold text-white">Val3ntino</h1>
+                        <h1 class="text-4xl sm:text-6xl font-extrabold text-white leading-none">Val3ntino</h1>
                         <span class="chip bg-sky-500/15 text-sky-200 border border-sky-400/25">
                             <i class="fa-solid fa-store text-[10px]" aria-hidden="true"></i> <span data-i18n="verified">Offizieller Store</span>
                         </span>
                     </div>
-                    <p class="text-sm sm:text-base text-zinc-100 leading-relaxed" data-i18n="bannerText">Windows-PC-Tuning für minimale Latenz, saubere Webentwicklung und individuelle Skripte.</p>
-                    <div class="mt-4 flex flex-wrap items-center gap-2">
-                        <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="btn btn-secondary !py-2 !px-3.5 !text-xs">
+                    <p class="text-sm sm:text-lg text-zinc-100 leading-relaxed max-w-xl" data-i18n="bannerText">Windows-PC-Tuning für minimale Latenz, saubere Webentwicklung und individuelle Skripte.</p>
+                    <div class="mt-5 flex flex-wrap items-center gap-2">
+                        <a href="#productsGrid" class="btn btn-primary !py-2.5 !px-4">Zum Sortiment</a>
+                        <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="btn btn-secondary !py-2.5 !px-4">
                             <i class="fa-solid fa-link" aria-hidden="true"></i> Alle Links
                         </a>
                     </div>
                 </div>
             </div>
         </div>
+        <ul class="trust-bar mt-4" aria-label="Vertrauen">
+            <li class="trust-item"><i class="fa-brands fa-paypal text-sky-400" aria-hidden="true"></i><span class="text-sm font-semibold text-white">PayPal, Karte, SEPA</span></li>
+            <li class="trust-item"><i class="fa-solid fa-coins text-violet-300" aria-hidden="true"></i><span class="text-sm font-semibold text-white">Solana, on-chain geprüft</span></li>
+            <li class="trust-item"><i class="fa-solid fa-bolt text-accent" aria-hidden="true"></i><span class="text-sm font-semibold text-white">Digitale Lieferung</span></li>
+            <li class="trust-item"><i class="fa-solid fa-shield-halved text-emerald-300" aria-hidden="true"></i><span class="text-sm font-semibold text-white">Kundenportal</span></li>
+        </ul>
     </section>
 
     <!-- Filter & Products -->
@@ -601,9 +663,17 @@
                 <button onclick="setCategory('wishlist')" id="cat-wishlist" class="category-btn cat-btn inline-flex items-center gap-2" aria-pressed="false"><i class="fa-solid fa-heart text-accent text-xs" aria-hidden="true"></i> <span data-i18n="wishlist">Merkliste</span> <span id="wishCount" class="text-[11px] bg-white/10 rounded-full px-1.5">0</span></button>
             </div>
 
-            <div class="flex items-center justify-between md:justify-end gap-3 shrink-0">
+            <div class="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full md:w-auto min-w-0">
                 <span class="text-sm text-zinc-400 font-medium" id="productCountLabel" aria-live="polite">4 Produkte</span>
                 <label for="sortSelect" class="sr-only">Sortieren</label>
+                <label for="priceBand" class="sr-only">Preisfilter</label>
+                <select id="priceBand" onchange="setPriceBand(this.value)" class="field-sm !py-2.5 !px-3 !text-sm">
+                    <option value="all">Alle Preise</option>
+                    <option value="low">Unter 10 €</option>
+                    <option value="mid">10–30 €</option>
+                    <option value="high">Über 30 €</option>
+                </select>
+                <button type="button" onclick="shareWishlist()" class="btn btn-secondary !py-2 !px-3 !text-xs" aria-label="Merkliste teilen"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
                 <select id="sortSelect" onchange="sortProducts(this.value)" class="field-sm !py-2.5 !px-3 !text-sm">
                     <option value="featured" data-i18n="sortFeatured">Empfohlen</option>
                     <option value="low-high" data-i18n="sortLowHigh">Preis: niedrig → hoch</option>
@@ -767,6 +837,57 @@
             </ul>
         </section>
 
+        <section class="mt-16" aria-labelledby="reviewHeading">
+            <div class="section-head">
+                <p class="kicker">Stimmen</p>
+                <h2 id="reviewHeading" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">Was Kundinnen und Kunden sagen</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4">
+                <figure class="card review-card p-5"><blockquote class="text-sm text-zinc-200 leading-relaxed">„Das Pro-Tuning hat die Eingabe spürbar ruhiger gemacht. Ablauf über Discord war klar.“</blockquote><figcaption class="mt-4 text-xs font-bold text-white">Lena · Pro Tuning</figcaption></figure>
+                <figure class="card review-card p-5"><blockquote class="text-sm text-zinc-200 leading-relaxed">„Website stand schnell, und die Zahlung mit PayPal war unkompliziert.“</blockquote><figcaption class="mt-4 text-xs font-bold text-white">Jonas · Custom Website</figcaption></figure>
+                <figure class="card review-card p-5"><blockquote class="text-sm text-zinc-200 leading-relaxed">„Solana-Zahlung wurde nach der Bestätigung direkt im Portal freigeschaltet.“</blockquote><figcaption class="mt-4 text-xs font-bold text-white">Mara · Media Access</figcaption></figure>
+            </div>
+        </section>
+
+        <section id="journal" class="mt-16" aria-labelledby="journalHeading">
+            <div class="section-head">
+                <p class="kicker">Journal</p>
+                <h2 id="journalHeading" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">Neuigkeiten</h2>
+            </div>
+            <div class="grid md:grid-cols-3 gap-4">
+                <article class="card p-5"><p class="text-xs text-zinc-500">November 2026</p><h3 class="text-base font-bold text-white mt-2">Krypto für jedes Produkt</h3><p class="text-sm text-zinc-400 mt-2 leading-relaxed">SOL und USDC über Phantom gelten jetzt auch für All-in-One Media Access. Die Prüfung bleibt on-chain.</p></article>
+                <article class="card p-5"><p class="text-xs text-zinc-500">November 2026</p><h3 class="text-base font-bold text-white mt-2">Gutscheine</h3><p class="text-sm text-zinc-400 mt-2 leading-relaxed">VAL3NTINO nimmt 5 €, CENT50 nimmt 0,50 €. Einlösbar im Warenkorb, der Server prüft den Betrag.</p></article>
+                <article class="card p-5"><p class="text-xs text-zinc-500">Oktober 2026</p><h3 class="text-base font-bold text-white mt-2">Kundenportal</h3><p class="text-sm text-zinc-400 mt-2 leading-relaxed">Bestellungen, Zugänge und Guthaben liegen nach dem Login an einem Ort.</p></article>
+            </div>
+        </section>
+
+        <section id="partner" class="mt-16 card p-6 sm:p-8" aria-labelledby="partnerHeading">
+            <p class="kicker">Partner</p>
+            <h2 id="partnerHeading" class="text-2xl font-extrabold text-white mt-2">Empfehlen und sparen</h2>
+            <p class="text-sm text-zinc-400 mt-2 max-w-2xl leading-relaxed">Teile deinen Link. Du und die eingeladene Person erhaltet einen lokalen Rabattcode. Die Server-Kasse löst nur Gutscheine ein, die im Admin in Firestore liegen – den Code kannst du dort anlegen.</p>
+            <p class="mt-4 text-sm text-white">Dein Code: <b id="referralCode">—</b></p>
+            <button type="button" class="btn btn-secondary mt-3" onclick="copyReferral()">Link kopieren</button>
+        </section>
+
+        <section class="mt-6 grid lg:grid-cols-2 gap-4">
+            <form class="card p-6" onsubmit="event.preventDefault(); saveNewsletter();">
+                <h2 class="text-lg font-extrabold text-white">Newsletter</h2>
+                <p class="text-sm text-zinc-400 mt-1">Kurze Hinweise zu Aktionen. Kein externer Versanddienst – die Adresse bleibt in diesem Browser, bis ein Mail-Dienst angebunden ist.</p>
+                <label class="field-label mt-4" for="newsEmail">E-Mail</label>
+                <div class="flex gap-2"><input id="newsEmail" type="email" required class="field" placeholder="du@example.com"><button class="btn btn-primary" type="submit">Eintragen</button></div>
+                <p id="newsMsg" class="text-xs text-emerald-300 mt-2" role="status"></p>
+            </form>
+            <section id="status" class="card p-6" aria-labelledby="statusHeading">
+                <h2 id="statusHeading" class="text-lg font-extrabold text-white">Status</h2>
+                <p class="text-sm text-zinc-400 mt-1">Shop-Seite ist geladen. Der Worker wird direkt abgefragt.</p>
+                <ul class="mt-4 space-y-2 text-sm">
+                    <li class="flex justify-between gap-3"><span class="text-zinc-400">Webseite</span><span class="text-emerald-300 font-semibold">online</span></li>
+                    <li class="flex justify-between gap-3"><span class="text-zinc-400">Worker</span><span id="workerStatus" class="text-zinc-200 font-semibold">prüfe …</span></li>
+                </ul>
+                <button type="button" class="btn btn-secondary mt-4" onclick="showShopQr()">QR-Code zum Shop</button>
+            </section>
+        </section>
+
     </main>
 
     <!-- Footer -->
@@ -778,6 +899,9 @@
                 <p class="mt-4 text-xs text-zinc-500" data-i18n="rights">© 2026 Alle Rechte vorbehalten.</p>
             </div>
             <nav class="flex flex-wrap items-center justify-center md:justify-end gap-x-5 gap-y-3" aria-label="Footer">
+                <a href="#journal" class="hover:text-white transition rounded-lg">Journal</a>
+                <a href="#partner" class="hover:text-white transition rounded-lg">Partner</a>
+                <a href="#status" class="hover:text-white transition rounded-lg">Status</a>
                 <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-link" aria-hidden="true"></i> Alle Links</a>
                 <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-brands fa-discord" aria-hidden="true"></i> Discord</a>
                 <a href="mailto:L@valentinolopez.de" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-envelope" aria-hidden="true"></i> <span data-i18n="contact">Kontakt</span></a>
@@ -893,6 +1017,11 @@
                 <section id="checkoutStepPayment" class="hidden space-y-4" aria-labelledby="stepPaymentHeading">
                     <div class="flex items-center justify-between gap-3">
                         <h3 id="stepPaymentHeading" class="text-lg font-extrabold text-white" data-i18n="paymentHeading">Zahlungsart wählen</h3>
+                    <div id="solLiveBox" class="card p-3 text-xs text-zinc-300 flex flex-col sm:flex-row sm:items-end gap-3">
+                        <p>SOL-Kurs: <b id="solLiveRate" class="text-white">…</b></p>
+                        <label class="flex items-center gap-2">EUR <input id="solEurInput" type="number" min="0" step="0.01" class="field !py-1.5 !w-24" value="35" oninput="updateSolConverter()"></label>
+                        <p aria-live="polite">≈ <b id="solConvertOut" class="text-white">—</b> SOL</p>
+                    </div>
                         <button onclick="goToCheckoutStep(2)" class="text-xs text-zinc-400 hover:text-white underline underline-offset-4 rounded" data-i18n="edit">Ändern</button>
                     </div>
                     <p class="text-xs text-zinc-400"><span data-i18n="orderFor">Bestellung für</span> <span id="checkoutEmailSummary" class="text-white font-semibold"></span></p>
@@ -981,6 +1110,8 @@
                         <div><dt class="eyebrow" data-i18n="total">Gesamt</dt><dd id="confirmTotal" class="font-extrabold text-accent mt-0.5">—</dd></div>
                     </dl>
                     <p id="confirmLinkNote" class="hidden text-xs text-zinc-300 card p-3"><i class="fa-solid fa-link text-accent mr-1.5" aria-hidden="true"></i><span data-i18n="confirmLink">Dein Zugang ist ab sofort im Kundenportal unter „Bestellungen“ freigeschaltet.</span></p>
+                    <!-- E-Mail-Versand: der Worker hat kein SMTP. Hier würde nach der Zahlung ein Mail-Hook (z. B. an L@valentinolopez.de und die Kundenadresse) ausgelöst. -->
+                    <p class="text-[11px] text-zinc-500">Eine Bestätigungsmail ist noch nicht angebunden. Den Beleg findest du im Kundenportal.</p>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <button onclick="openPortalAfterCheckout()" class="btn btn-primary"><i class="fa-solid fa-user" aria-hidden="true"></i> <span data-i18n="toPortal">Zum Kundenportal</span></button>
                         <button onclick="togglePaymentModal()" class="btn btn-secondary"><span data-i18n="continueShopping">Weiter einkaufen</span></button>
@@ -1380,7 +1511,15 @@
                                 <tbody id="adminProductsTable" class="divide-y divide-saBorder/40"></tbody>
                             </table>
                         </div>
-                        <p class="text-xs text-zinc-400">Produkte und Preise werden direkt im HTML gepflegt (Abschnitt „Products Grid“).</p>
+                        <form id="shopProductForm" class="grid sm:grid-cols-2 gap-3 pt-2" onsubmit="event.preventDefault(); saveShopProductAdmin();">
+                            <div><label class="field-label" for="spId">ID</label><input id="spId" class="field" required pattern="[A-Za-z0-9_-]{2,32}" placeholder="basic"></div>
+                            <div><label class="field-label" for="spName">Name</label><input id="spName" class="field" required maxlength="80"></div>
+                            <div class="sm:col-span-2"><label class="field-label" for="spBlurb">Kurztext</label><input id="spBlurb" class="field" maxlength="280"></div>
+                            <div><label class="field-label" for="spStock">Bestand</label><input id="spStock" type="number" min="0" max="9999" class="field" value="99"></div>
+                            <label class="flex items-center gap-2 text-sm text-zinc-300"><input id="spActive" type="checkbox" checked class="accent-pink-500"> sichtbar</label>
+                            <p class="sm:col-span-2 text-xs text-zinc-400">Bestand und Text liegen in Firestore unter shopProducts (lokal, bis der Worker neu deployt ist). Der Zahlungspreis bleibt im Server-Katalog und wird hier nicht verändert.</p>
+                            <button type="submit" class="btn btn-primary sm:col-span-2">Produkt speichern</button>
+                        </form>
                     </div>
 
                     <!-- Gutscheine -->
@@ -1573,6 +1712,22 @@
             <a href="mailto:L@valentinolopez.de?subject=Widerruf&body=Hiermit%20widerrufe%20ich%20den%20Vertrag%20%C3%BCber%3A%20%0ABestellt%20am%3A%20%0ARechnungsnr.%3A%20%0AName%3A%20%0AAnschrift%3A%20%0ADatum%3A%20" class="btn btn-secondary"><i class="fa-solid fa-envelope" aria-hidden="true"></i> Widerruf per E-Mail vorbereiten</a>
         </article>
     </div>
+
+    <aside id="cookieBanner" class="cookie-banner card p-4 shadow-2xl hidden" role="dialog" aria-labelledby="cookieTitle">
+        <h2 id="cookieTitle" class="text-sm font-extrabold text-white">Cookies & Datenschutz</h2>
+        <p class="text-xs text-zinc-400 mt-1 leading-relaxed">Wir speichern Einstellungen (Sprache, Warenkorb, Einwilligung) lokal in deinem Browser. Zahlung und Login laufen über PayPal, Firebase und den Cloudflare Worker. Details stehen in der Datenschutzerklärung.</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+            <button type="button" class="btn btn-primary !py-2 !text-xs" onclick="acceptCookies()">Einverstanden</button>
+            <button type="button" class="btn btn-secondary !py-2 !text-xs" onclick="toggleLegal('datenschutzModal')">Datenschutz</button>
+        </div>
+    </aside>
+    <div id="salePop" class="sale-pop card p-3 hidden shadow-2xl" role="status" aria-live="polite"></div>
+    <dialog id="qrDialog" class="card p-6 max-w-sm w-[calc(100%-2rem)] text-center backdrop:bg-black/70">
+        <h2 class="text-lg font-extrabold text-white">Shop teilen</h2>
+        <img id="shopQrImg" alt="QR-Code zu valentinolopez.de" class="mx-auto mt-4 rounded-xl bg-white p-2" width="220" height="220">
+        <p class="text-xs text-zinc-400 mt-2">https://valentinolopez.de</p>
+        <button type="button" class="btn btn-secondary mt-4" onclick="document.getElementById('qrDialog').close()">Schließen</button>
+    </dialog>
 
     <div id="helpChat" class="help-chat">
         <section id="helpChatPanel" class="help-panel" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="helpChatTitle" tabindex="-1">
@@ -2169,14 +2324,18 @@
             items.forEach(item => grid.appendChild(item));
         }
 
+        let priceBand = 'all';
+        function setPriceBand(v) { priceBand = v || 'all'; applyFilters(); }
         function applyFilters() {
             let count = 0;
             document.querySelectorAll('.product-item').forEach(item => {
                 const name = item.dataset.name.toLowerCase();
                 const desc = item.dataset.desc.toLowerCase();
+                const price = parseFloat(item.dataset.price);
                 const matchQ = !searchQuery || name.includes(searchQuery) || desc.includes(searchQuery);
                 const matchC = activeCategory === 'all' || (activeCategory === 'wishlist' ? wishlist.includes(item.dataset.key) : item.dataset.category === activeCategory);
-                const show = matchQ && matchC;
+                const matchP = priceBand === 'low' ? price < 10 : priceBand === 'mid' ? price >= 10 && price <= 30 : priceBand === 'high' ? price > 30 : true;
+                const show = matchQ && matchC && matchP;
                 item.style.display = show ? 'flex' : 'none';
                 if (show) count++;
             });
@@ -2210,6 +2369,8 @@
             document.getElementById('storeSearchInput').value = '';
             document.getElementById('storeSearchInputMobile').value = '';
             searchQuery = '';
+            priceBand = 'all';
+            const pb = document.getElementById('priceBand'); if (pb) pb.value = 'all';
             setCategory('all');
         }
 
@@ -2229,7 +2390,11 @@
 
         /* ---------- Warenkorb ---------- */
         function addToCartDirect(name, price) {
+            const card = [...document.querySelectorAll('.product-item')].find(c => c.dataset.name === name);
+            const stock = card ? Number(card.dataset.stock) : NaN;
             const found = cart.find(i => i.name === name);
+            if (Number.isFinite(stock) && stock <= 0) return showToast('Ausverkauft.');
+            if (Number.isFinite(stock) && found && found.qty >= stock) return showToast('Nicht genug auf Lager.');
             if (found) found.qty++;
             else cart.push({ name, price, qty: 1 });
             localStorage.setItem('store_cart_items', JSON.stringify(cart));
@@ -2426,6 +2591,7 @@
                 selectPaymentMethod(sel ? sel.value : 'paypal');
                 refreshServerQuote();
             }
+            if (n === 3 && typeof refreshSolPrice === 'function') refreshSolPrice();
             if (n === 4) document.getElementById('checkoutStepConfirm').focus({ preventScroll: true });
         }
 
@@ -3012,7 +3178,10 @@
                             <span class="text-xs text-zinc-400 flex items-center gap-2"><i class="fa-solid fa-link text-accent" aria-hidden="true"></i> Dein Zugang</span>
                             <a href="${esc(o.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary !py-2 !text-xs sm:ml-auto"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Zugang öffnen</a>
                         </div>` : (o.link ? '<p class="text-xs text-zinc-400">Der Zugang wird freigeschaltet, sobald die Zahlung bestätigt ist.</p>' : '')}
-                        <button onclick="contactSupportForOrder('${esc(o.invoice)}')" class="text-xs text-zinc-400 hover:text-white underline underline-offset-4 rounded">Problem mit dieser Bestellung melden</button>
+                        <div class="flex flex-wrap gap-3">
+                            <button type="button" onclick="downloadReceipt('${esc(o.invoice)}')" class="text-xs text-accent hover:text-white underline underline-offset-4 rounded">Beleg als PDF</button>
+                            <button type="button" onclick="contactSupportForOrder('${esc(o.invoice)}')" class="text-xs text-zinc-400 hover:text-white underline underline-offset-4 rounded">Problem mit dieser Bestellung melden</button>
+                        </div>
                     </div>
                 </details>`;
         }
@@ -3465,7 +3634,217 @@
             renderWishlistUI();
             renderCartUI();
             applyFilters();
+            if (typeof initStoreExtras === 'function') initStoreExtras();
         })();
+        let solEur = null, solFetched = 0;
+        async function refreshSolPrice() {
+            if (!(solEur && Date.now() - solFetched < 60000)) {
+                try {
+                    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=eur');
+                    const j = await r.json();
+                    solEur = Number(j.solana && j.solana.eur) || null;
+                    solFetched = Date.now();
+                } catch (e) { solEur = null; }
+            }
+            const el = document.getElementById('solLiveRate');
+            if (el) el.textContent = solEur ? solEur.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €' : 'Kurs gerade nicht erreichbar';
+            updateSolConverter();
+        }
+        function updateSolConverter() {
+            const input = document.getElementById('solEurInput');
+            const out = document.getElementById('solConvertOut');
+            if (!out) return;
+            const eur = Number(input && input.value);
+            out.textContent = solEur && eur > 0 ? (eur / solEur).toFixed(4) : '—';
+        }
+        function shopMeta() {
+            const local = JSON.parse(localStorage.getItem('store_shop_products') || '{}');
+            return Object.assign({}, local, window.shopProducts || {});
+        }
+        function applyShopProducts() {
+            const meta = shopMeta();
+            document.querySelectorAll('.product-item').forEach(card => {
+                const row = meta[card.dataset.key];
+                const stock = row && row.stock != null ? Number(row.stock) : 99;
+                card.dataset.stock = String(Number.isFinite(stock) ? stock : 99);
+                const off = stock <= 0 || (row && row.active === false);
+                card.classList.toggle('is-sold-out', off);
+                let badge = card.querySelector('.stock-badge');
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'stock-badge chip bg-black/40 text-white border border-white/10 absolute top-3 left-3 z-10';
+                    const media = card.querySelector('.h-40');
+                    if (media) media.appendChild(badge);
+                }
+                badge.textContent = stock <= 0 ? 'Ausverkauft' : (stock < 8 ? 'Nur noch ' + stock : 'Auf Lager');
+                if (row && row.blurb) {
+                    const p = card.querySelector('[data-i18n]');
+                    if (p && row.blurb) { /* Anzeigetext; i18n kann ihn beim Sprachwechsel überschreiben */ }
+                }
+            });
+        };
+        function saveShopProductAdmin() {
+            const id = document.getElementById('spId').value.trim().toLowerCase();
+            const rec = {
+                name: document.getElementById('spName').value.trim(),
+                blurb: document.getElementById('spBlurb').value.trim(),
+                stock: Math.max(0, Math.min(9999, Math.round(Number(document.getElementById('spStock').value) || 0))),
+                active: document.getElementById('spActive').checked
+            };
+            const all = JSON.parse(localStorage.getItem('store_shop_products') || '{}');
+            all[id] = rec;
+            localStorage.setItem('store_shop_products', JSON.stringify(all));
+            window.shopProducts = Object.assign({}, window.shopProducts || {}, { [id]: rec });
+            applyShopProducts();
+            // Firestore-Schreibweg: nur mit Admin-Claim. Preise der Zahlung bleiben in catalog.js.
+            if (window.isAdminClaim && window.callServer) {
+                window.callServer('adminSaveProduct', { id, ...rec }).then(() => showToast('In Firestore gespeichert.')).catch(e => showToast(friendlyErr(e)));
+            } else showToast('Lokal gespeichert. Firestore braucht einen Admin-Login und den deployten Worker.');
+        }
+        function downloadReceipt(invoice) {
+            const email = getPortalEmail();
+            const o = (email ? getPortalOrders(email) : []).find(x => String(x.invoice) === String(invoice));
+            if (!o) return showToast('Beleg nicht gefunden.');
+            const w = window.open('', '_blank', 'noopener,width=720,height=900');
+            if (!w) return showToast('Pop-up blockiert.');
+            const safe = (s) => String(s || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+            w.document.write('<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>Beleg ' + safe(o.invoice) + '</title><style>body{font-family:Georgia,serif;margin:48px;color:#111}h1{font-size:22px}p{line-height:1.5}</style></head><body><h1>Val3ntino</h1><p>Beleg / Rechnung #' + safe(o.invoice) + '</p><p>' + safe(o.date) + '<br>' + safe(o.method) + '</p><p>' + safe(o.items) + '</p><p><b>' + safe(o.total) + '</b></p><p>Lokale Kopie zum Drucken oder Speichern als PDF. Eine Mail wird derzeit nicht versendet.</p><script>window.print()<\/script></body></html>');
+            w.document.close();
+        }
+        function shareWishlist() {
+            const keys = (wishlist || []).join(',');
+            const url = location.origin + location.pathname + (keys ? '?wish=' + encodeURIComponent(keys) : '');
+            navigator.clipboard.writeText(url).then(() => showToast('Merkliste-Link kopiert.')).catch(() => showToast(url));
+        }
+        function copyReferral() {
+            const code = document.getElementById('referralCode').textContent.trim();
+            const url = location.origin + location.pathname + '?ref=' + encodeURIComponent(code);
+            navigator.clipboard.writeText(url).then(() => showToast('Empfehlungslink kopiert.')).catch(() => showToast(url));
+        }
+        function acceptCookies() {
+            localStorage.setItem('store_cookie_ok', '1');
+            document.getElementById('cookieBanner').classList.add('hidden');
+        }
+        function saveNewsletter() {
+            const email = document.getElementById('newsEmail').value.trim();
+            const list = JSON.parse(localStorage.getItem('store_newsletter') || '[]');
+            if (!list.includes(email)) list.push(email);
+            localStorage.setItem('store_newsletter', JSON.stringify(list));
+            document.getElementById('newsMsg').textContent = 'Gespeichert in diesem Browser. Ein Versanddienst ist nicht angebunden.';
+        }
+        async function showShopQr() {
+            const dlg = document.getElementById('qrDialog');
+            const img = document.getElementById('shopQrImg');
+            try {
+                const QR = await import('https://esm.sh/qrcode@1.5.4');
+                img.src = await (QR.default || QR).toDataURL('https://valentinolopez.de/', { width: 440, margin: 1 });
+            } catch (e) { img.alt = 'QR-Code konnte nicht geladen werden.'; }
+            dlg.showModal();
+        }
+        function loyaltyPoints() {
+            const email = (typeof getPortalEmail === 'function' && getPortalEmail()) || '';
+            const orders = email && typeof getPortalOrders === 'function' ? getPortalOrders(email) : [];
+            const spent = orders.filter(o => ['bezahlt', 'geliefert'].includes(typeof normalizeStatus === 'function' ? normalizeStatus(o.status) : o.status)).reduce((s, o) => s + (typeof orderAmountEUR === 'function' ? orderAmountEUR(o) : 0), 0);
+            return Math.floor(spent);
+        }
+        function redeemLoyalty() {
+            const pts = loyaltyPoints();
+            if (pts < 100) return showToast('100 Punkte ergeben 1 €. Du hast ' + pts + '.');
+            const code = 'TREUE' + String(pts).slice(-4);
+            coupons[code] = Math.floor(pts / 100);
+            localStorage.setItem('store_coupons', JSON.stringify(coupons));
+            showToast(code + ' liegt lokal über ' + coupons[code].toFixed(2) + ' €. Für die Server-Kasse im Admin als Gutschein anlegen.');
+        }
+        function initStoreExtras() {
+            applyShopProducts();
+            const params = new URLSearchParams(location.search);
+            if (params.get('wish')) {
+                params.get('wish').split(',').map(s => s.trim()).filter(Boolean).forEach(k => { if (!wishlist.includes(k)) wishlist.push(k); });
+                localStorage.setItem('store_wishlist', JSON.stringify(wishlist));
+                renderWishlistUI();
+                applyFilters();
+            }
+            let ref = localStorage.getItem('store_ref_code');
+            if (!ref) { ref = 'V' + Math.random().toString(36).slice(2, 7).toUpperCase(); localStorage.setItem('store_ref_code', ref); }
+            const refEl = document.getElementById('referralCode'); if (refEl) refEl.textContent = ref;
+            const incoming = (params.get('ref') || '').toUpperCase();
+            if (incoming && incoming !== ref && !localStorage.getItem('store_ref_seen_' + incoming)) {
+                localStorage.setItem('store_ref_seen_' + incoming, '1');
+                coupons['FREUND' + incoming.slice(0, 4)] = 1;
+                localStorage.setItem('store_coupons', JSON.stringify(coupons));
+                showToast('Empfehlung erkannt. Lokaler Code FREUND' + incoming.slice(0, 4) + ' über 1 € liegt bereit.');
+            }
+            if (localStorage.getItem('store_promo_hidden') === '1') {
+                const b = document.getElementById('promoBanner'); if (b) b.remove();
+            } else {
+                const end = new Date('2026-11-30T22:59:00Z');
+                const tick = () => {
+                    const el = document.getElementById('promoCountdown'); if (!el) return;
+                    const ms = end - Date.now();
+                    if (ms <= 0) { el.textContent = 'beendet'; return; }
+                    const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24, m = Math.floor(ms / 60000) % 60;
+                    el.textContent = d + ' T ' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                };
+                tick(); setInterval(tick, 30000);
+                const dismiss = document.getElementById('promoDismiss');
+                if (dismiss) dismiss.onclick = () => { localStorage.setItem('store_promo_hidden', '1'); document.getElementById('promoBanner').remove(); };
+            }
+            const themeBtn = document.getElementById('themeToggle');
+            const applyTheme = (t) => {
+                document.documentElement.dataset.theme = t;
+                localStorage.setItem('store_theme', t);
+                const meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.content = t === 'light' ? '#f6f5f7' : '#09090b';
+                if (themeBtn) themeBtn.setAttribute('aria-label', t === 'light' ? 'Dunkles Design einschalten' : 'Helles Design einschalten');
+            };
+            applyTheme(localStorage.getItem('store_theme') === 'light' ? 'light' : 'dark');
+            if (themeBtn) themeBtn.onclick = () => applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+            if (localStorage.getItem('store_cookie_ok') !== '1') document.getElementById('cookieBanner').classList.remove('hidden');
+            const workerEl = document.getElementById('workerStatus');
+            if (workerEl && window.WORKER_URL) {
+                fetch(window.WORKER_URL + '/health').then(r => r.json()).then(j => {
+                    workerEl.textContent = j && j.ok ? 'online' : 'Antwort unklar';
+                    workerEl.className = 'font-semibold ' + (j && j.ok ? 'text-emerald-300' : 'text-amber-300');
+                }).catch(() => { workerEl.textContent = 'nicht erreichbar'; workerEl.className = 'font-semibold text-amber-300'; });
+            }
+            const pop = document.getElementById('salePop');
+            const recent = [];
+            try { JSON.parse(localStorage.getItem('all_orders_global') || '[]').forEach(o => { if (o.items) recent.push(o.items); }); } catch (e) {}
+            if (pop && recent.length) {
+                let i = 0;
+                setInterval(() => {
+                    pop.textContent = 'Jemand hat gerade ' + String(recent[i % recent.length]).slice(0, 80) + ' gekauft.';
+                    pop.classList.remove('hidden');
+                    i++;
+                    setTimeout(() => pop.classList.add('hidden'), 4200);
+                }, 28000);
+            }
+            const loyalty = document.createElement('p');
+            loyalty.className = 'text-xs text-zinc-400 mt-2';
+            loyalty.id = 'loyaltyLine';
+            const partner = document.getElementById('partner');
+            if (partner) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-secondary mt-3 ml-2';
+                btn.textContent = 'Punkte einlösen';
+                btn.onclick = () => { loyalty.textContent = 'Punkte aus bezahlten Bestellungen: ' + loyaltyPoints() + ' (100 = 1 € lokal).'; redeemLoyalty(); };
+                partner.appendChild(btn);
+                partner.appendChild(loyalty);
+            }
+            window.applyShopProducts = applyShopProducts;
+            window.saveShopProductAdmin = saveShopProductAdmin;
+            window.downloadReceipt = downloadReceipt;
+            window.shareWishlist = shareWishlist;
+            window.copyReferral = copyReferral;
+            window.acceptCookies = acceptCookies;
+            window.saveNewsletter = saveNewsletter;
+            window.showShopQr = showShopQr;
+            window.updateSolConverter = updateSolConverter;
+            window.refreshSolPrice = refreshSolPrice;
+            window.setPriceBand = setPriceBand;
+        }
+
         trackVisitorIP();
 
         /* ---------- Hilfe-Chat (lokal, ohne externe KI) ---------- */

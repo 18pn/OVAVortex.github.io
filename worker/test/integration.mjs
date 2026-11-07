@@ -90,6 +90,8 @@ ok(pre.status === 204 && pre.headers.get('Access-Control-Allow-Origin') === 'htt
 // Gutscheine (Admin)
 ok((await call('adminSaveCoupon', { code: 'SAVE5', valueCents: 500 }, t)).status === 403, 'Gutschein ohne Admin -> 403');
 ok((await call('adminSaveCoupon', { code: 'save5', valueCents: 500 }, adminT)).status === 200, 'Admin legt Gutschein an');
+ok((await call('adminSaveProduct', { id: 'basic', name: 'Basic', blurb: 'x', stock: 3, active: true }, t)).status === 403, 'Produkt ohne Admin -> 403');
+ok((await call('adminSaveProduct', { id: 'basic', name: 'Basic PC-Tuning', blurb: 'Lager', stock: 4, active: true }, adminT)).status === 200, 'Admin speichert Bestand');
 let q = await call('quoteCart', { items: [{ id: 'basic', qty: 2 }], coupon: 'SAVE5' }, t);
 ok(q.body.totalCents === 2500 && q.body.discountCents === 500, 'quoteCart mit Gutschein = 25,00 €');
 ok((await call('quoteCart', { items: [{ id: 'media', qty: 1 }] }, t)).body.totalCents === 50, 'Media-Produkt = 0,50 €, Krypto erlaubt');
