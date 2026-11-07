@@ -62,10 +62,20 @@ node seed-firestore.js                        # Gutscheine VAL3NTINO/CENT50 + Au
 ```
 Danach im Shop **ab- und wieder anmelden** (neues Token mit Admin-Claim). Auslieferungstexte änderst du in der Firebase-Konsole unter `deliveries/basic|pro|web`.
 
-### 6. PayPal
-1. https://developer.paypal.com → *Apps & Credentials* → App anlegen → **Client ID** + **Secret** (erst *Sandbox* testen, später *Live*).
-2. `wrangler.toml`: `PAYPAL_CLIENT_ID = "…"` und `PAYPAL_ENV = "sandbox"` (bzw. `"live"`), dann `npx wrangler secret put PAYPAL_CLIENT_SECRET` und `npx wrangler deploy`.
-3. Im HTML im PayPal-Script `client-id=test` durch **dieselbe** Client-ID ersetzen.
+### 6. PayPal (Live)
+`PAYPAL_ENV` steht auf `production`. Dann spricht der Worker OAuth, Order-Create und Capture über `https://api-m.paypal.com` an. `sandbox` bleibt `https://api-m.sandbox.paypal.com`.
+Die öffentliche Live-Client-ID steht in `wrangler.toml` (`PAYPAL_CLIENT_ID`) und in der PayPal-SDK-Zeile von `index.html`. Beide Werte müssen identisch sein.
+Das Secret wird nicht eingecheckt. Im Ordner `worker`:
+```bash
+npx wrangler secret put PAYPAL_CLIENT_SECRET
+npx wrangler deploy
+```
+Das Secret muss zum Live-Konto der Client-ID gehören, nicht zum alten Sandbox-Secret.
+
+### Admins, Newsletter, Empfehlungen
+Weitere Admins legt der Inhaber im Shop unter **Betrieb** an. Dafür muss das Dienstkonto (`GOOGLE_SERVICE_ACCOUNT`) in der Google Cloud die Rolle **Firebase Authentication Admin** haben. Der Worker setzt damit den Custom Claim `admin=true`. Entfernen darf nur `l@valentinolopez.de`. Jede Änderung landet in `adminAudit`.
+Inhalte, Produkte, Cover/PDF, Gutscheine, Newsletter-Liste und Empfehlungen darf jeder Account mit Admin-Claim. Newsletter und Referral-Klicks sind öffentliche Worker-Routen ohne Login; Schreiben in Firestore macht nur das Dienstkonto.
+Kein weiteres Secret. Nach dem Claim muss sich die Person ab- und wieder anmelden.
 
 ### 7. Website hosten
 Die Live-Seite ist **GitHub Pages**: ausgeliefert wird die `index.html` in der Repository-Wurzel (`CNAME` = `valentinolopez.de`). Das reicht für das HTML. `firebase/` enthält nur Firestore-Regeln, keine zweite Website.
