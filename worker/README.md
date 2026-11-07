@@ -77,6 +77,15 @@ Weitere Admins legt der Inhaber im Shop unter **Betrieb** an. Dafür muss das Di
 Inhalte, Produkte, Cover/PDF, Gutscheine, Newsletter-Liste und Empfehlungen darf jeder Account mit Admin-Claim. Newsletter und Referral-Klicks sind öffentliche Worker-Routen ohne Login; Schreiben in Firestore macht nur das Dienstkonto.
 Kein weiteres Secret. Nach dem Claim muss sich die Person ab- und wieder anmelden.
 
+### Discord-Webhook und Tickets
+Kauf, Restock und Newsletter posten nur, wenn `DISCORD_WEBHOOK_URL` gesetzt ist und `discordNotify` nicht aus ist. Ohne Secret passiert nichts.
+```bash
+npx wrangler secret put DISCORD_WEBHOOK_URL
+npx wrangler secret put DISCORD_PUBLIC_KEY
+npx wrangler secret put DISCORD_BOT_TOKEN
+```
+Im Discord Developer Portal die Interactions Endpoint URL auf `https://valentinolopez-api.valentinolopez.workers.dev/discord/interactions` setzen. Guild-ID ist `1557536531567214672`. Eine Support-Kategorie trägst du als `DISCORD_TICKET_CATEGORY_ID` in `wrangler.toml` ein. Der Bot braucht Kanal verwalten und Nachrichten senden. Der Befehl `/ticket` legt den Button „Ticket öffnen“ ab.
+
 ### 7. Website hosten
 Die Live-Seite ist **GitHub Pages**: ausgeliefert wird die `index.html` in der Repository-Wurzel (`CNAME` = `valentinolopez.de`). Das reicht für das HTML. `firebase/` enthält nur Firestore-Regeln, keine zweite Website.
 
