@@ -3843,6 +3843,7 @@
         }
 
         /* ---------- Start ---------- */
+        let compareSet = new Set();
         (function init() {
             const prefs = JSON.parse(localStorage.getItem('store_prefs') || '{}');
             if (prefs.lang && i18n[prefs.lang]) applyLanguage(prefs.lang);
@@ -4115,8 +4116,8 @@
             ids.forEach(a => { pairs[a] = pairs[a] || {}; ids.forEach(b => { if (a !== b) pairs[a][b] = (pairs[a][b] || 0) + 1; }); localStorage.setItem('store_last_product', a); });
             localStorage.setItem('store_copurchase', JSON.stringify(pairs));
         }
-        const compareSet = new Set(JSON.parse(localStorage.getItem('store_compare') || '[]'));
         function setupCompare() {
+            compareSet = new Set(JSON.parse(localStorage.getItem('store_compare') || '[]'));
             document.querySelectorAll('.product-item').forEach(card => {
                 if (card.querySelector('.compare-toggle')) return;
                 const b = document.createElement('button');
