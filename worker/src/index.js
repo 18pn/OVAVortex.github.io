@@ -4,8 +4,8 @@
 // Free Plan: max. 50 Subrequests je Aufruf -> Cron prüft max. 15 Bestellungen pro Lauf, RPC max. 10 Signaturen je Referenz.
 import { HttpError, corsHeaders, json, randomId, newInvoice, eurString } from './util.js';
 import { verifyFirebaseToken } from './auth.js';
-import { fsGet, fsQuery, fsCommit, writeDoc, deleteDoc, runTransaction, ts } from './firestore.js';
-import { priceItems, validateTopUpCents } from './catalog.js';
+import { fsGet, fsQuery, fsList, fsCommit, writeDoc, deleteDoc, runTransaction, ts } from './firestore.js';
+import { priceItems, validateTopUpCents, PRODUCTS } from './catalog.js';
 import * as sol from './solana.js';
 import { paypalCreateOrder, paypalCaptureAndVerify } from './paypal.js';
 import { buildDelivery } from './delivery.js';
@@ -14,6 +14,21 @@ import { randomBase32, verifyTotp } from './totp.js';
 const CRYPTO_EXPIRY_MS = 30 * 60 * 1000;
 const MIN_PAYMENT_CENTS = 50;
 const STATUSES = ['offen', 'bezahlt', 'geliefert', 'storniert', 'abgelaufen'];
+const OWNER_EMAIL = 'l@valentinolopez.de';
+const CMS_COLLECTIONS = new Set(['siteSettings', 'catalog', 'reviews', 'posts', 'faqs', 'partners', 'bundles']);
+const isOwner = (user) => !!(user && user.admin && String(user.email || '').toLowerCase() === OWNER_EMAIL);
+function sanitizeCms(data) {
+  const clean = {};
+  if (!data || typeof data !== 'object') return clean;
+  for (const [k, v] of Object.entries(data)) {
+    if (!/^[A-Za-z][A-Za-z0-9_]{0,32}$/.test(k)) continue;
+    if (typeof v === 'string') clean[k] = v.slice(0, 2000);
+    else if (typeof v === 'boolean') clean[k] = v;
+    else if (typeof v === 'number' && Number.isFinite(v)) clean[k] = v;
+    else if (Array.isArray(v)) clean[k] = v.filter(x => typeof x === 'string').slice(0, 8).map(s => s.slice(0, 400));
+  }
+  return clean;
+}
 const rpcUrl = (env) => env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';
 const str = (v, max = 200) => String(v ?? '').slice(0, max);
 
@@ -27,10 +42,40 @@ async function applyCoupon(env, code, subtotalCents) {
   return { coupon: c, discountCents: Math.min(v, subtotalCents) };
 }
 
+async function liveProducts(env) {
+  const map = {};
+  for (const [id, p] of Object.entries(PRODUCTS)) map[id] = { ...p, crypto: true };
+  try {
+    for (const d of await fsList(env, 'catalog', 40)) {
+      const price = Math.round(Number(d.data && d.data.priceCents));
+      if (!d.id || !Number.isFinite(price) || price < 1) continue;
+      if (d.data.active === false) { delete map[d.id]; continue; }
+      map[d.id] = { id: d.id, name: String(d.data.name || (map[d.id] && map[d.id].name) || d.id).slice(0, 80), priceCents: price, crypto: d.data.crypto !== false };
+    }
+  } catch { /* Fallback: fest eingebaute Produkte */ }
+  return map;
+}
+
+async function bundleDiscount(env, lines) {
+  let off = 0;
+  try {
+    for (const b of await fsList(env, 'bundles', 30)) {
+      const line = lines.find(l => l.productId === b.data.productId);
+      const minQty = Number(b.data.minQty) || 0;
+      const percent = Math.min(80, Math.max(0, Number(b.data.percent) || 0));
+      if (line && minQty > 1 && line.qty >= minQty) off += Math.round(line.lineCents * percent / 100);
+    }
+  } catch { /* keine Bundles */ }
+  return off;
+}
+
 async function computeCart(env, items, coupon) {
-  const { lines, subtotalCents } = priceItems(items);
+  const products = await liveProducts(env);
+  const priced = priceItems(items, products);
+  const bundleCents = await bundleDiscount(env, priced.lines);
+  const subtotalCents = Math.max(0, priced.subtotalCents - bundleCents);
   const cp = await applyCoupon(env, coupon, subtotalCents);
-  return { lines, subtotalCents, discountCents: cp.discountCents, coupon: cp.coupon, couponInvalid: !!cp.couponInvalid, totalCents: Math.max(0, subtotalCents - cp.discountCents) };
+  return { lines: priced.lines, subtotalCents, discountCents: cp.discountCents, coupon: cp.coupon, couponInvalid: !!cp.couponInvalid, totalCents: Math.max(0, subtotalCents - cp.discountCents), noCrypto: priced.noCrypto };
 }
 
 async function getOwnOrder(env, user, orderId) {
@@ -82,7 +127,7 @@ async function deliverOrder(env, orderId) {
   if (!d || d.data.status !== 'bezahlt') return;
   const delivery = await buildDelivery(env, d.data.items || []);
   await fsCommit(env, [writeDoc(env, `orders/${orderId}`, { delivery, status: 'geliefert' }, { merge: true, serverTime: ['deliveredAt'], exists: true })]);
-  // E-Mail-Versand: auf Workers ohne SMTP nicht eingebaut (siehe README, optional z. B. über einen Mail-API-Dienst).
+  // SMTP: hier Zugangslink oder Lizenzschlüssel mailen. Auf dem Worker ist kein SMTP eingebaut (README).
 }
 
 async function createCryptoRecord(env, { uid, email, kind, cart, totalCents, token, label, billing = null }) {
@@ -200,11 +245,11 @@ const routes = {
 
   async createCryptoOrder(env, user, b) {
     const billing = sanitizeBilling(b.billing);
+    const cart = await computeCart(env, b.items, b.coupon);
+    if (cart.noCrypto) throw new HttpError(400, 'Für mindestens ein Produkt ist Krypto ausgeschaltet.');
     if (b.token === 'ETH' || b.token === 'BTC') {
-      const cart = await computeCart(env, b.items, b.coupon);
       return createManualCoinOrder(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, asset: b.token, billing });
     }
-    const cart = await computeCart(env, b.items, b.coupon);
     return createCryptoRecord(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, token: b.token, billing, label: 'Bestellung' });
   },
 
@@ -399,6 +444,107 @@ const routes = {
     await fsCommit(env, [writeDoc(env, `adminTotp/${user.uid}`, { enabled: true }, { merge: true, serverTime: ['enabledAt'] })]);
     return { ok: true };
   },
+
+  async adminUpsert(env, user, b) {
+    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Inhalte ändern.');
+    await assertAdmin(env, user, b);
+    const col = str(b.collection, 40);
+    if (!CMS_COLLECTIONS.has(col)) throw new HttpError(400, 'Diese Sammlung ist nicht freigegeben.');
+    const id = str(b.id, 40);
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) throw new HttpError(400, 'Ungültige ID.');
+    const data = sanitizeCms(b.data);
+    await fsCommit(env, [writeDoc(env, `${col}/${id}`, data, { serverTime: ['updatedAt'] })]);
+    return { ok: true, id };
+  },
+
+  async adminDeleteContent(env, user, b) {
+    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Inhalte löschen.');
+    await assertAdmin(env, user, b);
+    const col = str(b.collection, 40);
+    if (!CMS_COLLECTIONS.has(col) || col === 'siteSettings') throw new HttpError(400, 'Löschen hier nicht erlaubt.');
+    const id = str(b.id, 40);
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) throw new HttpError(400, 'Ungültige ID.');
+    await fsCommit(env, [deleteDoc(env, `${col}/${id}`)]);
+    return { ok: true };
+  },
+
+  async adminSetRole(env, user, b) {
+    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto vergibt Rollen.');
+    await assertAdmin(env, user, b);
+    const uid = str(b.uid, 128);
+    const role = str(b.role, 20);
+    if (!uid || !['editor', 'support', 'owner'].includes(role)) throw new HttpError(400, 'Rolle ungültig.');
+    await fsCommit(env, [writeDoc(env, `admins/${uid}`, { email: str(b.email, 120), role }, { serverTime: ['updatedAt'] })]);
+    return { ok: true };
+  },
+
+  async postChat(env, user, b) {
+    const text = str(b.text, 800).trim();
+    if (!text) throw new HttpError(400, 'Nachricht ist leer.');
+    const id = user.uid;
+    const cur = await fsGet(env, `liveThreads/${id}`);
+    const messages = Array.isArray(cur && cur.data.messages) ? cur.data.messages.slice(-40) : [];
+    messages.push({ from: 'customer', text, at: Date.now() });
+    await fsCommit(env, [writeDoc(env, `liveThreads/${id}`, { email: user.email || '', messages })]);
+    return { ok: true };
+  },
+
+  async adminReplyChat(env, user, b) {
+    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto antwortet hier.');
+    await assertAdmin(env, user, b);
+    const id = str(b.uid, 128);
+    const text = str(b.text, 800).trim();
+    if (!id || !text) throw new HttpError(400, 'Empfänger oder Text fehlt.');
+    const cur = await fsGet(env, `liveThreads/${id}`);
+    if (!cur) throw new HttpError(404, 'Kein Gespräch.');
+    const messages = Array.isArray(cur.data.messages) ? cur.data.messages.slice(-40) : [];
+    messages.push({ from: 'admin', text, at: Date.now() });
+    await fsCommit(env, [writeDoc(env, `liveThreads/${id}`, { messages }, { merge: true })]);
+    return { ok: true };
+  },
+
+  async adminListThreads(env, user, b) {
+    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto sieht alle Gespräche.');
+    await assertAdmin(env, user, b);
+    const rows = await fsList(env, 'liveThreads', 30);
+    return { threads: rows.map(r => ({ id: r.id, email: r.data.email || '', updated: r.data.messages && r.data.messages.length })) };
+  },
+
+  async createTicket(env, user, b) {
+    const subject = str(b.subject, 120).trim();
+    const text = str(b.text, 2000).trim();
+    if (!subject || !text) throw new HttpError(400, 'Betreff und Text braucht es.');
+    const id = randomId();
+    await fsCommit(env, [writeDoc(env, `tickets/${id}`, { uid: user.uid, email: user.email || '', subject, status: 'offen', messages: [{ from: 'customer', text, at: Date.now() }] }, { exists: false })]);
+    return { id };
+  },
+
+  async myTickets(env, user) {
+    const rows = await fsList(env, 'tickets', 40);
+    return { tickets: rows.filter(r => r.data.uid === user.uid).map(r => ({ id: r.id, subject: r.data.subject, status: r.data.status, messages: r.data.messages || [] })) };
+  },
+
+  async adminReplyTicket(env, user, b) {
+    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto antwortet auf Tickets.');
+    await assertAdmin(env, user, b);
+    const id = str(b.id, 40);
+    const text = str(b.text, 2000).trim();
+    const cur = await fsGet(env, `tickets/${id}`);
+    if (!cur) throw new HttpError(404, 'Ticket nicht gefunden.');
+    const messages = Array.isArray(cur.data.messages) ? cur.data.messages.slice(-30) : [];
+    messages.push({ from: 'admin', text, at: Date.now() });
+    await fsCommit(env, [writeDoc(env, `tickets/${id}`, { messages, status: str(b.status, 20) || 'beantwortet' }, { merge: true })]);
+    return { ok: true };
+  },
+
+  async startMembership(env, user) {
+    const settings = await fsGet(env, 'siteSettings/main');
+    const plan = settings && settings.data && settings.data.paypalPlanId;
+    // PayPal-Abo braucht eine Plan-ID aus dem PayPal-Dashboard. Krypto kann nicht zuverlässig wiederkehrend eingezogen werden.
+    if (!plan) throw new HttpError(503, 'PayPal-Abo-Plan ist in den Einstellungen noch leer.');
+    await fsCommit(env, [writeDoc(env, `memberships/${user.uid}`, { email: user.email || '', planId: String(plan), status: 'vorgemerkt' }, { serverTime: ['updatedAt'] })]);
+    return { ok: true, planId: String(plan), note: 'Der eigentliche Einzug läuft über PayPal Subscriptions. Krypto-Abos sind nicht automatisch.' };
+  },
 };
 routes.createGiftCardPayPal = (env, u, b) => routes.createPayPalOrder(env, u, { ...b, kind: 'giftcard' });
 routes.createGiftCardCrypto = (env, u, b) => routes.createTopUp(env, u, { ...b, kind: 'giftcard' });
@@ -447,6 +593,15 @@ export default {
     if (!m || !Object.prototype.hasOwnProperty.call(routes, m[1])) return json({ error: 'Nicht gefunden.' }, 404, cors);
     if (request.method !== 'POST') return json({ error: 'Nur POST.' }, 405, cors);
     try {
+      if (m[1] === 'trackVisit') {
+        const ip = request.headers.get('CF-Connecting-IP') || 'local';
+        if (!rateLimit(ip, 'trackVisit', 5, 60_000)) return json({ ok: true }, 200, cors);
+        const day = new Date().toISOString().slice(0, 10);
+        const cur = await fsGet(env, `analytics/${day}`);
+        const n = (cur && Number(cur.data.visits)) || 0;
+        await fsCommit(env, [writeDoc(env, `analytics/${day}`, { visits: n + 1 })]);
+        return json({ ok: true }, 200, cors);
+      }
       const user = await verifyFirebaseToken(request, env);
       let body = {};
       const text = await request.text();

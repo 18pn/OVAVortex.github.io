@@ -102,6 +102,15 @@
             window.shopProducts = map;
             if (typeof window.applyShopProducts === 'function') window.applyShopProducts();
         }, () => {});
+        ['siteSettings', 'catalog', 'reviews', 'posts', 'faqs', 'partners', 'bundles'].forEach((name) => {
+            onSnapshot(collection(db, name), (qs) => {
+                window.cms = window.cms || {};
+                const map = {};
+                qs.forEach((d) => { map[d.id] = d.data(); });
+                window.cms[name] = map;
+                if (typeof window.applyPublicCms === 'function') window.applyPublicCms();
+            }, () => {});
+        });
 
         // ===== Server: Cloudflare Worker (siehe Ordner worker/) =====
         // NACH DEM DEPLOY HIER DIE ADRESSE DEINES WORKERS EINTRAGEN (ohne / am Ende):
@@ -564,6 +573,8 @@
         html[data-theme="light"] .store-banner .text-white,
         html[data-theme="light"] .store-banner .text-zinc-100,
         html[data-theme="light"] .store-banner .kicker { color: #fff; }
+        html[data-theme="light"] .logo-mark { background: #18181b; color: #fff; }
+        html[data-brand="custom"] .btn-primary { background: var(--brand); }
         dialog.card { background: #121217; color: #f4f4f5; border: 1px solid rgba(255,255,255,.1); border-radius: 1.25rem; }
     </style>
 </head>
@@ -588,7 +599,7 @@
         <div class="header-bar max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-2 flex items-center justify-between gap-3">
             
             <a href="#" class="flex items-center gap-3 rounded-xl shrink-0" aria-label="Val3ntino – zur Startseite">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-accent to-accentGlow flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-pink-500/20" aria-hidden="true">V</div>
+                <div class="logo-mark w-9 h-9 rounded-xl bg-gradient-to-tr from-accent to-accentGlow flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-pink-500/20" aria-hidden="true">V</div>
                 <div class="hidden min-[420px]:flex flex-col">
                     <span class="text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
                         Val3ntino<span class="text-accent">.</span>
@@ -681,7 +692,7 @@
         </div>
         <div class="mt-6" aria-label="Bekannt aus">
             <p class="kicker mb-3">Bekannt aus</p>
-            <div class="logo-strip">
+            <div id="logoStrip" class="logo-strip">
                 <span class="logo-pill">Discord</span>
                 <span class="logo-pill">Linktree</span>
                 <span class="logo-pill">Val3ntino Studio</span>
@@ -710,6 +721,7 @@
 
             <div class="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full md:w-auto min-w-0">
                 <span class="text-sm text-zinc-400 font-medium" id="productCountLabel" aria-live="polite">4 Produkte</span>
+                <span id="soldCounter" class="text-xs text-zinc-500">Direkt vom Studio</span>
                 <label for="sortSelect" class="sr-only">Sortieren</label>
                 <label for="priceBand" class="sr-only">Preisfilter</label>
                 <select id="priceBand" onchange="setPriceBand(this.value)" class="field-sm !py-2.5 !px-3 !text-sm">
@@ -887,7 +899,7 @@
                 <p class="kicker">Stimmen</p>
                 <h2 id="reviewHeading" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">Was Kundinnen und Kunden sagen</h2>
             </div>
-            <div class="grid md:grid-cols-3 gap-4">
+            <div id="reviewGrid" class="grid md:grid-cols-3 gap-4">
                 <figure class="card review-card p-5"><blockquote class="text-sm text-zinc-200 leading-relaxed">„Das Pro-Tuning hat die Eingabe spürbar ruhiger gemacht. Ablauf über Discord war klar.“</blockquote><figcaption class="mt-4 text-xs font-bold text-white">Lena · Pro Tuning</figcaption></figure>
                 <figure class="card review-card p-5"><blockquote class="text-sm text-zinc-200 leading-relaxed">„Website stand schnell, und die Zahlung mit PayPal war unkompliziert.“</blockquote><figcaption class="mt-4 text-xs font-bold text-white">Jonas · Custom Website</figcaption></figure>
                 <figure class="card review-card p-5"><blockquote class="text-sm text-zinc-200 leading-relaxed">„Solana-Zahlung wurde nach der Bestätigung direkt im Portal freigeschaltet.“</blockquote><figcaption class="mt-4 text-xs font-bold text-white">Mara · Media Access</figcaption></figure>
@@ -899,13 +911,20 @@
                 <p class="kicker">Journal</p>
                 <h2 id="journalHeading" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">Neuigkeiten</h2>
             </div>
-            <div class="grid md:grid-cols-3 gap-4">
+            <div id="journalGrid" class="grid md:grid-cols-3 gap-4">
                 <article class="card p-5"><p class="text-xs text-zinc-500">November 2026</p><h3 class="text-base font-bold text-white mt-2">Krypto für jedes Produkt</h3><p class="text-sm text-zinc-400 mt-2 leading-relaxed">SOL und USDC über Phantom gelten jetzt auch für All-in-One Media Access. Die Prüfung bleibt on-chain.</p></article>
                 <article class="card p-5"><p class="text-xs text-zinc-500">November 2026</p><h3 class="text-base font-bold text-white mt-2">Gutscheine</h3><p class="text-sm text-zinc-400 mt-2 leading-relaxed">VAL3NTINO nimmt 5 €, CENT50 nimmt 0,50 €. Einlösbar im Warenkorb, der Server prüft den Betrag.</p></article>
                 <article class="card p-5"><p class="text-xs text-zinc-500">Oktober 2026</p><h3 class="text-base font-bold text-white mt-2">Kundenportal</h3><p class="text-sm text-zinc-400 mt-2 leading-relaxed">Bestellungen, Zugänge und Guthaben liegen nach dem Login an einem Ort.</p></article>
             </div>
         </section>
 
+        <section id="faqSection" class="mt-16" aria-labelledby="faqHeading">
+            <div class="section-head"><p class="kicker">FAQ</p><h2 id="faqHeading" class="text-2xl font-extrabold text-white mt-2">Fragen zu den Produkten</h2></div>
+            <div id="faqList" class="card p-5 space-y-2">
+                <details class="border-b border-white/10 py-2"><summary class="font-semibold text-white">Wann ist die Krypto-Zahlung fertig?</summary><p class="text-sm text-zinc-400 mt-2">SOL und USDC werden on-chain geprüft. ETH und BTC bestätigt der Shop manuell.</p></details>
+            </div>
+        </section>
+        <p id="abandonedCart" class="hidden mt-6 card p-4 text-sm text-zinc-200" role="status">Du hast noch Artikel im Warenkorb. <button type="button" class="text-accent underline" onclick="toggleCartModal()">Warenkorb öffnen</button></p>
         <section id="partner" class="mt-16 card p-6 sm:p-8" aria-labelledby="partnerHeading">
             <p class="kicker">Partner</p>
             <h2 id="partnerHeading" class="text-2xl font-extrabold text-white mt-2">Empfehlen und sparen</h2>
@@ -1392,7 +1411,12 @@
                         </form>
                         <p id="giftMsg" class="text-xs text-zinc-400" role="status"></p>
                     </div>
-                    <p class="text-xs text-zinc-400" data-i18n="balanceHint">Guthaben kann an der Kasse als Zahlungsart gewählt werden.</p>
+                        <p class="text-xs text-zinc-400" data-i18n="balanceHint">Guthaben kann an der Kasse als Zahlungsart gewählt werden.</p>
+                    <div class="card p-5 space-y-2">
+                        <h3 class="text-sm font-extrabold text-white">Mitgliedschaft</h3>
+                        <p class="text-xs text-zinc-400">Ein Abo braucht eine PayPal-Plan-ID in den Studio-Einstellungen. Wiederkehrende Krypto-Zahlungen gibt es nicht.</p>
+                        <button type="button" class="btn btn-secondary" onclick="startMembership()">Abo vormerken</button>
+                    </div>
                 </section>
 
                 <!-- Profil & Einstellungen -->
@@ -1547,6 +1571,7 @@
                         <button onclick="switchAdminSubTab('products')" id="admSub-products" class="sub-tab" role="tab" aria-selected="false">Produkte</button>
                         <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="sub-tab" role="tab" aria-selected="false">Gutscheine</button>
                         <button onclick="switchAdminSubTab('ips')" id="admSub-ips" class="sub-tab" role="tab" aria-selected="false">IPs</button>
+                        <button onclick="switchAdminSubTab('studio')" id="admSub-studio" class="sub-tab" role="tab" aria-selected="false">Studio</button>
                     </div>
 
                     <!-- Bestellungen -->
@@ -1628,6 +1653,38 @@
 
                     <!-- IPs (unverändert) -->
                     <div id="admBox-ips" class="hidden card p-4 sm:p-6 space-y-4 shadow-xl" role="tabpanel"><div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs"><table class="w-full text-left"><thead><tr class="text-zinc-400 text-xs border-b border-saBorder"><th class="py-3 px-3">Uhrzeit</th><th class="py-3 px-3">IP</th><th class="py-3 px-3">Standort</th><th class="py-3 px-3">Gerät</th></tr></thead><tbody id="adminIpLogTable" class="divide-y divide-saBorder/40"></tbody></table></div></div>
+                    <div id="admBox-studio" class="hidden card p-4 sm:p-6 space-y-4" role="tabpanel">
+                        <h3 class="text-sm font-extrabold text-white">Inhalte aus Firestore</h3>
+                        <p class="text-xs text-zinc-400">Nur das Konto l@valentinolopez.de mit Admin-Claim. Die Seite nutzt diese Daten, sonst die eingebauten Texte. Zahlungsprüfung bleibt im Worker.</p>
+                        <label class="field-label" for="cmsCollection">Bereich</label>
+                        <select id="cmsCollection" class="field" onchange="renderCmsEditor()">
+                            <option value="siteSettings">Einstellungen</option>
+                            <option value="catalog">Produkte</option>
+                            <option value="bundles">Mengenrabatt</option>
+                            <option value="reviews">Stimmen</option>
+                            <option value="posts">Journal</option>
+                            <option value="faqs">FAQ</option>
+                            <option value="partners">Partner</option>
+                        </select>
+                        <div id="cmsEditor" class="space-y-3"></div>
+                        <h3 class="text-sm font-extrabold text-white pt-2">Live-Chat</h3>
+                        <div id="adminThreads" class="text-sm text-zinc-300 space-y-2"></div>
+                        <form class="flex gap-2" onsubmit="event.preventDefault(); replyLiveChat();">
+                            <label class="sr-only" for="chatUid">Kunden-ID</label>
+                            <input id="chatUid" class="field" placeholder="uid">
+                            <label class="sr-only" for="chatReply">Antwort</label>
+                            <input id="chatReply" class="field" placeholder="Antwort">
+                            <button class="btn btn-primary" type="submit">Senden</button>
+                        </form>
+                        <h3 class="text-sm font-extrabold text-white">Rollen</h3>
+                        <form class="grid sm:grid-cols-3 gap-2" onsubmit="event.preventDefault(); saveAdminRole();">
+                            <input id="roleUid" class="field" placeholder="uid" aria-label="Nutzer-ID">
+                            <input id="roleEmail" class="field" placeholder="email" aria-label="E-Mail">
+                            <select id="roleName" class="field" aria-label="Rolle"><option value="support">Support</option><option value="editor">Redaktion</option></select>
+                            <button class="btn btn-secondary sm:col-span-3" type="submit">Rolle speichern</button>
+                        </form>
+                        <p id="analyticsLine" class="text-xs text-zinc-400">Besuche heute werden nach dem Laden ergänzt.</p>
+                    </div>
                 </section>
             </div>
         </div>
@@ -1841,6 +1898,7 @@
                 <label for="helpChatInput" class="sr-only">Frage an den Hilfe-Chat</label>
                 <input id="helpChatInput" class="field !py-2.5" type="text" maxlength="240" autocomplete="off" placeholder="Frage eingeben …">
                 <button type="submit" class="btn btn-primary shrink-0" aria-label="Frage senden"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
+                <button type="button" class="btn btn-secondary shrink-0" onclick="sendLiveChat()" aria-label="Nachricht an das Team">Team</button>
             </form>
         </section>
         <button type="button" id="helpChatToggle" class="help-launcher" onclick="toggleHelpChat()" aria-expanded="false" aria-controls="helpChatPanel" aria-label="Hilfe-Chat öffnen">
@@ -3444,7 +3502,7 @@
         }
 
         /* ---------- Admin ---------- */
-        const ADMIN_SUBTABS = ['orders', 'revenue', 'products', 'coupons', 'ips'];
+        const ADMIN_SUBTABS = ['orders', 'revenue', 'products', 'coupons', 'ips', 'studio'];
         function switchAdminSubTab(sub) {
             ADMIN_SUBTABS.forEach(k => {
                 document.getElementById('admBox-' + k).classList.toggle('hidden', k !== sub);
@@ -3938,8 +3996,139 @@
                 if (cta) cta.textContent = 'Jetzt starten';
             }
         }
+        const CMS_FIELDS = {
+            siteSettings: ['heroTitle', 'heroText', 'promoText', 'accent', 'linktree', 'paypalPlanId', 'unitsSold', 'payments'],
+            catalog: ['name', 'blurb', 'priceCents', 'stock', 'image', 'video', 'deliveryType', 'crypto', 'active'],
+            reviews: ['name', 'quote'],
+            posts: ['title', 'date', 'body'],
+            faqs: ['productId', 'q', 'a'],
+            partners: ['label', 'href'],
+            bundles: ['name', 'productId', 'minQty', 'percent']
+        };
+        function escHtml(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+        function applyPublicCms() {
+            const cms = window.cms || {};
+            const settings = (cms.siteSettings && cms.siteSettings.main) || {};
+            if (settings.heroText) {
+                const p = document.querySelector('[data-i18n="bannerText"]');
+                if (p) p.textContent = settings.heroText;
+            }
+            if (settings.heroTitle && document.documentElement.dataset.hero !== 'B') {
+                const h1 = document.querySelector('.store-banner h1');
+                if (h1) h1.textContent = settings.heroTitle;
+            }
+            if (settings.promoText) {
+                const a = document.querySelector('#promoBanner [data-i18n="announcement"]');
+                if (a) a.textContent = settings.promoText;
+            }
+            if (settings.linktree) document.querySelectorAll('a[href^="https://linktr.ee/"]').forEach(el => { el.href = settings.linktree; });
+            if (settings.accent && /^#[0-9a-fA-F]{6}$/.test(settings.accent)) {
+                document.documentElement.style.setProperty('--brand', settings.accent);
+                document.documentElement.dataset.brand = 'custom';
+            }
+            if (settings.unitsSold != null && document.getElementById('soldCounter')) document.getElementById('soldCounter').textContent = settings.unitsSold + ' Mal bestellt';
+            const catalog = cms.catalog || {};
+            document.querySelectorAll('.product-item').forEach(card => {
+                const row = catalog[card.dataset.key];
+                if (!row) return;
+                if (row.name) { card.dataset.name = row.name; const h = card.querySelector('h3'); if (h) h.textContent = row.name; }
+                if (row.priceCents) {
+                    const eur = (Number(row.priceCents) / 100).toFixed(2);
+                    card.dataset.price = eur;
+                    const price = card.querySelector('.product-price');
+                    if (price) price.dataset.base = eur;
+                }
+                if (row.blurb) { const d = card.querySelector('p.line-clamp-2'); if (d) d.textContent = row.blurb; }
+                card.dataset.crypto = row.crypto === false ? '0' : '1';
+                if (row.image) {
+                    const media = card.querySelector('.h-40');
+                    if (media && !media.querySelector('img.product-photo')) {
+                        const img = document.createElement('img');
+                        img.className = 'product-photo absolute inset-0 h-full w-full object-cover';
+                        img.alt = '';
+                        img.src = row.image;
+                        media.appendChild(img);
+                    }
+                }
+            });
+            const reviews = Object.values(cms.reviews || {});
+            if (reviews.length && document.getElementById('reviewGrid')) {
+                document.getElementById('reviewGrid').innerHTML = reviews.map(r => `<figure class="card p-5"><blockquote class="text-sm text-zinc-200">${escHtml(r.quote)}</blockquote><figcaption class="mt-3 text-xs font-bold text-white">${escHtml(r.name)}</figcaption></figure>`).join('');
+            }
+            const posts = Object.values(cms.posts || {});
+            if (posts.length && document.getElementById('journalGrid')) {
+                document.getElementById('journalGrid').innerHTML = posts.map(p => `<article class="card p-5"><p class="text-xs text-zinc-500">${escHtml(p.date)}</p><h3 class="text-base font-bold text-white mt-2">${escHtml(p.title)}</h3><p class="text-sm text-zinc-400 mt-2">${escHtml(p.body)}</p></article>`).join('');
+            }
+            const faqs = Object.values(cms.faqs || {});
+            if (faqs.length && document.getElementById('faqList')) {
+                document.getElementById('faqList').innerHTML = faqs.map(f => `<details class="border-b border-white/10 py-2"><summary class="font-semibold text-white">${escHtml(f.q)}</summary><p class="text-sm text-zinc-400 mt-2">${escHtml(f.a)}</p></details>`).join('');
+            }
+            const partners = Object.values(cms.partners || {});
+            if (partners.length && document.getElementById('logoStrip')) {
+                document.getElementById('logoStrip').innerHTML = partners.map(p => `<a class="logo-pill" href="${escHtml(p.href || '#')}">${escHtml(p.label)}</a>`).join('');
+            }
+            if (typeof applyShopProducts === 'function') applyShopProducts();
+        }
+        function renderCmsEditor() {
+            const col = document.getElementById('cmsCollection').value;
+            const box = document.getElementById('cmsEditor');
+            const fields = CMS_FIELDS[col] || [];
+            const rows = window.cms && window.cms[col] ? window.cms[col] : {};
+            const ids = Object.keys(rows);
+            box.innerHTML = `<label class="field-label" for="cmsId">ID</label><input id="cmsId" class="field" value="${escHtml(ids[0] || (col === 'siteSettings' ? 'main' : ''))}">` +
+                fields.map(f => `<label class="field-label" for="cms_${f}">${f}</label><input id="cms_${f}" class="field" value="${escHtml(rows[ids[0]] ? rows[ids[0]][f] : '')}">`).join('') +
+                `<div class="flex gap-2"><button type="button" class="btn btn-primary" onclick="saveCmsDoc()">Speichern</button><button type="button" class="btn btn-secondary" onclick="deleteCmsDoc()">Löschen</button></div>`;
+        }
+        async function saveCmsDoc() {
+            const col = document.getElementById('cmsCollection').value;
+            const id = document.getElementById('cmsId').value.trim();
+            const data = {};
+            (CMS_FIELDS[col] || []).forEach(f => {
+                const raw = document.getElementById('cms_' + f).value;
+                if (raw === 'true' || raw === 'false') data[f] = raw === 'true';
+                else if (raw !== '' && !Number.isNaN(Number(raw)) && /Cents|Qty|percent|unitsSold|stock|price/.test(f)) data[f] = Number(raw);
+                else data[f] = raw;
+            });
+            try { await window.callServer('adminUpsert', { collection: col, id, data }); showToast('Gespeichert.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function deleteCmsDoc() {
+            try { await window.callServer('adminDeleteContent', { collection: document.getElementById('cmsCollection').value, id: document.getElementById('cmsId').value.trim() }); showToast('Gelöscht.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function sendLiveChat() {
+            const input = document.getElementById('helpChatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            if (!signedInUser()) return showToast('Bitte melde dich an, damit das Team antworten kann.');
+            try { await window.callServer('postChat', { text }); input.value = ''; appendHelpMessage('user', { text }); showToast('An das Team gesendet.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function replyLiveChat() {
+            try { await window.callServer('adminReplyChat', { uid: document.getElementById('chatUid').value.trim(), text: document.getElementById('chatReply').value.trim() }); showToast('Antwort gespeichert.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function saveAdminRole() {
+            try { await window.callServer('adminSetRole', { uid: document.getElementById('roleUid').value.trim(), email: document.getElementById('roleEmail').value.trim(), role: document.getElementById('roleName').value }); showToast('Rolle gespeichert.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function startMembership() {
+            try { const r = await window.callServer('startMembership', {}); showToast(r.note || 'Vorgemerkt.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
         function initStoreExtras() {
             applyHeroTest();
+            window.applyPublicCms = applyPublicCms;
+            window.renderCmsEditor = renderCmsEditor;
+            window.saveCmsDoc = saveCmsDoc;
+            window.deleteCmsDoc = deleteCmsDoc;
+            window.sendLiveChat = sendLiveChat;
+            window.replyLiveChat = replyLiveChat;
+            window.saveAdminRole = saveAdminRole;
+            window.startMembership = startMembership;
+            if (cart.length) document.getElementById('abandonedCart')?.classList.remove('hidden');
+            try { fetch(window.WORKER_URL + '/api/trackVisit', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: location.origin }, body: '{}' }); } catch (e) {}
+            applyPublicCms();
             if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
             applyShopProducts();
             const params = new URLSearchParams(location.search);

@@ -104,6 +104,13 @@ export async function fsGet(env, path, transaction) {
   return { id: idOf(j.name), data: decodeFields(j.fields), updateTime: j.updateTime };
 }
 
+export async function fsList(env, collection, limit = 50) {
+  const j = await call(env, 'POST', `${dbRoot(env)}/documents:runQuery`, {
+    structuredQuery: { from: [{ collectionId: collection }], limit },
+  });
+  return (j || []).filter(r => r.document).map(r => ({ id: idOf(r.document.name), data: decodeFields(r.document.fields) }));
+}
+
 export async function fsQuery(env, collection, filters, limit = 50) {
   const where = filters.length === 1 ? fieldFilter(filters[0]) : { compositeFilter: { op: 'AND', filters: filters.map(fieldFilter) } };
   const j = await call(env, 'POST', `${dbRoot(env)}/documents:runQuery`, {

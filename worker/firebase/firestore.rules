@@ -44,6 +44,29 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    function isOwnerAdmin() {
+      return isAdmin() && request.auth.token.email == 'l@valentinolopez.de';
+    }
+
+    match /siteSettings/{id} { allow read: if true; allow write: if false; }
+    match /catalog/{id} { allow read: if true; allow write: if false; }
+    match /reviews/{id} { allow read: if true; allow write: if false; }
+    match /posts/{id} { allow read: if true; allow write: if false; }
+    match /faqs/{id} { allow read: if true; allow write: if false; }
+    match /partners/{id} { allow read: if true; allow write: if false; }
+    match /bundles/{id} { allow read: if true; allow write: if false; }
+    match /analytics/{id} { allow read: if isOwnerAdmin(); allow write: if false; }
+    match /liveThreads/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isOwnerAdmin());
+      allow write: if false;
+    }
+    match /tickets/{id} {
+      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isOwnerAdmin());
+      allow write: if false;
+    }
+    match /admins/{uid} { allow read: if isOwnerAdmin(); allow write: if false; }
+    match /memberships/{uid} { allow read: if signedIn() && request.auth.uid == uid; allow write: if false; }
+
     match /supportChats/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }

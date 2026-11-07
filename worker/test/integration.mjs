@@ -55,7 +55,8 @@ globalThis.fetch = async (input, init = {}) => {
       try { for (const w of b.writes) applyWrite(w); } catch (e) { store.clear(); for (const [k, v] of snap) store.set(k, v); return resp({ error: { status: e.code, message: 'x' } }, 400); }
       return resp({ writeResults: [] }); }
     if (path.endsWith(':runQuery')) { const b = JSON.parse(body); const coll = b.structuredQuery.from[0].collectionId;
-      const fl = b.structuredQuery.where.compositeFilter ? b.structuredQuery.where.compositeFilter.filters : [b.structuredQuery.where];
+      const where = b.structuredQuery.where;
+      const fl = !where ? [] : (where.compositeFilter ? where.compositeFilter.filters : [where]);
       const out = [...store.entries()].filter(([n, f]) => n.startsWith(PFX + coll + '/') && fl.every(x => f[x.fieldFilter.field.fieldPath]?.stringValue === x.fieldFilter.value.stringValue))
         .map(([n, f]) => ({ document: { name: n, fields: f } }));
       return resp(out); }

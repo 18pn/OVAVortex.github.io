@@ -12,20 +12,21 @@ export const PRODUCTS = Object.freeze({
 export const TOPUP_MIN_CENTS = 500;
 export const TOPUP_MAX_CENTS = 50000;
 
-export function priceItems(items) {
+export function priceItems(items, products = PRODUCTS) {
   if (!Array.isArray(items) || items.length === 0 || items.length > 20) throw new HttpError(400, 'Ungültiger Warenkorb.');
   const merged = {};
   for (const it of items) {
     const id = String((it && it.id) || '');
     const qty = Math.floor(Number(it && it.qty));
-    if (!PRODUCTS[id]) throw new HttpError(400, 'Ein Produkt im Warenkorb kann mit dieser Zahlungsart nicht gekauft werden.');
+    if (!products[id]) throw new HttpError(400, 'Ein Produkt im Warenkorb kann mit dieser Zahlungsart nicht gekauft werden.');
     if (!Number.isFinite(qty) || qty < 1 || qty > 20) throw new HttpError(400, 'Ungültige Menge.');
     merged[id] = (merged[id] || 0) + qty;
   }
   const lines = Object.entries(merged).map(([id, qty]) => ({
-    productId: id, name: PRODUCTS[id].name, qty, unitCents: PRODUCTS[id].priceCents, lineCents: PRODUCTS[id].priceCents * qty,
+    productId: id, name: products[id].name, qty, unitCents: products[id].priceCents, lineCents: products[id].priceCents * qty,
+    crypto: products[id].crypto !== false,
   }));
-  return { lines, subtotalCents: lines.reduce((s, l) => s + l.lineCents, 0) };
+  return { lines, subtotalCents: lines.reduce((s, l) => s + l.lineCents, 0), noCrypto: lines.some(l => l.crypto === false) };
 }
 
 export function validateTopUpCents(amountEUR) {
