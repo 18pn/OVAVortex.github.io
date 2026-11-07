@@ -83,6 +83,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /stockAlerts/{id} {
+      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isOwnerAdmin());
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

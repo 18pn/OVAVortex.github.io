@@ -22,7 +22,7 @@ function sanitizeCms(data) {
   if (!data || typeof data !== 'object') return clean;
   for (const [k, v] of Object.entries(data)) {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,32}$/.test(k)) continue;
-    if (typeof v === 'string') clean[k] = v.slice(0, 2000);
+    if (typeof v === 'string') clean[k] = v.slice(0, /legal|impressum|privacy|terms/i.test(k) ? 8000 : 2000);
     else if (typeof v === 'boolean') clean[k] = v;
     else if (typeof v === 'number' && Number.isFinite(v)) clean[k] = v;
     else if (Array.isArray(v)) clean[k] = v.filter(x => typeof x === 'string').slice(0, 8).map(s => s.slice(0, 400));
@@ -453,7 +453,7 @@ const routes = {
     const id = str(b.id, 40);
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) throw new HttpError(400, 'Ungültige ID.');
     const data = sanitizeCms(b.data);
-    await fsCommit(env, [writeDoc(env, `${col}/${id}`, data, { serverTime: ['updatedAt'] })]);
+    await fsCommit(env, [writeDoc(env, `${col}/${id}`, data, { merge: true, serverTime: ['updatedAt'] })]);
     return { ok: true, id };
   },
 
@@ -545,6 +545,43 @@ const routes = {
     await fsCommit(env, [writeDoc(env, `memberships/${user.uid}`, { email: user.email || '', planId: String(plan), status: 'vorgemerkt' }, { serverTime: ['updatedAt'] })]);
     return { ok: true, planId: String(plan), note: 'Der eigentliche Einzug läuft über PayPal Subscriptions. Krypto-Abos sind nicht automatisch.' };
   },
+
+  async joinStockAlert(env, user, b) {
+    const productId = str(b.productId, 40);
+    if (!/^[a-z0-9_-]{2,32}$/.test(productId)) throw new HttpError(400, 'Produkt unbekannt.');
+    await fsCommit(env, [writeDoc(env, `stockAlerts/${user.uid}_${productId}`, { uid: user.uid, email: user.email || '', productId, active: true })]);
+    // SMTP: hier eine Mail schicken, sobald der Bestand von 0 auf >0 wechselt. Der Worker hat keinen Mailversand.
+    return { ok: true };
+  },
+
+  async exportMyData(env, user) {
+    const orders = await fsQuery(env, 'orders', [['uid', user.uid]], 50);
+    const tickets = (await fsList(env, 'tickets', 40)).filter(r => r.data.uid === user.uid);
+    const chat = await fsGet(env, `liveThreads/${user.uid}`);
+    const help = await fsGet(env, `supportChats/${user.uid}`);
+    return {
+      email: user.email,
+      orders: orders.map(r => ({ id: r.id, invoice: r.data.invoice, totalCents: r.data.totalCents, status: r.data.status })),
+      tickets: tickets.map(r => ({ id: r.id, subject: r.data.subject, status: r.data.status })),
+      chat: chat ? chat.data.messages || [] : [],
+      help: help ? help.data.messages || [] : [],
+    };
+  },
+
+  async deleteMyAccount(env, user) {
+    const orders = await fsQuery(env, 'orders', [['uid', user.uid]], 50);
+    const writes = [
+      deleteDoc(env, `liveThreads/${user.uid}`),
+      deleteDoc(env, `supportChats/${user.uid}`),
+      deleteDoc(env, `memberships/${user.uid}`),
+    ];
+    for (const o of orders) {
+      writes.push(writeDoc(env, `orders/${o.id}`, { email: 'gelöscht@invalid', uid: user.uid }, { merge: true }));
+    }
+    await fsCommit(env, writes);
+    // Rechnungen bleiben anonymisiert (steuerliche Aufbewahrung). Auth-Konto löscht der Browser über Firebase.
+    return { ok: true, kept: 'Bestellungen bleiben ohne E-Mail gespeichert.' };
+  },
 };
 routes.createGiftCardPayPal = (env, u, b) => routes.createPayPalOrder(env, u, { ...b, kind: 'giftcard' });
 routes.createGiftCardCrypto = (env, u, b) => routes.createTopUp(env, u, { ...b, kind: 'giftcard' });
@@ -610,7 +647,7 @@ export default {
       if (!body || typeof body !== 'object') body = {};
       const ip = request.headers.get('CF-Connecting-IP') || 'local';
       // Drossel gilt nur im jeweiligen Worker-Isolate. Für harte Limits: Cloudflare Rate Limiting oder KV.
-      if (/^(create|capture|pay|verify|redeem|admin|subscribe)/.test(m[1]) && !rateLimit(ip, m[1], 20, 60_000)) {
+      if (/^(create|capture|pay|verify|redeem|admin|subscribe|export|delete|join)/.test(m[1]) && !rateLimit(ip, m[1], 20, 60_000)) {
         return json({ error: 'Zu viele Anfragen. Bitte eine Minute warten.' }, 429, cors);
       }
       const result = await routes[m[1]](env, user, body);

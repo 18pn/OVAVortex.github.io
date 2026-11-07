@@ -34,7 +34,7 @@ const deliveries = {
     if (!(await ref.get()).exists) { await ref.set(data); console.log('Auslieferung angelegt:', id); }
   }
   const defaults = {
-    siteSettings: { main: { heroTitle: 'Val3ntino', heroText: 'Windows-PC-Tuning für minimale Latenz, saubere Webentwicklung und individuelle Skripte.', promoText: 'Mit dem Code VAL3NTINO sparst du 5,00 € an der Kasse!', accent: '#ec4899', linktree: 'https://linktr.ee/val3nt1no', unitsSold: 0, payments: 'paypal,balance,crypto', paypalPlanId: '' } },
+    siteSettings: { main: { heroTitle: 'Val3ntino', heroText: 'Windows-PC-Tuning für minimale Latenz, saubere Webentwicklung und individuelle Skripte.', promoText: 'Mit dem Code VAL3NTINO sparst du 5,00 € an der Kasse!', accent: '#ec4899', linktree: 'https://linktr.ee/val3nt1no', unitsSold: 0, payments: 'paypal,balance,crypto', paypalPlanId: '', legalName: 'Valentino Lopez', legalStreet: 'Europa-Allee 2', legalZipCity: '60327 Frankfurt am Main', legalEmail: 'L@valentinolopez.de' } },
     catalog: {
       basic: { name: 'Basic PC-Tuning', blurb: 'Bereinigung der Windows-Dienste, Hintergrund-Debloat und stabilere FPS.', priceCents: 1500, stock: 99, crypto: true, active: true, deliveryType: 'termin' },
       pro: { name: 'Pro Tuning (0 Delay)', blurb: 'Ultra-Low-Latency-Setup mit BIOS- und Registry-Optimierung.', priceCents: 3500, stock: 99, crypto: true, active: true, deliveryType: 'termin' },

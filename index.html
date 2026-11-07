@@ -575,6 +575,11 @@
         html[data-theme="light"] .store-banner .kicker { color: #fff; }
         html[data-theme="light"] .logo-mark { background: #18181b; color: #fff; }
         html[data-brand="custom"] .btn-primary { background: var(--brand); }
+        .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); gap: .25rem; padding: .4rem .4rem calc(.4rem + env(safe-area-inset-bottom)); background: rgba(9,9,11,.92); border-top: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); }
+        .bottom-nav a, .bottom-nav button { color: #d4d4d8; font-size: .68rem; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: .15rem; min-height: 2.75rem; }
+        @media (min-width: 768px) { .bottom-nav { display: none; } body { padding-bottom: 0; } }
+        @media (max-width: 767px) { body { padding-bottom: 4.5rem; } .help-chat { bottom: calc(4.6rem + env(safe-area-inset-bottom)); } }
+        #compareBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 5.2rem; z-index: 44; }
         dialog.card { background: #121217; color: #f4f4f5; border: 1px solid rgba(255,255,255,.1); border-radius: 1.25rem; }
     </style>
 </head>
@@ -858,6 +863,10 @@
 
         </div>
 
+        <section id="recommendSection" class="mt-10" aria-labelledby="recommendHeading">
+            <h2 id="recommendHeading" class="text-lg font-extrabold text-white">Das könnte dir gefallen</h2>
+            <div id="recommendGrid" class="mt-3 grid sm:grid-cols-3 gap-3"></div>
+        </section>
         <div id="noProductsMsg" class="hidden card p-10 text-center">
             <i class="fa-solid fa-magnifying-glass text-2xl text-zinc-500 mb-3" aria-hidden="true"></i>
             <p class="text-sm text-zinc-300 font-semibold" data-i18n="noProducts">Keine passenden Produkte gefunden.</p>
@@ -939,6 +948,8 @@
                 <p class="text-sm text-zinc-400 mt-1">Kurze Hinweise zu Aktionen. Kein externer Versanddienst – die Adresse bleibt in diesem Browser, bis ein Mail-Dienst angebunden ist.</p>
                 <label class="field-label mt-4" for="newsEmail">E-Mail</label>
                 <div class="flex gap-2"><input id="newsEmail" type="email" required class="field" placeholder="du@example.com"><button class="btn btn-primary" type="submit">Eintragen</button></div>
+                <input id="newsHoney" class="hidden" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <label class="text-xs text-zinc-400 mt-2 block">Schutz: <span id="newsCaptchaQ"></span> <input id="newsCaptcha" class="field !py-1 !w-16 inline-block" inputmode="numeric" aria-label="Rechenaufgabe"></label>
                 <p id="newsMsg" class="text-xs text-emerald-300 mt-2" role="status"></p>
                 <button type="button" class="btn btn-secondary mt-3" onclick="enablePush()">Hinweise per Push</button>
                 <p id="pushMsg" class="text-xs text-zinc-400 mt-2"></p>
@@ -1464,6 +1475,8 @@
                             <p class="text-xs text-zinc-400" data-i18n="logoutHint">Von diesem Gerät abmelden.</p>
                         </div>
                         <button onclick="handleLogout()" class="btn btn-danger"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> <span data-i18n="logout">Abmelden</span></button>
+                        <button type="button" class="btn btn-secondary" onclick="exportMyData()">Daten exportieren</button>
+                        <button type="button" class="btn btn-secondary" onclick="deleteMyAccount()">Konto löschen</button>
                     </div>
                 </section>
 
@@ -1726,10 +1739,11 @@
         <div class="bg-saCard border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-4 shadow-2xl">
             <button onclick="toggleImpressum()" class="icon-btn absolute top-4 right-4" aria-label="Impressum schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="impressumTitle" class="text-lg font-bold text-white">Impressum</h2>
-            <div class="text-sm text-zinc-300 space-y-3 leading-relaxed">
+            <div id="impressumBody" class="text-sm text-zinc-300 space-y-3 leading-relaxed">
                 <p class="eyebrow">Angaben gemäß § 5 DDG</p>
                 <p>Valentino Lopez<br>Europa-Allee 2<br>60327 Frankfurt am Main</p>
                 <p>E-Mail: <a href="mailto:L@valentinolopez.de" class="text-accent hover:underline underline-offset-4">L@valentinolopez.de</a></p>
+                <div class="legal-en hidden"><p>Legal notice: Valentino Lopez, Europa-Allee 2, 60327 Frankfurt am Main, Germany. Email L@valentinolopez.de. This text can be replaced in the admin studio.</p></div>
             </div>
         </div>
     </div>
@@ -1768,6 +1782,11 @@
         <article class="bg-saCard border border-saBorder p-6 sm:p-8 sm:rounded-3xl max-w-3xl w-full relative shadow-2xl min-h-full sm:min-h-0 sm:max-h-[90vh] overflow-y-auto text-sm text-zinc-300 leading-relaxed space-y-4">
             <button onclick="toggleLegal('datenschutzModal')" class="icon-btn absolute top-4 right-4" aria-label="Datenschutzerklärung schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="dsTitle" class="text-xl font-extrabold text-white pr-10">Datenschutzerklärung</h2>
+            <div class="legal-en hidden space-y-3">
+                <p><b>Controller:</b> Valentino Lopez, Europa-Allee 2, 60327 Frankfurt am Main, L@valentinolopez.de.</p>
+                <p>We store shop preferences in your browser. Login uses Firebase. Payments use PayPal or a Solana transaction, which is public on the blockchain. Orders are kept as required for tax records.</p>
+                <p>You can export or delete your account data in the customer portal. You may contact us about access, correction, or erasure.</p>
+            </div>
             <p class="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><b>Vorlage:</b> Dieser Text ist ein unverbindliches Muster. Bitte [PLATZHALTER] ersetzen und vor Veröffentlichung rechtlich prüfen lassen (z. B. Anwalt oder Datenschutz-Generator).</p>
             <h3 class="text-white font-bold">1. Verantwortlicher</h3>
             <p>[PLATZHALTER: Vollständiger Name]<br>[PLATZHALTER: Straße, Hausnummer]<br>[PLATZHALTER: PLZ, Ort]<br>E-Mail: L@valentinolopez.de</p>
@@ -1803,6 +1822,10 @@
         <article class="bg-saCard border border-saBorder p-6 sm:p-8 sm:rounded-3xl max-w-3xl w-full relative shadow-2xl min-h-full sm:min-h-0 sm:max-h-[90vh] overflow-y-auto text-sm text-zinc-300 leading-relaxed space-y-4">
             <button onclick="toggleLegal('agbModal')" class="icon-btn absolute top-4 right-4" aria-label="AGB schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="agbTitle" class="text-xl font-extrabold text-white pr-10">Allgemeine Geschäftsbedingungen (AGB)</h2>
+            <div class="legal-en hidden space-y-3">
+                <p>Prices are in euro. Digital access is provided after payment. By starting digital delivery early you waive the withdrawal right for that content, as stated at checkout.</p>
+                <p>SOL and USDC are confirmed on-chain. ETH and BTC are confirmed manually. Network fees are yours.</p>
+            </div>
             <p class="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><b>Vorlage:</b> Unverbindliches Muster. [PLATZHALTER] ersetzen und rechtlich prüfen lassen.</p>
             <h3 class="text-white font-bold">§ 1 Geltungsbereich, Anbieter</h3>
             <p>Diese AGB gelten für alle Verträge zwischen [PLATZHALTER: Name], [PLATZHALTER: Anschrift] („Anbieter“) und Kunden über den Online-Shop valentinolopez.de. Verbraucher ist jede natürliche Person, die ein Rechtsgeschäft zu überwiegend privaten Zwecken abschließt (§ 13 BGB).</p>
@@ -1832,6 +1855,9 @@
         <article class="bg-saCard border border-saBorder p-6 sm:p-8 sm:rounded-3xl max-w-3xl w-full relative shadow-2xl min-h-full sm:min-h-0 sm:max-h-[90vh] overflow-y-auto text-sm text-zinc-300 leading-relaxed space-y-4">
             <button onclick="toggleLegal('widerrufModal')" class="icon-btn absolute top-4 right-4" aria-label="Widerrufsbelehrung schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="wrTitle" class="text-xl font-extrabold text-white pr-10">Widerrufsbelehrung</h2>
+            <div class="legal-en hidden space-y-3">
+                <p>Consumers may withdraw within 14 days. For digital content the right ends once delivery has started with your express consent. Email L@valentinolopez.de to withdraw.</p>
+            </div>
             <p class="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><b>Vorlage</b> nach dem gesetzlichen Muster (Anlage 1 zu Art. 246a § 1 Abs. 2 EGBGB). [PLATZHALTER] ersetzen und rechtlich prüfen lassen.</p>
             <h3 class="text-white font-bold">Widerrufsrecht</h3>
             <p>Du hast das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.</p>
@@ -1858,6 +1884,32 @@
         </article>
     </div>
 
+    <nav class="bottom-nav" aria-label="Mobil">
+        <a href="#productsGrid"><i class="fa-solid fa-store" aria-hidden="true"></i>Shop</a>
+        <a href="#storeSearchInputMobile"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>Suche</a>
+        <button type="button" onclick="toggleCartModal()"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Korb</button>
+        <button type="button" onclick="document.getElementById('authNavBtn').click()"><i class="fa-solid fa-user" aria-hidden="true"></i>Konto</button>
+    </nav>
+    <div id="compareBar" class="hidden card px-4 py-3 flex items-center gap-3 shadow-2xl">
+        <span id="compareCount" class="text-sm text-white font-semibold">0</span>
+        <button type="button" class="btn btn-primary !py-2" onclick="openCompare()">Vergleichen</button>
+        <button type="button" class="btn btn-ghost !py-2" onclick="clearCompare()">Leeren</button>
+    </div>
+    <dialog id="compareDialog" class="card p-5 max-w-3xl w-[calc(100%-2rem)] backdrop:bg-black/70">
+        <h2 class="text-lg font-extrabold text-white">Vergleich</h2>
+        <div id="compareTable" class="mt-3 overflow-x-auto text-sm"></div>
+        <button type="button" class="btn btn-secondary mt-4" onclick="document.getElementById('compareDialog').close()">Schließen</button>
+    </dialog>
+    <div id="adminTour" class="hidden fixed inset-0 z-[70] bg-black/70 p-4 flex items-end sm:items-center justify-center">
+        <div class="card p-5 max-w-md w-full space-y-3" role="dialog" aria-labelledby="tourTitle">
+            <h2 id="tourTitle" class="text-lg font-extrabold text-white">Admin-Rundgang</h2>
+            <p id="tourText" class="text-sm text-zinc-300"></p>
+            <div class="flex gap-2">
+                <button type="button" class="btn btn-primary" onclick="nextAdminTour()">Weiter</button>
+                <button type="button" class="btn btn-ghost" onclick="endAdminTour()">Überspringen</button>
+            </div>
+        </div>
+    </div>
     <aside id="cookieBanner" class="cookie-banner card p-4 shadow-2xl hidden" role="dialog" aria-labelledby="cookieTitle">
         <h2 id="cookieTitle" class="text-sm font-extrabold text-white">Cookies & Datenschutz</h2>
         <p class="text-xs text-zinc-400 mt-1 leading-relaxed">Wir speichern Einstellungen (Sprache, Warenkorb, Einwilligung) lokal in deinem Browser. Zahlung und Login laufen über PayPal, Firebase und den Cloudflare Worker. Details stehen in der Datenschutzerklärung.</p>
@@ -2432,7 +2484,7 @@
             });
             const ls = document.getElementById('langSelect'); if (ls) ls.value = currentLang;
         }
-        function savePrefs() { localStorage.setItem('store_prefs', JSON.stringify({ lang: currentLang, currency: currentCurrency })); }
+        function savePrefs() { localStorage.setItem('store_prefs', JSON.stringify({ lang: currentLang, currency: currentCurrency })); localStorage.setItem('store_locale_manual', '1'); }
 
         function changeCurrency(curr) {
             currentCurrency = rates[curr] ? curr : 'EUR';
@@ -2452,7 +2504,27 @@
         function changeLanguage(lang) {
             applyLanguage(lang);
             savePrefs();
+            applyLegalLang();
             showToast((currentLang === 'de' ? 'Sprache geändert: ' : 'Language: ') + currentLang.toUpperCase());
+        }
+        function applyLegalLang() {
+            const en = currentLang === 'en';
+            document.querySelectorAll('.legal-en').forEach(el => el.classList.toggle('hidden', !en));
+            ['datenschutzModal', 'agbModal', 'widerrufModal', 'impressumModal'].forEach(id => {
+                const root = document.getElementById(id);
+                if (!root) return;
+                root.querySelectorAll('p, h3, div.card, div.eyebrow').forEach(el => {
+                    if (el.classList.contains('legal-en') || el.closest('.legal-en')) return;
+                    if (el.querySelector && el.querySelector('.legal-en')) return;
+                    el.classList.toggle('hidden', en && !el.classList.contains('legal-keep'));
+                });
+            });
+            const settings = window.cms && window.cms.siteSettings && window.cms.siteSettings.main;
+            const box = document.getElementById('impressumBody');
+            if (box && settings) {
+                const custom = en ? settings.impressumEn : settings.impressumDe;
+                if (custom) box.textContent = custom;
+            }
         }
 
         /* ---------- Produkte: Sortieren, Filtern, Details ---------- */
@@ -2941,6 +3013,7 @@
 
         // Bestätigung für serverseitig bezahlte Bestellungen
         function finishServerOrder({ orderId, invoice, totalCents, method }) {
+            if (typeof notePurchasePairs === 'function') notePurchasePairs();
             const itemsHTML = cart.map(i => `<div class="flex justify-between gap-3 py-1"><span><span class="text-zinc-400">${i.qty}×</span> ${esc(i.name)}</span></div>`).join('');
             const email = signedInUser() ? signedInUser().email : document.getElementById('checkoutEmail').value.trim();
             const total = totalCents != null ? eur(totalCents) : (symbols[currentCurrency] + getCartTotal());
@@ -3733,6 +3806,12 @@
                 const data = await res.json();
                 window.currentVisitorIP = data.ip || 'Unbekannt';
                 saveVisitorLog(window.currentVisitorIP, data.city ? `${data.city}, ${data.country_name}` : 'Direkt');
+                if (!localStorage.getItem('store_prefs')) {
+                    const cc = String(data.country || '').toUpperCase();
+                    const map = { DE: ['de', 'EUR'], AT: ['de', 'EUR'], CH: ['de', 'CHF'], US: ['en', 'USD'], GB: ['en', 'GBP'], FR: ['fr', 'EUR'], IT: ['it', 'EUR'], ES: ['es', 'EUR'] };
+                    const pick = map[cc];
+                    if (pick) { applyLanguage(pick[0]); changeCurrency(pick[1]); localStorage.removeItem('store_locale_manual'); }
+                }
             } catch (e) {
                 window.currentVisitorIP = 'Lokal';
                 saveVisitorLog(window.currentVisitorIP, 'Lokal');
@@ -3827,6 +3906,22 @@
                     if (media) media.appendChild(badge);
                 }
                 badge.textContent = stock <= 0 ? 'Ausverkauft' : (stock < 8 ? 'Nur noch ' + stock : 'Auf Lager');
+                let alertBtn = card.querySelector('.stock-alert');
+                if (!alertBtn) {
+                    alertBtn = document.createElement('button');
+                    alertBtn.type = 'button';
+                    alertBtn.className = 'stock-alert btn btn-secondary w-full mt-2 !py-2 !text-xs';
+                    alertBtn.textContent = 'Sag mir, wenn wieder da';
+                    alertBtn.onclick = () => notifyStock(card.dataset.key);
+                    card.querySelector('.p-5.pt-0')?.appendChild(alertBtn);
+                }
+                alertBtn.classList.toggle('hidden', !off);
+                const watched = JSON.parse(localStorage.getItem('store_stock_alerts') || '[]');
+                if (card.dataset.wasOut === '1' && !off && watched.includes(card.dataset.key)) {
+                    showToast(card.dataset.name + ' ist wieder da.');
+                    localStorage.setItem('store_stock_alerts', JSON.stringify(watched.filter(x => x !== card.dataset.key)));
+                }
+                card.dataset.wasOut = off ? '1' : '0';
                 if (row && row.blurb) {
                     const p = card.querySelector('[data-i18n]');
                     if (p && row.blurb) { /* Anzeigetext; i18n kann ihn beim Sprachwechsel überschreiben */ }
@@ -3876,6 +3971,7 @@
             document.getElementById('cookieBanner').classList.add('hidden');
         }
         function saveNewsletter() {
+            if (!guardForm('newsHoney', 'newsCaptcha', 'newsCaptchaQ')) return;
             const email = document.getElementById('newsEmail').value.trim();
             const list = JSON.parse(localStorage.getItem('store_newsletter') || '[]');
             if (!list.includes(email)) list.push(email);
@@ -3981,6 +4077,142 @@
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) { msg.textContent = 'Dieser Browser kann keine Push-Nachrichten.'; return; }
             Notification.requestPermission().then(p => { msg.textContent = p === 'granted' ? 'Erlaubnis da. Abo folgt nach dem Schlüssel.' : 'Nicht erlaubt.'; });
         }
+        async function refreshFx() {
+            try {
+                const r = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,CHF,GBP');
+                const j = await r.json();
+                if (j.rates) {
+                    if (j.rates.USD) rates.USD = j.rates.USD;
+                    if (j.rates.CHF) rates.CHF = j.rates.CHF;
+                    if (j.rates.GBP) rates.GBP = j.rates.GBP;
+                    if (currentCurrency !== 'EUR') changeCurrency(currentCurrency);
+                }
+            } catch (e) { /* eingebaute Kurse bleiben */ }
+        }
+        function renderRecommendations() {
+            const box = document.getElementById('recommendGrid');
+            if (!box) return;
+            const cards = [...document.querySelectorAll('.product-item')];
+            const last = localStorage.getItem('store_last_product');
+            const pairs = JSON.parse(localStorage.getItem('store_copurchase') || '{}');
+            const scored = cards.map(card => {
+                let score = 0;
+                const id = card.dataset.key;
+                if (last && pairs[last] && pairs[last][id]) score += pairs[last][id];
+                if (last) {
+                    const src = cards.find(c => c.dataset.key === last);
+                    if (src && src.dataset.category === card.dataset.category && id !== last) score += 2;
+                    if (src && Math.abs(parseFloat(src.dataset.price) - parseFloat(card.dataset.price)) < 15) score += 1;
+                }
+                return { card, score };
+            }).filter(x => x.card.dataset.key !== last && x.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+            const pick = scored.length ? scored : cards.slice(0, 3).map(card => ({ card }));
+            box.innerHTML = pick.map(({ card }) => `<button type="button" class="card p-4 text-left" onclick="document.querySelector('[data-key=${card.dataset.key}]').scrollIntoView({behavior:'smooth',block:'center'})"><span class="text-sm font-bold text-white">${escHtml(card.dataset.name)}</span><span class="block text-xs text-zinc-400 mt-1">${escHtml(card.dataset.price)} €</span></button>`).join('');
+        }
+        function notePurchasePairs() {
+            const ids = [...document.querySelectorAll('.product-item')].filter(c => cart.some(i => i.name === c.dataset.name)).map(c => c.dataset.key);
+            const pairs = JSON.parse(localStorage.getItem('store_copurchase') || '{}');
+            ids.forEach(a => { pairs[a] = pairs[a] || {}; ids.forEach(b => { if (a !== b) pairs[a][b] = (pairs[a][b] || 0) + 1; }); localStorage.setItem('store_last_product', a); });
+            localStorage.setItem('store_copurchase', JSON.stringify(pairs));
+        }
+        const compareSet = new Set(JSON.parse(localStorage.getItem('store_compare') || '[]'));
+        function setupCompare() {
+            document.querySelectorAll('.product-item').forEach(card => {
+                if (card.querySelector('.compare-toggle')) return;
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'compare-toggle text-[11px] font-bold text-zinc-400 hover:text-white mt-2';
+                b.textContent = 'Vergleichen';
+                b.setAttribute('aria-pressed', compareSet.has(card.dataset.key) ? 'true' : 'false');
+                b.onclick = () => {
+                    const id = card.dataset.key;
+                    if (compareSet.has(id)) compareSet.delete(id); else if (compareSet.size < 3) compareSet.add(id);
+                    localStorage.setItem('store_compare', JSON.stringify([...compareSet]));
+                    b.setAttribute('aria-pressed', compareSet.has(id) ? 'true' : 'false');
+                    const bar = document.getElementById('compareBar');
+                    document.getElementById('compareCount').textContent = compareSet.size + ' Produkte';
+                    bar.classList.toggle('hidden', compareSet.size < 2);
+                };
+                card.querySelector('.p-5.pt-0')?.appendChild(b);
+            });
+        }
+        function openCompare() {
+            const rows = [...compareSet].map(id => document.querySelector(`.product-item[data-key="${id}"]`)).filter(Boolean);
+            document.getElementById('compareTable').innerHTML = `<table class="w-full text-left"><thead><tr>${rows.map(c => `<th class="p-2 text-white">${escHtml(c.dataset.name)}</th>`).join('')}</tr></thead><tbody><tr>${rows.map(c => `<td class="p-2 text-zinc-300">${escHtml(c.dataset.price)} €<br>${escHtml(c.dataset.category)}<br>${c.classList.contains('is-sold-out') ? 'Ausverkauft' : 'Lieferbar'}</td>`).join('')}</tr></tbody></table>`;
+            document.getElementById('compareDialog').showModal();
+        }
+        function clearCompare() { compareSet.clear(); localStorage.removeItem('store_compare'); document.getElementById('compareBar').classList.add('hidden'); }
+        function setupSwipe() {
+            document.querySelectorAll('.product-item').forEach(card => {
+                let x0 = 0;
+                card.addEventListener('touchstart', (e) => { x0 = e.changedTouches[0].clientX; }, { passive: true });
+                card.addEventListener('touchend', (e) => {
+                    const dx = e.changedTouches[0].clientX - x0;
+                    if (Math.abs(dx) > 70 && card.dataset.key) toggleWishlist(card.dataset.key);
+                }, { passive: true });
+            });
+        }
+        function armCaptcha() {
+            const q = document.getElementById('newsCaptchaQ');
+            if (!q) return;
+            const a = 2 + Math.floor(Math.random() * 4);
+            const b = 1 + Math.floor(Math.random() * 4);
+            q.dataset.answer = String(a + b);
+            q.textContent = a + ' + ' + b + ' =';
+        }
+        function guardForm(honeyId, captchaId, questionId) {
+            const honey = document.getElementById(honeyId);
+            if (honey && honey.value) return false;
+            const q = document.getElementById(questionId);
+            const a = document.getElementById(captchaId);
+            if (q && a && a.value.trim() !== q.dataset.answer) { showToast('Bitte die Rechenaufgabe lösen.'); return false; }
+            return true;
+        }
+        async function exportMyData() {
+            const local = { prefs: localStorage.getItem('store_prefs'), cart: localStorage.getItem('store_cart_items'), newsletter: localStorage.getItem('store_newsletter') };
+            let remote = null;
+            try { remote = await window.callServer('exportMyData', {}); } catch (e) { remote = { note: friendlyErr(e) }; }
+            const blob = new Blob([JSON.stringify({ local, remote }, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'val3ntino-daten.json';
+            a.click();
+        }
+        async function deleteMyAccount() {
+            if (!confirm('Konto und Chat löschen? Rechnungen bleiben anonymisiert.')) return;
+            try { const r = await window.callServer('deleteMyAccount', {}); showToast(r.kept || 'Gelöscht.'); } catch (e) { showToast(friendlyErr(e)); return; }
+            const user = window.firebaseAuth && window.firebaseAuth.currentUser;
+            if (user && user.delete) user.delete().catch(() => showToast('Firebase verlangt eine frische Anmeldung, um das Login zu löschen.'));
+        }
+        async function notifyStock(productId) {
+            const list = JSON.parse(localStorage.getItem('store_stock_alerts') || '[]');
+            if (!list.includes(productId)) list.push(productId);
+            localStorage.setItem('store_stock_alerts', JSON.stringify(list));
+            try { await window.callServer('joinStockAlert', { productId }); } catch (e) { /* lokal gemerkt; Mail braucht SMTP */ }
+            showToast('Wir merken es uns in diesem Browser. Eine E-Mail geht erst raus, wenn Versand angebunden ist.');
+        }
+        const tourSteps = [
+            'Unter Studio pflegst du Texte, Preise, FAQ und Partner. Die Seite fällt auf die eingebauten Texte zurück, solange Firestore leer ist.',
+            'Gutscheine und der Bestand gelten an der Kasse erst nach dem Worker-Deploy und dem Admin-Claim.',
+            'Zwei-Faktor schaltest du freiwillig ein. Danach verlangt der Server den Code.',
+            'Der Rundgang ist fertig. Du kannst ihn über den Button im Studio neu starten.'
+        ];
+        let tourIndex = 0;
+        function maybeAdminTour() {
+            if (!window.isStoreAdmin || localStorage.getItem('admin_tour_done') === '1') return;
+            tourIndex = 0;
+            document.getElementById('tourText').textContent = tourSteps[0];
+            document.getElementById('adminTour').classList.remove('hidden');
+        }
+        function nextAdminTour() {
+            tourIndex += 1;
+            if (tourIndex >= tourSteps.length) return endAdminTour();
+            document.getElementById('tourText').textContent = tourSteps[tourIndex];
+        }
+        function endAdminTour() {
+            localStorage.setItem('admin_tour_done', '1');
+            document.getElementById('adminTour').classList.add('hidden');
+        }
         function applyHeroTest() {
             let variant = localStorage.getItem('ab_hero');
             if (variant !== 'A' && variant !== 'B') {
@@ -3997,7 +4229,7 @@
             }
         }
         const CMS_FIELDS = {
-            siteSettings: ['heroTitle', 'heroText', 'promoText', 'accent', 'linktree', 'paypalPlanId', 'unitsSold', 'payments'],
+            siteSettings: ['heroTitle', 'heroText', 'promoText', 'accent', 'linktree', 'paypalPlanId', 'unitsSold', 'payments', 'legalName', 'legalStreet', 'legalZipCity', 'legalEmail', 'impressumDe', 'impressumEn'],
             catalog: ['name', 'blurb', 'priceCents', 'stock', 'image', 'video', 'deliveryType', 'crypto', 'active'],
             reviews: ['name', 'quote'],
             posts: ['title', 'date', 'body'],
@@ -4118,6 +4350,13 @@
         }
         function initStoreExtras() {
             applyHeroTest();
+            applyLegalLang();
+            refreshFx();
+            renderRecommendations();
+            setupCompare();
+            setupSwipe();
+            armCaptcha();
+            maybeAdminTour();
             window.applyPublicCms = applyPublicCms;
             window.renderCmsEditor = renderCmsEditor;
             window.saveCmsDoc = saveCmsDoc;
