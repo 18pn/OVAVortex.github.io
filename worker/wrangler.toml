@@ -26,3 +26,10 @@ VAPID_PUBLIC_KEY = ""
 #   optional: npx wrangler secret put SOLANA_RPC_URL  (eigener RPC, z. B. Helius Free; Standard: api.mainnet-beta.solana.com)
 #   optional: npx wrangler secret put VAPID_PRIVATE_KEY
 #   optional: npx wrangler secret put BACKUP_WEBHOOK   (URL, die den nächtlichen Zähler empfängt)
+#   Pflicht für PDF-Downloads: npx wrangler secret put DOWNLOAD_TOKEN_SECRET
+# Privater PDF-Speicher (nicht ins Git, sonst wäre die Datei über GitHub Pages öffentlich):
+#   npx wrangler r2 bucket create valentinolopez-guides
+#   dann die Kommentarzeichen entfernen:
+# [[r2_buckets]]
+# binding = "GUIDES"
+# bucket_name = "valentinolopez-guides"

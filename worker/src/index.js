@@ -10,6 +10,7 @@ import * as sol from './solana.js';
 import { paypalCreateOrder, paypalCaptureAndVerify } from './paypal.js';
 import { buildDelivery } from './delivery.js';
 import { randomBase32, verifyTotp } from './totp.js';
+import { GUIDE_OBJECT, GUIDE_NAMES, loadGuide } from './guides.js';
 
 const CRYPTO_EXPIRY_MS = 30 * 60 * 1000;
 const MIN_PAYMENT_CENTS = 50;
@@ -67,6 +68,14 @@ async function bundleDiscount(env, lines) {
     }
   } catch { /* keine Bundles */ }
   return off;
+}
+
+async function assertGuidesReady(env, lines) {
+  for (const line of lines || []) {
+    if (!GUIDE_OBJECT[line.productId]) continue;
+    const bytes = await loadGuide(env, line.productId);
+    if (!bytes) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im privaten Speicher.');
+  }
 }
 
 async function computeCart(env, items, coupon) {
@@ -169,6 +178,38 @@ async function verifyCrypto(env, orderId, o) {
   return found;
 }
 
+function b64url(text) {
+  return btoa(text).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+function b64urlDecode(text) {
+  const pad = text.length % 4 === 0 ? '' : '='.repeat(4 - (text.length % 4));
+  return atob(text.replace(/-/g, '+').replace(/_/g, '/') + pad);
+}
+async function downloadKey(env) {
+  if (!env.DOWNLOAD_TOKEN_SECRET) throw new HttpError(503, 'DOWNLOAD_TOKEN_SECRET fehlt. Bitte als Worker-Secret setzen.');
+  return crypto.subtle.importKey('raw', new TextEncoder().encode(env.DOWNLOAD_TOKEN_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+}
+async function signDownload(env, payload) {
+  const body = b64url(JSON.stringify(payload));
+  const key = await downloadKey(env);
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(body)));
+  let raw = '';
+  for (const b of sig) raw += String.fromCharCode(b);
+  return body + '.' + b64url(raw);
+}
+async function verifyDownload(env, token, orderId, productId) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 2) return null;
+  const key = await downloadKey(env);
+  const sig = Uint8Array.from(b64urlDecode(parts[1]), c => c.charCodeAt(0));
+  const ok = await crypto.subtle.verify('HMAC', key, sig, new TextEncoder().encode(parts[0]));
+  if (!ok) return null;
+  let payload;
+  try { payload = JSON.parse(b64urlDecode(parts[0])); } catch { return null; }
+  if (!payload || payload.orderId !== orderId || payload.productId !== productId || payload.exp < Date.now()) return null;
+  return payload;
+}
+
 function giftCode() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const bytes = crypto.getRandomValues(new Uint8Array(12));
@@ -246,6 +287,7 @@ const routes = {
   async createCryptoOrder(env, user, b) {
     const billing = sanitizeBilling(b.billing);
     const cart = await computeCart(env, b.items, b.coupon);
+    await assertGuidesReady(env, cart.lines);
     if (cart.noCrypto) throw new HttpError(400, 'Für mindestens ein Produkt ist Krypto ausgeschaltet.');
     if (b.token === 'ETH' || b.token === 'BTC') {
       return createManualCoinOrder(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, asset: b.token, billing });
@@ -290,7 +332,7 @@ const routes = {
     const kind = b.kind === 'topup' ? 'topup' : b.kind === 'giftcard' ? 'giftcard' : 'order';
     let cart = null, totalCents;
     if (kind === 'topup' || kind === 'giftcard') totalCents = validateTopUpCents(b.amountEUR);
-    else { cart = await computeCart(env, b.items, b.coupon); totalCents = cart.totalCents; }
+    else { cart = await computeCart(env, b.items, b.coupon); totalCents = cart.totalCents; await assertGuidesReady(env, cart.lines); }
     const billing = kind === 'order' ? sanitizeBilling(b.billing) : null;
     if (totalCents < MIN_PAYMENT_CENTS) throw new HttpError(400, 'Der Betrag ist zu klein.');
     const invoice = newInvoice();
@@ -324,6 +366,7 @@ const routes = {
 
   async payWithBalance(env, user, b) {
     const cart = await computeCart(env, b.items, b.coupon);
+    await assertGuidesReady(env, cart.lines);
     const orderId = randomId();
     const invoice = newInvoice();
     await runTransaction(env, async (tx) => {
@@ -582,6 +625,18 @@ const routes = {
     // Rechnungen bleiben anonymisiert (steuerliche Aufbewahrung). Auth-Konto löscht der Browser über Firebase.
     return { ok: true, kept: 'Bestellungen bleiben ohne E-Mail gespeichert.' };
   },
+
+  async issueDownload(env, user, b) {
+    const orderId = str(b.orderId, 40);
+    const productId = str(b.productId, 40);
+    const order = await getOwnOrder(env, user, orderId);
+    if (order.status !== 'bezahlt' && order.status !== 'geliefert') throw new HttpError(402, 'Die Bestellung ist noch nicht bezahlt.');
+    const owns = (order.items || []).some(l => l.productId === productId) || (order.delivery || []).some(d => d.downloadKey === productId || d.productId === productId);
+    if (!owns || !GUIDE_OBJECT[productId]) throw new HttpError(404, 'Kein PDF für diese Bestellung.');
+    if (!(await loadGuide(env, productId))) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im privaten Speicher.');
+    const token = await signDownload(env, { orderId, productId, uid: user.uid, exp: Date.now() + 15 * 60 * 1000 });
+    return { token, productId, orderId };
+  },
 };
 routes.createGiftCardPayPal = (env, u, b) => routes.createPayPalOrder(env, u, { ...b, kind: 'giftcard' });
 routes.createGiftCardCrypto = (env, u, b) => routes.createTopUp(env, u, { ...b, kind: 'giftcard' });
@@ -617,6 +672,34 @@ export async function recheckOpenCryptoOrders(env) {
   return { checked: docs.length, paid, expired };
 }
 
+async function servePaidPdf(request, env, orderId, url, cors) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'local';
+  if (!rateLimit(ip, 'download', 30, 60_000)) return json({ error: 'Zu viele Downloads.' }, 429, cors);
+  const productId = url.searchParams.get('product') || '';
+  try {
+    const payload = await verifyDownload(env, url.searchParams.get('token'), orderId, productId);
+    if (!payload) return json({ error: 'Download-Link ungültig oder abgelaufen.' }, 401, cors);
+    const order = await fsGet(env, `orders/${orderId}`);
+    if (!order || order.data.uid !== payload.uid) return json({ error: 'Bestellung nicht gefunden.' }, 404, cors);
+    if (order.data.status !== 'bezahlt' && order.data.status !== 'geliefert') return json({ error: 'Bestellung ist nicht bezahlt.' }, 402, cors);
+    const owns = (order.data.items || []).some(l => l.productId === productId);
+    const bytes = await loadGuide(env, productId);
+    if (!owns || !bytes) return json({ error: 'Keine passende Datei.' }, 404, cors);
+    return new Response(bytes, {
+      status: 200,
+      headers: {
+        ...cors,
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${GUIDE_NAMES[productId] || 'guide.pdf'}"`,
+        'Cache-Control': 'private, no-store',
+      },
+    });
+  } catch (e) {
+    if (e instanceof HttpError) return json({ error: e.message }, e.status, cors);
+    return json({ error: 'Download fehlgeschlagen.' }, 500, cors);
+  }
+}
+
 /* ---------- HTTP ---------- */
 export default {
   async fetch(request, env) {
@@ -624,6 +707,8 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: cors['Access-Control-Allow-Origin'] ? 204 : 403, headers: cors });
     const url = new URL(request.url);
     if (url.pathname === '/health') return json({ ok: true, manual: { ETH: env.ETH_ADDRESS || '', BTC: env.BTC_ADDRESS || '' }, push: !!env.VAPID_PUBLIC_KEY }, 200, cors);
+    const downloadMatch = url.pathname.match(/^\/api\/download\/([A-Za-z0-9]{10,40})$/);
+    if (downloadMatch && request.method === 'GET') return servePaidPdf(request, env, downloadMatch[1], url, cors);
     const origin = request.headers.get('Origin');
     if (origin && !cors['Access-Control-Allow-Origin']) return json({ error: 'Origin nicht erlaubt.' }, 403, cors);
     const m = url.pathname.match(/^\/api\/([A-Za-z]+)$/);
