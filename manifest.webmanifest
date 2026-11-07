@@ -1,0 +1,14 @@
+{
+  "name": "Val3ntino Store",
+  "short_name": "Val3ntino",
+  "description": "PC-Tuning, Websites und Skripte. PayPal, Guthaben oder Solana.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "lang": "de",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

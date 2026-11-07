@@ -6,6 +6,10 @@
     <title data-i18n="storeTitle">Val3ntino | Official Store & Services</title>
     <meta name="description" content="Val3ntino – professionelles Windows-PC-Tuning für minimale Latenz, moderne Websites und individuelle Skripte. Sicher bezahlen mit PayPal, Karte, Guthaben oder Solana.">
     <link rel="canonical" href="https://valentinolopez.de/">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Val3ntino">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="de_DE">
     <meta property="og:site_name" content="Val3ntino">
@@ -74,7 +78,7 @@
             updateProfile
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import {
-            getFirestore, doc, getDoc, collection, query, where, limit, onSnapshot
+            getFirestore, doc, getDoc, setDoc, collection, query, where, limit, onSnapshot
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -128,6 +132,24 @@
         // Gutscheine verwalten nur über den Worker (prüft Custom Claim admin==true)
         window.adminSaveCoupon = (code, valueCents) => window.callServer('adminSaveCoupon', { code, valueCents, active: true });
         window.adminDeleteCoupon = (code) => window.callServer('adminDeleteCoupon', { code });
+        window.persistHelpChat = async (messages) => {
+            const slice = (messages || []).slice(-40);
+            try { localStorage.setItem('help_chat_v1', JSON.stringify(slice)); } catch (e) {}
+            const u = auth.currentUser;
+            if (!u) return;
+            try { await setDoc(doc(db, 'supportChats', u.uid), { messages: slice, updatedAt: Date.now() }); } catch (e) {}
+        };
+        window.loadHelpChat = async () => {
+            let local = [];
+            try { local = JSON.parse(localStorage.getItem('help_chat_v1') || '[]'); } catch (e) {}
+            const u = auth.currentUser;
+            if (!u) return local;
+            try {
+                const s = await getDoc(doc(db, 'supportChats', u.uid));
+                if (s.exists() && Array.isArray(s.data().messages) && s.data().messages.length) return s.data().messages;
+            } catch (e) {}
+            return local;
+        };
 
         let unsubs = [];
         function clearSubs() { unsubs.forEach(u => { try { u(); } catch (e) {} }); unsubs = []; }
@@ -367,6 +389,15 @@
             box-shadow: 0 30px 80px -36px rgba(236, 72, 153, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
         }
         .store-banner p { max-width: 38rem; }
+        .hero-motion { position: absolute; inset: -8%; background:
+            radial-gradient(420px 180px at 18% 40%, rgba(236,72,153,.55), transparent 62%),
+            radial-gradient(380px 200px at 78% 20%, rgba(56,189,248,.22), transparent 60%),
+            url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop') center/cover;
+            animation: heroDrift 22s ease-in-out infinite alternate; }
+        .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .38; }
+        @keyframes heroDrift { from { transform: scale(1) translate3d(0,0,0); } to { transform: scale(1.08) translate3d(-2%, -1%, 0); } }
+        .logo-strip { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+        .logo-pill { padding: .7rem 1rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); color: #e4e4e7; font-weight: 800; letter-spacing: .08em; font-size: .72rem; text-transform: uppercase; }
         .linktree-btn {
             display: inline-flex;
             align-items: center;
@@ -502,6 +533,7 @@
         }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+            .hero-video, .hero-motion { animation: none !important; }
         }
         details > summary { list-style: none; cursor: pointer; }
         details > summary::-webkit-details-marker { display: none; }
@@ -621,7 +653,10 @@
     <!-- Store Profile Header -->
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-8" aria-label="Über den Store">
         <div class="store-banner min-h-[16rem] sm:min-h-[18.5rem] rounded-3xl relative flex items-end p-5 sm:p-8 lg:p-10 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-t from-saBg/80 via-transparent to-transparent" aria-hidden="true"></div>
+            <div class="hero-motion" aria-hidden="true"></div>
+            <video id="heroVideo" class="hero-video" poster="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop" autoplay muted loop playsinline preload="none"></video>
+            <!-- Video-Datei selbst hosten und hier src setzen, z. B. src="hero.webm". Ohne Datei läuft die CSS-Bewegung. -->
+            <div class="absolute inset-0 bg-gradient-to-t from-saBg/85 via-saBg/25 to-transparent" aria-hidden="true"></div>
             <div class="relative z-10 flex items-center gap-4 sm:gap-6 w-full">
                 <div class="w-16 h-16 sm:w-24 sm:h-24 shrink-0 rounded-2xl bg-saCard/80 border border-white/15 p-1 flex items-center justify-center shadow-xl backdrop-blur-sm" aria-hidden="true">
                     <div class="w-full h-full rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500 flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl">V</div>
@@ -642,6 +677,15 @@
                         </a>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="mt-6" aria-label="Bekannt aus">
+            <p class="kicker mb-3">Bekannt aus</p>
+            <div class="logo-strip">
+                <span class="logo-pill">Discord</span>
+                <span class="logo-pill">Linktree</span>
+                <span class="logo-pill">Val3ntino Studio</span>
+                <span class="logo-pill">Performance</span>
             </div>
         </div>
         <ul class="trust-bar mt-4" aria-label="Vertrauen">
@@ -877,6 +921,8 @@
                 <label class="field-label mt-4" for="newsEmail">E-Mail</label>
                 <div class="flex gap-2"><input id="newsEmail" type="email" required class="field" placeholder="du@example.com"><button class="btn btn-primary" type="submit">Eintragen</button></div>
                 <p id="newsMsg" class="text-xs text-emerald-300 mt-2" role="status"></p>
+                <button type="button" class="btn btn-secondary mt-3" onclick="enablePush()">Hinweise per Push</button>
+                <p id="pushMsg" class="text-xs text-zinc-400 mt-2"></p>
             </form>
             <section id="status" class="card p-6" aria-labelledby="statusHeading">
                 <h2 id="statusHeading" class="text-lg font-extrabold text-white">Status</h2>
@@ -1001,6 +1047,15 @@
                         <label for="checkoutEmail" class="field-label" data-i18n="emailLabel">E-Mail-Adresse *</label>
                         <input type="email" id="checkoutEmail" placeholder="deine-email@example.com" autocomplete="email" inputmode="email" required aria-describedby="checkoutEmailHint checkoutEmailError" class="field">
                         <p id="checkoutEmailHint" class="text-xs text-zinc-400 mt-1.5" data-i18n="emailHint">Hierhin senden wir Bestellbestätigung und Zugangsdaten.</p>
+                        <label class="flex items-center gap-2 text-sm text-zinc-200 mt-3"><input type="checkbox" id="bizToggle" class="accent-pink-500" onchange="document.getElementById('bizFields').classList.toggle('hidden', !this.checked)"> Geschäftskunde (Rechnung mit USt-IdNr.)</label>
+                        <div id="bizFields" class="hidden grid sm:grid-cols-2 gap-3 mt-3">
+                            <div class="sm:col-span-2"><label class="field-label" for="bizCompany">Firma</label><input id="bizCompany" class="field" autocomplete="organization" maxlength="80"></div>
+                            <div class="sm:col-span-2"><label class="field-label" for="bizStreet">Straße</label><input id="bizStreet" class="field" autocomplete="street-address" maxlength="120"></div>
+                            <div><label class="field-label" for="bizZip">PLZ</label><input id="bizZip" class="field" autocomplete="postal-code" maxlength="12"></div>
+                            <div><label class="field-label" for="bizCity">Ort</label><input id="bizCity" class="field" autocomplete="address-level2" maxlength="80"></div>
+                            <div><label class="field-label" for="bizCountry">Land</label><input id="bizCountry" class="field" value="DE" maxlength="2"></div>
+                            <div><label class="field-label" for="bizVat">USt-IdNr.</label><input id="bizVat" class="field" placeholder="DE123456789" maxlength="20"></div>
+                        </div>
                         <p id="checkoutEmailError" class="hidden text-xs text-red-400 mt-1.5 font-medium" role="alert"></p>
                     </div>
                     <label class="flex items-start gap-3 text-xs text-zinc-300 leading-relaxed cursor-pointer">
@@ -1088,10 +1143,15 @@
                         <div id="cryptoPaymentSlot" data-integration="solana-phantom" class="space-y-3">
                             <fieldset class="grid grid-cols-2 gap-2">
                                 <legend class="field-label">Währung</legend>
-                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="SOL" checked class="h-4 w-4 accent-pink-500"> <span class="text-sm font-bold text-white">SOL</span></label>
-                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="USDC" class="h-4 w-4 accent-pink-500"> <span class="text-sm font-bold text-white">USDC</span></label>
+                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="SOL" checked class="h-4 w-4 accent-pink-500" onchange="toggleManualCoin()"> <span class="text-sm font-bold text-white">SOL</span></label>
+                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="USDC" class="h-4 w-4 accent-pink-500" onchange="toggleManualCoin()"> <span class="text-sm font-bold text-white">USDC</span></label>
+                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="ETH" class="h-4 w-4 accent-pink-500" onchange="toggleManualCoin()"> <span class="text-sm font-bold text-white">ETH</span></label>
+                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="BTC" class="h-4 w-4 accent-pink-500" onchange="toggleManualCoin()"> <span class="text-sm font-bold text-white">BTC</span></label>
                             </fieldset>
-                            <p class="text-xs text-zinc-400">Der Betrag wird live in SOL/USDC umgerechnet und 30 Minuten reserviert. Die Zahlung wird auf der Blockchain geprüft – erst dann wird deine Bestellung freigeschaltet.</p>
+                            <p id="solanaAutoNote" class="text-xs text-zinc-400">SOL und USDC werden live umgerechnet und on-chain geprüft. ETH und BTC legt der Shop nur an – die Bestätigung macht der Inhaber manuell.</p>
+                            <div id="manualCoinBox" class="hidden text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 space-y-1">
+                                <p id="manualCoinText"></p>
+                            </div>
                             <button id="cryptoStartBtn" onclick="startCheckoutCrypto()" class="btn btn-primary w-full"><i class="fa-solid fa-ghost" aria-hidden="true"></i> Mit Krypto bezahlen</button>
                         </div>
                     </div>
@@ -1316,6 +1376,22 @@
                         </div>
                         <p id="topupLoginNote" class="hidden text-sm text-amber-200"><i class="fa-solid fa-user-lock mr-1.5" aria-hidden="true"></i>Bitte melde dich an, um Guthaben zu kaufen.</p>
                     </div>
+                    <div class="card p-5 sm:p-6 space-y-3">
+                        <h3 class="text-sm font-extrabold text-white uppercase tracking-wider">Geschenkkarte</h3>
+                        <p class="text-xs text-zinc-400">Kauf einen Code (10–500 €). Nach bestätigter SOL/USDC- oder PayPal-Zahlung steht der Code in der Bestellung. Einlösen schreibt ihn einmalig aufs Guthaben.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-secondary" onclick="renderGiftPaypal(25)">25 € PayPal</button>
+                            <div id="giftPaypalSlot" class="w-full"></div>
+                            <button type="button" class="btn btn-secondary" onclick="buyGiftCard('SOL', 25)">25 € SOL</button>
+                            <button type="button" class="btn btn-secondary" onclick="buyGiftCard('USDC', 25)">25 € USDC</button>
+                        </div>
+                        <form class="flex gap-2" onsubmit="event.preventDefault(); redeemGiftCard();">
+                            <label class="sr-only" for="giftRedeem">Code einlösen</label>
+                            <input id="giftRedeem" class="field uppercase" placeholder="Code einlösen" maxlength="20">
+                            <button class="btn btn-primary" type="submit">Einlösen</button>
+                        </form>
+                        <p id="giftMsg" class="text-xs text-zinc-400" role="status"></p>
+                    </div>
                     <p class="text-xs text-zinc-400" data-i18n="balanceHint">Guthaben kann an der Kasse als Zahlungsart gewählt werden.</p>
                 </section>
 
@@ -1428,6 +1504,17 @@
                             <p class="text-sm text-zinc-400 mt-1">Bestellungen, Umsatz, Produkte, Gutscheine und Besucher.</p>
                         </div>
                         <p id="adminDataSourceNote" class="text-[11px] text-amber-300/80"><i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i>Server-Daten nur mit Admin-Claim sichtbar.</p>
+                        <div class="card p-4 space-y-2">
+                            <h3 class="text-sm font-extrabold text-white">Zwei-Faktor (TOTP)</h3>
+                            <p class="text-xs text-zinc-400">Optional. Erst nach Bestätigung eines Codes verlangt der Worker den Code bei Admin-Aktionen. Geheimnis liegt nur in Firestore, nicht im Browser dauerhaft.</p>
+                            <button type="button" class="btn btn-secondary !py-2" onclick="startAdminTotp()">Einrichten</button>
+                            <p id="totpSetup" class="text-xs text-zinc-300 break-all"></p>
+                            <form class="flex gap-2" onsubmit="event.preventDefault(); confirmAdminTotp();">
+                                <label class="sr-only" for="totpCode">Code</label>
+                                <input id="totpCode" inputmode="numeric" maxlength="6" class="field !py-2 w-32" placeholder="123456">
+                                <button class="btn btn-primary !py-2" type="submit">Aktivieren</button>
+                            </form>
+                        </div>
                     </div>
 
                     <!-- KPIs -->
@@ -2740,7 +2827,7 @@
                         ppMode = 'server';
                         if (!signedInUser()) { status.innerText = 'Bitte melde dich an.'; throw new Error('not signed in'); }
                         try {
-                            const r = await window.callServer('createPayPalOrder', { kind: 'order', items: cartServerItems(), coupon: appliedCouponCode });
+                            const r = await window.callServer('createPayPalOrder', { kind: 'order', items: cartServerItems(), coupon: appliedCouponCode, billing: collectBilling() });
                             ppServerOrderId = r.orderId;
                             return r.paypalOrderId;
                         } catch (e) { status.innerText = friendlyErr(e); throw e; }
@@ -2774,7 +2861,7 @@
             const btn = document.getElementById('payWithBalanceBtn');
             btn.disabled = true;
             try {
-                const r = await window.callServer('payWithBalance', { items: cartServerItems(), coupon: appliedCouponCode });
+                const r = await window.callServer('payWithBalance', { items: cartServerItems(), coupon: appliedCouponCode, billing: collectBilling() });
                 showToast("Erfolgreich mit Guthaben bezahlt!");
                 finishServerOrder({ orderId: r.orderId, invoice: r.invoice, totalCents: r.totalCents, method: 'Account-Guthaben' });
             } catch (e) {
@@ -2912,8 +2999,12 @@
             const btn = document.getElementById('cryptoStartBtn');
             btn.disabled = true;
             try {
-                const r = await window.callServer('createCryptoOrder', { items: cartServerItems(), coupon: appliedCouponCode, token });
-                openCryptoModal(r, 'order');
+                const r = await window.callServer('createCryptoOrder', { items: cartServerItems(), coupon: appliedCouponCode, token, billing: collectBilling() });
+                if (r.manual) {
+                    document.getElementById('manualCoinText').textContent = r.asset + '-Adresse: ' + r.address + '. Bestellung #' + r.invoice + ' wartet auf manuelle Bestätigung. SOL/USDC bleiben automatisch.';
+                    document.getElementById('manualCoinBox').classList.remove('hidden');
+                    showToast('Manuelle ' + r.asset + '-Bestellung angelegt.');
+                } else openCryptoModal(r, 'order');
             } catch (e) { showToast(friendlyErr(e)); }
             finally { btn.disabled = false; }
         }
@@ -2930,7 +3021,7 @@
         async function openCryptoModal(r, kind) {
             stopCryptoTimers();
             cryptoState = { ...r, kind };
-            document.getElementById('cryptoModalTitle').innerText = kind === 'topup' ? 'Guthaben mit Krypto kaufen' : 'Mit Krypto bezahlen';
+            document.getElementById('cryptoModalTitle').innerText = kind === 'topup' ? 'Guthaben mit Krypto kaufen' : kind === 'gift' ? 'Geschenkkarte mit Krypto' : 'Mit Krypto bezahlen';
             document.getElementById('cryptoInvoice').innerText = '#' + r.invoice;
             document.getElementById('cryptoAmount').innerText = r.amount;
             document.getElementById('cryptoTokenLabel').innerText = r.token;
@@ -3756,7 +3847,100 @@
             localStorage.setItem('store_coupons', JSON.stringify(coupons));
             showToast(code + ' liegt lokal über ' + coupons[code].toFixed(2) + ' €. Für die Server-Kasse im Admin als Gutschein anlegen.');
         }
+        function collectBilling() {
+            const box = document.getElementById('bizToggle');
+            if (!box || !box.checked) return null;
+            return {
+                business: true,
+                company: document.getElementById('bizCompany').value.trim(),
+                street: document.getElementById('bizStreet').value.trim(),
+                zip: document.getElementById('bizZip').value.trim(),
+                city: document.getElementById('bizCity').value.trim(),
+                country: document.getElementById('bizCountry').value.trim() || 'DE',
+                vatId: document.getElementById('bizVat').value.trim()
+            };
+        }
+        function toggleManualCoin() {
+            const token = (document.querySelector('input[name="cryptoToken"]:checked') || {}).value;
+            const manual = token === 'ETH' || token === 'BTC';
+            document.getElementById('manualCoinBox').classList.toggle('hidden', !manual);
+            document.getElementById('solanaAutoNote').classList.toggle('hidden', manual);
+            if (manual) document.getElementById('manualCoinText').textContent = token + ' wird nicht automatisch geprüft. Die Adresse kommt aus dem Worker (ETH_ADDRESS / BTC_ADDRESS). SOL und USDC bleiben automatisch.';
+        }
+        let giftPpReady = false;
+        function renderGiftPaypal(amount) {
+            if (!signedInUser()) return showToast('Bitte melde dich an.');
+            const msg = document.getElementById('giftMsg');
+            whenPayPalReady(msg, () => {
+                if (giftPpReady) return;
+                giftPpReady = true;
+                paypal.Buttons({
+                    style: { layout: 'vertical', color: 'black', shape: 'rect', height: 40 },
+                    createOrder: async () => {
+                        const r = await window.callServer('createGiftCardPayPal', { amountEUR: amount });
+                        window.__giftOrder = r.orderId;
+                        return r.paypalOrderId;
+                    },
+                    onApprove: async () => {
+                        const r = await window.callServer('capturePayPalOrder', { orderId: window.__giftOrder });
+                        msg.textContent = 'Status: ' + (r.status || '') + '. Den Code findest du in der Bestellung im Portal.';
+                    },
+                    onError: () => { msg.textContent = 'PayPal-Fehler.'; }
+                }).render('#giftPaypalSlot');
+            });
+        }
+        async function buyGiftCard(token, amount) {
+            if (!signedInUser()) return showToast('Bitte melde dich an.');
+            try {
+                const r = await window.callServer('createGiftCardCrypto', { amountEUR: amount, token });
+                openCryptoModal(r, 'gift');
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function redeemGiftCard() {
+            const code = document.getElementById('giftRedeem').value.trim();
+            try {
+                const r = await window.callServer('redeemGiftCard', { code });
+                document.getElementById('giftMsg').textContent = (r.valueCents / 100).toFixed(2) + ' € wurden gutgeschrieben.';
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function startAdminTotp() {
+            try {
+                const r = await window.callServer('adminTotpSetup', {});
+                document.getElementById('totpSetup').textContent = r.otpauth;
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function confirmAdminTotp() {
+            try {
+                await window.callServer('adminTotpConfirm', { totp: document.getElementById('totpCode').value.trim() });
+                showToast('Zwei-Faktor ist aktiv.');
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        function enablePush() {
+            const msg = document.getElementById('pushMsg');
+            // VAPID-Public-Key hier einsetzen, privaten Schlüssel als wrangler secret VAPID_PRIVATE_KEY.
+            const PUSH_VAPID_PUBLIC_KEY = '';
+            if (!PUSH_VAPID_PUBLIC_KEY) { msg.textContent = 'Push ist noch nicht eingerichtet (kein VAPID-Schlüssel).'; return; }
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) { msg.textContent = 'Dieser Browser kann keine Push-Nachrichten.'; return; }
+            Notification.requestPermission().then(p => { msg.textContent = p === 'granted' ? 'Erlaubnis da. Abo folgt nach dem Schlüssel.' : 'Nicht erlaubt.'; });
+        }
+        function applyHeroTest() {
+            let variant = localStorage.getItem('ab_hero');
+            if (variant !== 'A' && variant !== 'B') {
+                variant = Math.random() < 0.5 ? 'A' : 'B';
+                localStorage.setItem('ab_hero', variant);
+                // analytics: hier die Variante an einen Collector schicken. Kein Dienst ist angebunden.
+            }
+            document.documentElement.dataset.hero = variant;
+            if (variant === 'B') {
+                const h1 = document.querySelector('.store-banner h1');
+                const cta = document.querySelector('.store-banner .btn-primary');
+                if (h1) h1.textContent = 'Val3ntino';
+                if (cta) cta.textContent = 'Jetzt starten';
+            }
+        }
         function initStoreExtras() {
+            applyHeroTest();
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
             applyShopProducts();
             const params = new URLSearchParams(location.search);
             if (params.get('wish')) {
@@ -3841,6 +4025,14 @@
             window.acceptCookies = acceptCookies;
             window.saveNewsletter = saveNewsletter;
             window.showShopQr = showShopQr;
+            window.buyGiftCard = buyGiftCard;
+            window.renderGiftPaypal = renderGiftPaypal;
+            window.redeemGiftCard = redeemGiftCard;
+            window.startAdminTotp = startAdminTotp;
+            window.confirmAdminTotp = confirmAdminTotp;
+            window.enablePush = enablePush;
+            window.toggleManualCoin = toggleManualCoin;
+            window.collectBilling = collectBilling;
             window.updateSolConverter = updateSolConverter;
             window.refreshSolPrice = refreshSolPrice;
             window.setPriceBand = setPriceBand;
@@ -3928,7 +4120,13 @@
             });
             return bestScore >= 2 ? best : null;
         }
-        function appendHelpMessage(role, payload) {
+        const helpHistory = [];
+        function rememberHelp(role, payload) {
+            helpHistory.push({ role, text: payload.text || '', links: payload.links || [] });
+            if (helpHistory.length > 40) helpHistory.shift();
+            if (window.persistHelpChat) window.persistHelpChat(helpHistory);
+        }
+        function appendHelpMessage(role, payload, skipSave) {
             const log = document.getElementById('helpChatLog');
             const bubble = document.createElement('div');
             bubble.className = 'help-msg ' + (role === 'user' ? 'is-user' : 'is-bot');
@@ -3947,6 +4145,7 @@
             });
             log.appendChild(bubble);
             log.scrollTop = log.scrollHeight;
+            if (!skipSave) rememberHelp(role, payload);
         }
         function showHelpTopic(topic, fromUser) {
             if (fromUser) appendHelpMessage('user', { text: fromUser });
@@ -3982,7 +4181,15 @@
             btn.setAttribute('aria-label', 'Hilfe-Chat schließen');
             if (!helpChatGreeted) {
                 helpChatGreeted = true;
-                appendHelpMessage('bot', { text: 'Hallo! Ich bin der Hilfe-Chat von Val3ntino. Ich kenne Zahlung, Krypto mit Phantom, Lieferung, Produkte, Guthaben und das Konto. Wähl ein Thema oder schreib deine Frage.' });
+                const paintGreeting = () => appendHelpMessage('bot', { text: 'Hallo! Ich bin der Hilfe-Chat von Val3ntino. Ich kenne Zahlung, Krypto mit Phantom, Lieferung, Produkte, Guthaben und das Konto. Wähl ein Thema oder schreib deine Frage.' });
+                if (window.loadHelpChat) {
+                    window.loadHelpChat().then(list => {
+                        if (list && list.length) {
+                            list.forEach(m => appendHelpMessage(m.role === 'user' ? 'user' : 'bot', m, true));
+                            helpHistory.splice(0, helpHistory.length, ...list);
+                        } else paintGreeting();
+                    }).catch(paintGreeting);
+                } else paintGreeting();
             }
             panel.focus();
         }

@@ -9,6 +9,7 @@ import { priceItems, validateTopUpCents } from './catalog.js';
 import * as sol from './solana.js';
 import { paypalCreateOrder, paypalCaptureAndVerify } from './paypal.js';
 import { buildDelivery } from './delivery.js';
+import { randomBase32, verifyTotp } from './totp.js';
 
 const CRYPTO_EXPIRY_MS = 30 * 60 * 1000;
 const MIN_PAYMENT_CENTS = 50;
@@ -61,6 +62,13 @@ async function markPaidAndFulfill(env, orderId, { signature = null, paypalCaptur
       upd.status = 'geliefert';
       upd.delivery = [{ productId: 'topup', name: 'Guthaben-Aufladung', title: 'Guthaben gutgeschrieben', instructions: `${eurString(o.totalCents)} € wurden deinem Konto gutgeschrieben.`, links: [] }];
       serverTime.push('deliveredAt');
+    } else if (o.kind === 'giftcard') {
+      const code = giftCode();
+      writes.push(writeDoc(env, `giftCards/${code}`, { valueCents: o.totalCents, redeemed: false, orderId }, { serverTime: ['createdAt'], exists: false }));
+      upd.status = 'geliefert';
+      upd.giftCode = code;
+      upd.delivery = [{ productId: 'giftcard', name: 'Geschenkkarte', title: 'Dein Gutscheincode', instructions: `Code ${code} über ${eurString(o.totalCents)} €. Einlösen im Kundenportal unter Guthaben. Der Code wird einmalig zum Guthaben.`, links: [] }];
+      serverTime.push('deliveredAt');
     }
     writes.push(writeDoc(env, `orders/${orderId}`, upd, { merge: true, serverTime, exists: true }));
     return { writes, result: { already: false, order: o } };
@@ -77,7 +85,7 @@ async function deliverOrder(env, orderId) {
   // E-Mail-Versand: auf Workers ohne SMTP nicht eingebaut (siehe README, optional z. B. über einen Mail-API-Dienst).
 }
 
-async function createCryptoRecord(env, { uid, email, kind, cart, totalCents, token, label }) {
+async function createCryptoRecord(env, { uid, email, kind, cart, totalCents, token, label, billing = null }) {
   if (totalCents < MIN_PAYMENT_CENTS) throw new HttpError(400, 'Der Betrag ist zu klein für eine Krypto-Zahlung.');
   const tokenSymbol = token === 'USDC' ? 'USDC' : 'SOL';
   const recipient = env.MERCHANT_WALLET;
@@ -97,6 +105,7 @@ async function createCryptoRecord(env, { uid, email, kind, cart, totalCents, tok
     totalCents, method: 'crypto',
     methodLabel: tokenSymbol === 'USDC' ? 'USDC (Solana)' : 'SOL (Solana)',
     status: 'offen',
+    billing: billing || null,
     crypto: { recipient, reference, token: tokenSymbol, amount: q.amount, mint: q.token.mint, rateEUR: q.rateEUR, url },
     createdAt: ts(now),
     expiresAt: ts(now + CRYPTO_EXPIRY_MS),
@@ -115,6 +124,73 @@ async function verifyCrypto(env, orderId, o) {
   return found;
 }
 
+function giftCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  return [...bytes].map(b => alphabet[b % alphabet.length]).join('');
+}
+
+function sanitizeBilling(raw) {
+  if (!raw || typeof raw !== 'object' || !raw.business) return null;
+  const vat = str(raw.vatId, 20).toUpperCase().replace(/\s/g, '');
+  if (vat && !/^[A-Z]{2}[A-Z0-9]{2,12}$/.test(vat)) throw new HttpError(400, 'USt-IdNr. ist ungültig.');
+  return {
+    business: true,
+    company: str(raw.company, 80),
+    street: str(raw.street, 120),
+    zip: str(raw.zip, 12),
+    city: str(raw.city, 80),
+    country: str(raw.country, 2).toUpperCase() || 'DE',
+    vatId: vat,
+  };
+}
+
+// ETH/BTC: keine automatische On-Chain-Prüfung. Anschlussstelle: hier eine Quittung (Tx-Hash)
+// gegen einen ETH- oder BTC-RPC prüfen (Betrag, Empfänger, Bestätigungen) und danach markPaidAndFulfill.
+async function createManualCoinOrder(env, { uid, email, kind, cart, totalCents, asset, billing }) {
+  const address = asset === 'ETH' ? str(env.ETH_ADDRESS, 80) : str(env.BTC_ADDRESS, 80);
+  if (!address) throw new HttpError(503, asset + '-Adresse ist noch nicht hinterlegt (wrangler.toml).');
+  if (totalCents < MIN_PAYMENT_CENTS) throw new HttpError(400, 'Der Betrag ist zu klein.');
+  const invoice = newInvoice();
+  const orderId = randomId();
+  await fsCommit(env, [writeDoc(env, `orders/${orderId}`, {
+    uid, email, kind, invoice,
+    items: cart ? cart.lines : [],
+    subtotalCents: cart ? cart.subtotalCents : totalCents,
+    discountCents: cart ? cart.discountCents : 0,
+    coupon: cart ? cart.coupon : '',
+    totalCents, method: 'manual-crypto', methodLabel: asset + ' (manuell)', status: 'offen',
+    billing: billing || null,
+    manualCrypto: { asset, address },
+    createdAt: ts(Date.now()),
+  }, { exists: false })]);
+  return { orderId, invoice, totalCents, asset, address, manual: true };
+}
+
+const rateBuckets = new Map();
+function rateLimit(ip, key, limit, windowMs) {
+  const now = Date.now();
+  const id = ip + ':' + key;
+  const prev = (rateBuckets.get(id) || []).filter(t => now - t < windowMs);
+  if (prev.length >= limit) { rateBuckets.set(id, prev); return false; }
+  prev.push(now);
+  rateBuckets.set(id, prev);
+  if (rateBuckets.size > 5000) rateBuckets.clear();
+  return true;
+}
+
+// Cron-Sicherung: ohne R2 nur Zähler, optional POST an BACKUP_WEBHOOK. Vollbackup: admin-scripts/backup-firestore.js
+async function backupTick(env) {
+  let activeCoupons = 0;
+  try { activeCoupons = (await fsQuery(env, 'coupons', [['active', true]], 50)).length; } catch { activeCoupons = -1; }
+  const summary = { at: new Date().toISOString(), activeCoupons, note: 'Vollbackup: node admin-scripts/backup-firestore.js (R2 ist nicht gebunden).' };
+  if (env.BACKUP_WEBHOOK) {
+    await fetch(env.BACKUP_WEBHOOK, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(summary) }).catch(() => {});
+  }
+  console.log('Backup-Tick', JSON.stringify(summary));
+  return summary;
+}
+
 /* ---------- Endpunkte ---------- */
 const routes = {
   async quoteCart(env, user, b) {
@@ -123,13 +199,22 @@ const routes = {
   },
 
   async createCryptoOrder(env, user, b) {
+    const billing = sanitizeBilling(b.billing);
+    if (b.token === 'ETH' || b.token === 'BTC') {
+      const cart = await computeCart(env, b.items, b.coupon);
+      return createManualCoinOrder(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, asset: b.token, billing });
+    }
     const cart = await computeCart(env, b.items, b.coupon);
-    return createCryptoRecord(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, token: b.token, label: 'Bestellung' });
+    return createCryptoRecord(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, token: b.token, billing, label: 'Bestellung' });
   },
 
   async createTopUp(env, user, b) {
     const cents = validateTopUpCents(b.amountEUR);
-    return createCryptoRecord(env, { uid: user.uid, email: user.email, kind: 'topup', cart: null, totalCents: cents, token: b.token, label: 'Aufladung' });
+    const kind = b.kind === 'giftcard' ? 'giftcard' : 'topup';
+    if (b.token === 'ETH' || b.token === 'BTC') {
+      return createManualCoinOrder(env, { uid: user.uid, email: user.email, kind, cart: null, totalCents: cents, asset: b.token, billing: null });
+    }
+    return createCryptoRecord(env, { uid: user.uid, email: user.email, kind, cart: null, totalCents: cents, token: b.token, billing: null, label: kind === 'giftcard' ? 'Geschenkkarte' : 'Aufladung' });
   },
 
   /** Liefert die Parameter (inkl. aktuellem Blockhash), mit denen der Browser die Phantom-Transaktion baut. */
@@ -157,10 +242,11 @@ const routes = {
   },
 
   async createPayPalOrder(env, user, b) {
-    const kind = b.kind === 'topup' ? 'topup' : 'order';
+    const kind = b.kind === 'topup' ? 'topup' : b.kind === 'giftcard' ? 'giftcard' : 'order';
     let cart = null, totalCents;
-    if (kind === 'topup') totalCents = validateTopUpCents(b.amountEUR);
+    if (kind === 'topup' || kind === 'giftcard') totalCents = validateTopUpCents(b.amountEUR);
     else { cart = await computeCart(env, b.items, b.coupon); totalCents = cart.totalCents; }
+    const billing = kind === 'order' ? sanitizeBilling(b.billing) : null;
     if (totalCents < MIN_PAYMENT_CENTS) throw new HttpError(400, 'Der Betrag ist zu klein.');
     const invoice = newInvoice();
     const orderId = randomId();
@@ -173,6 +259,7 @@ const routes = {
       coupon: cart ? cart.coupon : '',
       totalCents, method: 'paypal', methodLabel: 'PayPal / Karte', status: 'offen',
       paypal: { orderId: paypalOrderId },
+      billing,
       createdAt: ts(Date.now()),
     }, { exists: false })]);
     return { orderId, paypalOrderId, invoice, totalCents };
@@ -205,6 +292,7 @@ const routes = {
             uid: user.uid, email: user.email, kind: 'order', invoice,
             items: cart.lines, subtotalCents: cart.subtotalCents, discountCents: cart.discountCents, coupon: cart.coupon,
             totalCents: cart.totalCents, method: 'balance', methodLabel: 'Account-Guthaben', status: 'bezahlt',
+            billing: sanitizeBilling(b.billing),
             createdAt: ts(Date.now()),
           }, { serverTime: ['paidAt'], exists: false }),
         ],
@@ -217,7 +305,7 @@ const routes = {
 
   /* ----- Admin (Custom Claim admin == true) ----- */
   async adminSetOrderStatus(env, user, b) {
-    requireAdmin(user);
+    await assertAdmin(env, user, b);
     const orderId = str(b.orderId, 40);
     const status = str(b.status, 20);
     if (!STATUSES.includes(status)) throw new HttpError(400, 'Ungültiger Status.');
@@ -231,7 +319,7 @@ const routes = {
   },
 
   async adminSaveCoupon(env, user, b) {
-    requireAdmin(user);
+    await assertAdmin(env, user, b);
     const code = str(b.code, 40).trim().toUpperCase();
     const valueCents = Math.round(Number(b.valueCents));
     if (!/^[A-Z0-9_-]{2,32}$/.test(code)) throw new HttpError(400, 'Ungültiger Gutscheincode.');
@@ -241,7 +329,7 @@ const routes = {
   },
 
   async adminDeleteCoupon(env, user, b) {
-    requireAdmin(user);
+    await assertAdmin(env, user, b);
     const code = str(b.code, 40).trim().toUpperCase();
     if (!/^[A-Z0-9_-]{2,32}$/.test(code)) throw new HttpError(400, 'Ungültiger Gutscheincode.');
     await fsCommit(env, [deleteDoc(env, `coupons/${code}`)]);
@@ -250,7 +338,7 @@ const routes = {
 
   // Anzeige-Daten (Bestand, Text). Preise für die Zahlung bleiben in catalog.js.
   async adminSaveProduct(env, user, b) {
-    requireAdmin(user);
+    await assertAdmin(env, user, b);
     const id = str(b.id, 40).trim().toLowerCase();
     if (!/^[a-z0-9_-]{2,32}$/.test(id)) throw new HttpError(400, 'Ungültige Produkt-ID.');
     const stock = Math.max(0, Math.min(9999, Math.round(Number(b.stock))));
@@ -263,13 +351,68 @@ const routes = {
     }, { serverTime: ['updatedAt'] })]);
     return { ok: true, id };
   },
+
+  async redeemGiftCard(env, user, b) {
+    const code = str(b.code, 20).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length < 8) throw new HttpError(400, 'Code ungültig.');
+    return runTransaction(env, async (tx) => {
+      const g = await fsGet(env, `giftCards/${code}`, tx);
+      if (!g) throw new HttpError(404, 'Geschenkkarte nicht gefunden.');
+      if (g.data.redeemed) throw new HttpError(409, 'Diese Karte wurde schon eingelöst.');
+      const cents = Number(g.data.valueCents) || 0;
+      return {
+        writes: [
+          writeDoc(env, `giftCards/${code}`, { redeemed: true, redeemedBy: user.uid }, { merge: true, serverTime: ['redeemedAt'], exists: true }),
+          writeDoc(env, `users/${user.uid}`, { email: user.email || '' }, { merge: true, increment: { balanceCents: cents }, serverTime: ['updatedAt'] }),
+        ],
+        result: { valueCents: cents },
+      };
+    });
+  },
+
+  async subscribePush(env, user, b) {
+    // Web Push braucht VAPID. Schlüssel: `npx web-push generate-vapid-keys`
+    // Öffentlicher Schlüssel in index.html PUSH_VAPID_PUBLIC_KEY, privater Schlüssel:
+    // npx wrangler secret put VAPID_PRIVATE_KEY
+    if (!env.VAPID_PRIVATE_KEY || !env.VAPID_PUBLIC_KEY) throw new HttpError(503, 'Push ist noch nicht eingerichtet.');
+    const endpoint = str(b.endpoint, 500);
+    if (!endpoint.startsWith('https://')) throw new HttpError(400, 'Abo ungültig.');
+    await fsCommit(env, [writeDoc(env, `pushSubs/${user.uid}`, { endpoint, uid: user.uid }, { serverTime: ['updatedAt'] })]);
+    return { ok: true };
+  },
+
+  async adminTotpSetup(env, user, b) {
+    await assertAdmin(env, user, b, { allowWithoutCode: true });
+    const existing = await fsGet(env, `adminTotp/${user.uid}`);
+    if (existing && existing.data.enabled) throw new HttpError(409, 'Zwei-Faktor ist schon aktiv.');
+    const secret = randomBase32(20);
+    await fsCommit(env, [writeDoc(env, `adminTotp/${user.uid}`, { secret, enabled: false }, { serverTime: ['updatedAt'] })]);
+    const label = encodeURIComponent('Val3ntino:' + (user.email || user.uid));
+    return { secret, otpauth: `otpauth://totp/${label}?secret=${secret}&issuer=Val3ntino&digits=6&period=30` };
+  },
+
+  async adminTotpConfirm(env, user, b) {
+    if (!user.admin) throw new HttpError(403, 'Kein Admin-Zugriff.');
+    const sec = await fsGet(env, `adminTotp/${user.uid}`);
+    if (!sec) throw new HttpError(400, 'Bitte zuerst einrichten.');
+    if (!(await verifyTotp(sec.data.secret, b.totp))) throw new HttpError(401, 'Code stimmt nicht.');
+    await fsCommit(env, [writeDoc(env, `adminTotp/${user.uid}`, { enabled: true }, { merge: true, serverTime: ['enabledAt'] })]);
+    return { ok: true };
+  },
 };
+routes.createGiftCardPayPal = (env, u, b) => routes.createPayPalOrder(env, u, { ...b, kind: 'giftcard' });
+routes.createGiftCardCrypto = (env, u, b) => routes.createTopUp(env, u, { ...b, kind: 'giftcard' });
 routes.verifyTopUp = routes.verifyCryptoOrder;            // Alias: Krypto-Aufladung prüfen
 routes.createPayPalTopUp = (env, u, b) => routes.createPayPalOrder(env, u, { ...b, kind: 'topup' });
 routes.capturePayPalTopUp = routes.capturePayPalOrder;
 
-function requireAdmin(user) {
+async function assertAdmin(env, user, b, opts = {}) {
   if (!user.admin) throw new HttpError(403, 'Kein Admin-Zugriff.');
+  if (opts.allowWithoutCode) return;
+  const sec = await fsGet(env, `adminTotp/${user.uid}`);
+  if (sec && sec.data && sec.data.enabled) {
+    if (!(await verifyTotp(sec.data.secret, b && b.totp))) throw new HttpError(401, 'Zwei-Faktor-Code fehlt oder ist ungültig.');
+  }
 }
 
 /* ---------- Cron: offene Krypto-Bestellungen ---------- */
@@ -297,7 +440,7 @@ export default {
     const cors = corsHeaders(env, request);
     if (request.method === 'OPTIONS') return new Response(null, { status: cors['Access-Control-Allow-Origin'] ? 204 : 403, headers: cors });
     const url = new URL(request.url);
-    if (url.pathname === '/health') return json({ ok: true }, 200, cors);
+    if (url.pathname === '/health') return json({ ok: true, manual: { ETH: env.ETH_ADDRESS || '', BTC: env.BTC_ADDRESS || '' }, push: !!env.VAPID_PUBLIC_KEY }, 200, cors);
     const origin = request.headers.get('Origin');
     if (origin && !cors['Access-Control-Allow-Origin']) return json({ error: 'Origin nicht erlaubt.' }, 403, cors);
     const m = url.pathname.match(/^\/api\/([A-Za-z]+)$/);
@@ -310,6 +453,11 @@ export default {
       if (text.length > 20000) throw new HttpError(413, 'Anfrage zu groß.');
       if (text) { try { body = JSON.parse(text); } catch { throw new HttpError(400, 'Ungültiges JSON.'); } }
       if (!body || typeof body !== 'object') body = {};
+      const ip = request.headers.get('CF-Connecting-IP') || 'local';
+      // Drossel gilt nur im jeweiligen Worker-Isolate. Für harte Limits: Cloudflare Rate Limiting oder KV.
+      if (/^(create|capture|pay|verify|redeem|admin|subscribe)/.test(m[1]) && !rateLimit(ip, m[1], 20, 60_000)) {
+        return json({ error: 'Zu viele Anfragen. Bitte eine Minute warten.' }, 429, cors);
+      }
       const result = await routes[m[1]](env, user, body);
       return json(result ?? { ok: true }, 200, cors);
     } catch (e) {
@@ -320,6 +468,7 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(recheckOpenCryptoOrders(env).then(r => console.log('Cron', JSON.stringify(r))));
+    if (event.cron === '0 3 * * *') ctx.waitUntil(backupTick(env));
+    else ctx.waitUntil(recheckOpenCryptoOrders(env).then(r => console.log('Cron', JSON.stringify(r))));
   },
 };

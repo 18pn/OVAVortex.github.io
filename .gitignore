@@ -5,6 +5,7 @@ dist/
 **/dist/
 .wrangler/
 **/.wrangler/
+worker/admin-scripts/backups/
 
 # Geheimnisse – niemals committen
 admin-scripts/service-account.json

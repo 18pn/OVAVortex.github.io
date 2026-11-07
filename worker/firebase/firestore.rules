@@ -44,6 +44,22 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /supportChats/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /adminTotp/{uid} {
+      allow read, write: if false;
+    }
+
+    match /giftCards/{code} {
+      allow read, write: if false;
+    }
+
+    match /pushSubs/{uid} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
