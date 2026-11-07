@@ -1,0 +1,45 @@
+rules_version = '2';
+
+// Firestore-Sicherheitsregeln für valentinolopez.de (v4 – Cloudflare Worker)
+// - Kunden lesen NUR ihre eigenen Dokumente (users/{uid}, orders mit uid == eigene uid)
+// - ALLE Schreibzugriffe auf Guthaben, Bestellungen, Status, Auslieferungen, Gutscheine
+//   laufen ausschließlich über den Cloudflare Worker (Dienstkonto -> umgeht diese Regeln).
+// - Admin = Custom Claim admin == true (scripts: admin-scripts/set-admin-claim.js)
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin()  { return signedIn() && request.auth.token.admin == true; }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if false;
+    }
+
+    match /orders/{orderId} {
+      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+
+    // Gutscheine: Einzelabruf zur Anzeige, Liste nur Admin; Schreiben nur Worker
+    match /coupons/{code} {
+      allow get: if signedIn();
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+
+    // Auslieferungsinhalte: Kunden nie direkt; Admin darf lesen; Schreiben nur Worker/Konsole/Seed-Skript
+    match /deliveries/{productId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /usedSignatures/{sig} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

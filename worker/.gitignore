@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.wrangler/
+.dev.vars
+.env
+.env.*
+!.env.example
+admin-scripts/service-account.json
+**/service-account*.json
+*.key.json

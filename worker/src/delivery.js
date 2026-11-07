@@ -1,0 +1,24 @@
+// Auslieferung aus deliveries/{productId} (für Kunden nicht lesbar) -> orders/{id}.delivery
+import { fsGet } from './firestore.js';
+
+const DEFAULT_DELIVERY = {
+  title: 'Auftragsbestätigung',
+  instructions: '[PLATZHALTER] Vielen Dank für deine Bestellung! Nächste Schritte: Wir melden uns innerhalb von 24 Stunden per E-Mail oder Discord zur Terminabsprache. (Text in Firestore unter deliveries/{productId} anpassen.)',
+  links: [],
+};
+
+export async function buildDelivery(env, lines) {
+  const out = [];
+  for (const l of lines || []) {
+    const doc = await fsGet(env, `deliveries/${l.productId}`);
+    const d = doc ? doc.data : DEFAULT_DELIVERY;
+    out.push({
+      productId: l.productId,
+      name: l.name,
+      title: String(d.title || DEFAULT_DELIVERY.title),
+      instructions: String(d.instructions || ''),
+      links: Array.isArray(d.links) ? d.links.filter(x => typeof x === 'string' && /^https:\/\//.test(x)).slice(0, 10) : [],
+    });
+  }
+  return out;
+}
