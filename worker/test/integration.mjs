@@ -158,4 +158,14 @@ ok(r.status === 200 && globalThis.__ppHost === 'live', 'PAYPAL_ENV=production nu
 env.PAYPAL_ENV = 'sandbox';
 r = await call('createPayPalOrder', { kind: 'topup', amountEUR: 20 }, t);
 ok(r.status === 200 && globalThis.__ppHost === 'sandbox', 'PAYPAL_ENV=sandbox nutzt api-m.sandbox.paypal.com');
+const sub = async (email) => worker.fetch(new Request('https://api.example/api/subscribeNewsletter', { method: 'POST', headers: { Origin: 'https://valentinolopez.de', 'Content-Type': 'application/json' }, body: JSON.stringify({ email, company: '' }) }), env);
+let ns = await sub('kunde@example.com');
+ok(ns.status === 200 && (await ns.json()).duplicate === false, 'Newsletter neu');
+ns = await sub('kunde@example.com');
+ok(ns.status === 200 && (await ns.json()).duplicate === true, 'Newsletter doppelt');
+ok((await call('adminGrantAdmin', { email: 'neu@example.com' }, t)).status === 403, 'Admin vergeben ohne Claim -> 403');
+ok((await call('adminRevokeAdmin', { email: 'l@valentinolopez.de' }, adminT)).status === 400, 'Inhaber bleibt Admin');
+const sales = await worker.fetch(new Request('https://api.example/api/recentSales', { method: 'POST', headers: { Origin: 'https://valentinolopez.de', 'Content-Type': 'application/json' }, body: '{}' }), env);
+const salesBody = await sales.json();
+ok(sales.status === 200 && Array.isArray(salesBody.sales) && !JSON.stringify(salesBody).includes('@'), 'Verkäufe ohne E-Mail');
 process.exit(fail ? 1 : 0);

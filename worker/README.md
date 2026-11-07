@@ -72,6 +72,11 @@ npx wrangler deploy
 ```
 Das Secret muss zum Live-Konto der Client-ID gehören, nicht zum alten Sandbox-Secret.
 
+### Admins, Newsletter, Empfehlungen
+Weitere Admins legt der Inhaber im Shop unter **Betrieb** an. Dafür muss das Dienstkonto (`GOOGLE_SERVICE_ACCOUNT`) in der Google Cloud die Rolle **Firebase Authentication Admin** haben. Der Worker setzt damit den Custom Claim `admin=true`. Entfernen darf nur `l@valentinolopez.de`. Jede Änderung landet in `adminAudit`.
+Inhalte, Produkte, Cover/PDF, Gutscheine, Newsletter-Liste und Empfehlungen darf jeder Account mit Admin-Claim. Newsletter und Referral-Klicks sind öffentliche Worker-Routen ohne Login; Schreiben in Firestore macht nur das Dienstkonto.
+Kein weiteres Secret. Nach dem Claim muss sich die Person ab- und wieder anmelden.
+
 ### 7. Website hosten
 Die Live-Seite ist **GitHub Pages**: ausgeliefert wird die `index.html` in der Repository-Wurzel (`CNAME` = `valentinolopez.de`). Das reicht für das HTML. `firebase/` enthält nur Firestore-Regeln, keine zweite Website.
 

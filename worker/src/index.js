@@ -11,6 +11,7 @@ import { paypalCreateOrder, paypalCaptureAndVerify } from './paypal.js';
 import { buildDelivery } from './delivery.js';
 import { randomBase32, verifyTotp } from './totp.js';
 import { GUIDES, PLACEHOLDER_PNG, coverKey, pdfKey, pdfFilename, readAsset, readAssetMeta } from './guides.js';
+import { lookupUserByEmail, setAdminClaim } from './identity.js';
 
 const CRYPTO_EXPIRY_MS = 30 * 60 * 1000;
 const MIN_PAYMENT_CENTS = 50;
@@ -18,12 +19,20 @@ const STATUSES = ['offen', 'bezahlt', 'geliefert', 'storniert', 'abgelaufen'];
 const OWNER_EMAIL = 'l@valentinolopez.de';
 const CMS_COLLECTIONS = new Set(['siteSettings', 'catalog', 'reviews', 'posts', 'faqs', 'partners', 'bundles']);
 const isOwner = (user) => !!(user && user.admin && String(user.email || '').toLowerCase() === OWNER_EMAIL);
+function cleanRef(v) {
+  const c = str(v, 16).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return /^[A-Z0-9]{4,16}$/.test(c) ? c : '';
+}
+function mailOk(v) {
+  const email = str(v, 120).trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+}
 function sanitizeCms(data) {
   const clean = {};
   if (!data || typeof data !== 'object') return clean;
   for (const [k, v] of Object.entries(data)) {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,32}$/.test(k)) continue;
-    if (typeof v === 'string') clean[k] = v.slice(0, /legal|impressum|privacy|terms|widerruf/i.test(k) ? 8000 : 2000);
+    if (typeof v === 'string') clean[k] = v.slice(0, /legal|impressum|privacy|terms|widerruf|^body$/i.test(k) ? 8000 : 2000);
     else if (typeof v === 'boolean') clean[k] = v;
     else if (typeof v === 'number' && Number.isFinite(v)) clean[k] = v;
     else if (Array.isArray(v)) clean[k] = v.filter(x => typeof x === 'string').slice(0, 8).map(s => s.slice(0, 400));
@@ -136,8 +145,21 @@ async function markPaidAndFulfill(env, orderId, { signature = null, paypalCaptur
     writes.push(writeDoc(env, `orders/${orderId}`, upd, { merge: true, serverTime, exists: true }));
     return { writes, result: { already: false, order: o } };
   });
-  if (!result.already && result.order.kind === 'order') await deliverOrder(env, orderId);
+  if (!result.already && result.order.kind === 'order') {
+    await deliverOrder(env, orderId);
+    await countReferralOrder(env, result.order.refCode, result.order.uid);
+  }
   return result;
+}
+
+async function countReferralOrder(env, refCode, buyerUid) {
+  const code = cleanRef(refCode);
+  if (!code) return;
+  try {
+    const row = await fsGet(env, `referrals/${code}`);
+    if (!row || row.data.uid === buyerUid) return;
+    await fsCommit(env, [writeDoc(env, `referrals/${code}`, {}, { merge: true, increment: { orders: 1 } })]);
+  } catch (e) { console.warn('Referral', e.message); }
 }
 
 async function deliverOrder(env, orderId) {
@@ -148,7 +170,7 @@ async function deliverOrder(env, orderId) {
   // SMTP: hier Zugangslink oder Lizenzschlüssel mailen. Auf dem Worker ist kein SMTP eingebaut (README).
 }
 
-async function createCryptoRecord(env, { uid, email, kind, cart, totalCents, token, label, billing = null }) {
+async function createCryptoRecord(env, { uid, email, kind, cart, totalCents, token, label, billing = null, refCode = '' }) {
   if (totalCents < MIN_PAYMENT_CENTS) throw new HttpError(400, 'Der Betrag ist zu klein für eine Krypto-Zahlung.');
   const tokenSymbol = token === 'USDC' ? 'USDC' : 'SOL';
   const recipient = env.MERCHANT_WALLET;
@@ -170,6 +192,7 @@ async function createCryptoRecord(env, { uid, email, kind, cart, totalCents, tok
     status: 'offen',
     billing: billing || null,
     crypto: { recipient, reference, token: tokenSymbol, amount: q.amount, mint: q.token.mint, rateEUR: q.rateEUR, url },
+    refCode: cleanRef(refCode),
     createdAt: ts(now),
     expiresAt: ts(now + CRYPTO_EXPIRY_MS),
   };
@@ -242,7 +265,7 @@ function sanitizeBilling(raw) {
 
 // ETH/BTC: keine automatische On-Chain-Prüfung. Anschlussstelle: hier eine Quittung (Tx-Hash)
 // gegen einen ETH- oder BTC-RPC prüfen (Betrag, Empfänger, Bestätigungen) und danach markPaidAndFulfill.
-async function createManualCoinOrder(env, { uid, email, kind, cart, totalCents, asset, billing }) {
+async function createManualCoinOrder(env, { uid, email, kind, cart, totalCents, asset, billing, refCode = '' }) {
   const address = asset === 'ETH' ? str(env.ETH_ADDRESS, 80) : str(env.BTC_ADDRESS, 80);
   if (!address) throw new HttpError(503, asset + '-Adresse ist noch nicht hinterlegt (wrangler.toml).');
   if (totalCents < MIN_PAYMENT_CENTS) throw new HttpError(400, 'Der Betrag ist zu klein.');
@@ -257,6 +280,7 @@ async function createManualCoinOrder(env, { uid, email, kind, cart, totalCents, 
     totalCents, method: 'manual-crypto', methodLabel: asset + ' (manuell)', status: 'offen',
     billing: billing || null,
     manualCrypto: { asset, address },
+    refCode: cleanRef(refCode),
     createdAt: ts(Date.now()),
   }, { exists: false })]);
   return { orderId, invoice, totalCents, asset, address, manual: true };
@@ -299,9 +323,9 @@ const routes = {
     await assertGuidesReady(env, cart.lines);
     if (cart.noCrypto) throw new HttpError(400, 'Für mindestens ein Produkt ist Krypto ausgeschaltet.');
     if (b.token === 'ETH' || b.token === 'BTC') {
-      return createManualCoinOrder(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, asset: b.token, billing });
+      return createManualCoinOrder(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, asset: b.token, billing, refCode: b.refCode });
     }
-    return createCryptoRecord(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, token: b.token, billing, label: 'Bestellung' });
+    return createCryptoRecord(env, { uid: user.uid, email: user.email, kind: 'order', cart, totalCents: cart.totalCents, token: b.token, billing, label: 'Bestellung', refCode: b.refCode });
   },
 
   async createTopUp(env, user, b) {
@@ -356,6 +380,7 @@ const routes = {
       totalCents, method: 'paypal', methodLabel: 'PayPal / Karte', status: 'offen',
       paypal: { orderId: paypalOrderId },
       billing,
+      refCode: cleanRef(b.refCode),
       createdAt: ts(Date.now()),
     }, { exists: false })]);
     return { orderId, paypalOrderId, invoice, totalCents };
@@ -390,6 +415,7 @@ const routes = {
             items: cart.lines, subtotalCents: cart.subtotalCents, discountCents: cart.discountCents, coupon: cart.coupon,
             totalCents: cart.totalCents, method: 'balance', methodLabel: 'Account-Guthaben', status: 'bezahlt',
             billing: sanitizeBilling(b.billing),
+            refCode: cleanRef(b.refCode),
             createdAt: ts(Date.now()),
           }, { serverTime: ['paidAt'], exists: false }),
         ],
@@ -397,6 +423,7 @@ const routes = {
       };
     });
     await deliverOrder(env, orderId);
+    await countReferralOrder(env, b.refCode, user.uid);
     return { orderId, invoice, totalCents: cart.totalCents, status: 'geliefert' };
   },
 
@@ -436,7 +463,6 @@ const routes = {
   // Anzeige-Daten (Bestand, Text). Preise für die Zahlung bleiben in catalog.js.
   async adminSaveProduct(env, user, b) {
     await assertAdmin(env, user, b);
-    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Produkte ändern.');
     const id = str(b.id, 48).trim().toLowerCase();
     if (!/^[a-z0-9_-]{2,48}$/.test(id)) throw new HttpError(400, 'Ungültige Produkt-ID.');
     const stock = Math.max(0, Math.min(9999, Math.round(Number(b.stock))));
@@ -464,7 +490,6 @@ const routes = {
 
   async adminDeleteProduct(env, user, b) {
     await assertAdmin(env, user, b);
-    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Produkte ändern.');
     const id = str(b.id, 48).trim().toLowerCase();
     if (!/^[a-z0-9_-]{2,48}$/.test(id)) throw new HttpError(400, 'Ungültige Produkt-ID.');
     if (PRODUCTS[id]) {
@@ -527,7 +552,6 @@ const routes = {
   },
 
   async adminUpsert(env, user, b) {
-    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Inhalte ändern.');
     await assertAdmin(env, user, b);
     const col = str(b.collection, 40);
     if (!CMS_COLLECTIONS.has(col)) throw new HttpError(400, 'Diese Sammlung ist nicht freigegeben.');
@@ -539,7 +563,6 @@ const routes = {
   },
 
   async adminDeleteContent(env, user, b) {
-    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Inhalte löschen.');
     await assertAdmin(env, user, b);
     const col = str(b.collection, 40);
     if (!CMS_COLLECTIONS.has(col) || col === 'siteSettings') throw new HttpError(400, 'Löschen hier nicht erlaubt.');
@@ -559,6 +582,69 @@ const routes = {
     return { ok: true };
   },
 
+  async myReferral(env, user) {
+    const existing = await fsGet(env, `users/${user.uid}`);
+    const current = cleanRef(existing && existing.data.refCode);
+    if (current) return { code: current };
+    const code = cleanRef('V' + user.uid.replace(/[^A-Za-z0-9]/g, '').slice(0, 6) + randomId().slice(0, 4));
+    await fsCommit(env, [
+      writeDoc(env, `users/${user.uid}`, { email: user.email || '', refCode: code }, { merge: true }),
+      writeDoc(env, `referrals/${code}`, { uid: user.uid, email: user.email || '', clicks: 0, orders: 0 }, { exists: false }),
+    ]);
+    return { code };
+  },
+
+  async adminListAdmins(env, user, b) {
+    await assertAdmin(env, user, b);
+    const rows = await fsList(env, 'admins', 50);
+    const admins = rows.filter(r => r.data.active !== false).map(r => ({ uid: r.id, email: r.data.email || '', role: r.data.role || 'admin' }));
+    if (!admins.some(a => String(a.email).toLowerCase() === OWNER_EMAIL)) admins.unshift({ uid: 'owner', email: OWNER_EMAIL, role: 'owner' });
+    return { admins, owner: isOwner(user) };
+  },
+
+  async adminGrantAdmin(env, user, b) {
+    await assertAdmin(env, user, b);
+    const email = mailOk(b.email);
+    if (!email) throw new HttpError(400, 'Ungültige E-Mail.');
+    if (email === OWNER_EMAIL) return { ok: true, owner: true };
+    const found = await lookupUserByEmail(env, email);
+    if (!found || !found.localId) throw new HttpError(404, 'Kein Konto mit dieser E-Mail. Die Person muss sich einmal im Shop registrieren.');
+    await setAdminClaim(env, found.localId, true, found.customAttributes);
+    await fsCommit(env, [
+      writeDoc(env, `admins/${found.localId}`, { email, role: 'admin', active: true }, { serverTime: ['updatedAt'] }),
+      writeDoc(env, `adminAudit/${randomId()}`, { actorUid: user.uid, actorEmail: user.email || '', targetUid: found.localId, targetEmail: email, action: 'grant' }, { serverTime: ['at'], exists: false }),
+    ]);
+    return { ok: true };
+  },
+
+  async adminRevokeAdmin(env, user, b) {
+    if (!isOwner(user)) throw new HttpError(403, 'Nur der Inhaber darf Admins entfernen.');
+    await assertAdmin(env, user, b);
+    const email = mailOk(b.email);
+    if (!email) throw new HttpError(400, 'Ungültige E-Mail.');
+    if (email === OWNER_EMAIL) throw new HttpError(400, 'Das Inhaber-Konto bleibt Admin.');
+    const found = await lookupUserByEmail(env, email);
+    if (!found || !found.localId) throw new HttpError(404, 'Kein Konto mit dieser E-Mail.');
+    await setAdminClaim(env, found.localId, false, found.customAttributes);
+    await fsCommit(env, [
+      writeDoc(env, `admins/${found.localId}`, { email, active: false }, { merge: true, serverTime: ['updatedAt'] }),
+      writeDoc(env, `adminAudit/${randomId()}`, { actorUid: user.uid, actorEmail: user.email || '', targetUid: found.localId, targetEmail: email, action: 'revoke' }, { serverTime: ['at'], exists: false }),
+    ]);
+    return { ok: true };
+  },
+
+  async adminListSubscribers(env, user, b) {
+    await assertAdmin(env, user, b);
+    const rows = await fsList(env, 'subscribers', 200);
+    return { subscribers: rows.map(r => ({ email: r.data.email || r.id })) };
+  },
+
+  async adminListReferrals(env, user, b) {
+    await assertAdmin(env, user, b);
+    const rows = await fsList(env, 'referrals', 100);
+    return { referrals: rows.map(r => ({ code: r.id, email: r.data.email || '', clicks: Number(r.data.clicks) || 0, orders: Number(r.data.orders) || 0 })) };
+  },
+
   async postChat(env, user, b) {
     const text = str(b.text, 800).trim();
     if (!text) throw new HttpError(400, 'Nachricht ist leer.');
@@ -571,7 +657,6 @@ const routes = {
   },
 
   async adminReplyChat(env, user, b) {
-    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto antwortet hier.');
     await assertAdmin(env, user, b);
     const id = str(b.uid, 128);
     const text = str(b.text, 800).trim();
@@ -585,7 +670,6 @@ const routes = {
   },
 
   async adminListThreads(env, user, b) {
-    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto sieht alle Gespräche.');
     await assertAdmin(env, user, b);
     const rows = await fsList(env, 'liveThreads', 30);
     return { threads: rows.map(r => ({ id: r.id, email: r.data.email || '', updated: r.data.messages && r.data.messages.length })) };
@@ -606,7 +690,6 @@ const routes = {
   },
 
   async adminReplyTicket(env, user, b) {
-    if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto antwortet auf Tickets.');
     await assertAdmin(env, user, b);
     const id = str(b.id, 40);
     const text = str(b.text, 2000).trim();
@@ -710,11 +793,48 @@ export async function recheckOpenCryptoOrders(env) {
   return { checked: docs.length, paid, expired };
 }
 
+async function publicShop(name, request, env, cors) {
+  const ip = request.headers.get('CF-Connecting-IP') || 'local';
+  if (!rateLimit(ip, name, name === 'recentSales' ? 30 : 8, 60_000)) return json({ error: 'Zu viele Anfragen.' }, 429, cors);
+  let body = {};
+  const text = await request.text();
+  if (text) { try { body = JSON.parse(text); } catch { throw new HttpError(400, 'Ungültiges JSON.'); } }
+  if (name === 'subscribeNewsletter') {
+    if (body.company) return json({ ok: true }, 200, cors);
+    const email = mailOk(body.email);
+    if (!email) throw new HttpError(400, 'Bitte eine gültige E-Mail angeben.');
+    const id = email.replace(/\//g, '');
+    const cur = await fsGet(env, `subscribers/${id}`);
+    if (cur) return json({ ok: true, duplicate: true }, 200, cors);
+    await fsCommit(env, [writeDoc(env, `subscribers/${id}`, { email }, { serverTime: ['createdAt'], exists: false })]);
+    return json({ ok: true, duplicate: false }, 200, cors);
+  }
+  if (name === 'trackReferral') {
+    const code = cleanRef(body.code);
+    if (!code) throw new HttpError(400, 'Code ungültig.');
+    const cur = await fsGet(env, `referrals/${code}`);
+    if (!cur) return json({ ok: true, known: false }, 200, cors);
+    await fsCommit(env, [writeDoc(env, `referrals/${code}`, {}, { merge: true, increment: { clicks: 1 } })]);
+    return json({ ok: true, known: true }, 200, cors);
+  }
+  const rows = await fsList(env, 'orders', 40);
+  const sales = [];
+  for (const row of rows) {
+    const o = row.data || {};
+    if (o.kind === 'topup' || o.kind === 'giftcard') continue;
+    if (o.status !== 'bezahlt' && o.status !== 'geliefert') continue;
+    const item = Array.isArray(o.items) ? o.items[0] : null;
+    sales.push({ product: String((item && item.name) || 'ein Produkt').slice(0, 80) });
+    if (sales.length >= 8) break;
+  }
+  return json({ sales }, 200, cors);
+}
+
 async function handleAdminAsset(request, env, cors) {
   const user = await verifyFirebaseToken(request, env);
   const url = new URL(request.url);
   await assertAdmin(env, user, { totp: url.searchParams.get('totp') || '' });
-  if (!isOwner(user)) throw new HttpError(403, 'Nur das Inhaber-Konto darf Dateien hochladen.');
+  if (!user.admin) throw new HttpError(403, 'Nur ein Admin darf Dateien hochladen.');
   if (!env.ASSETS) throw new HttpError(503, 'KV-Namespace ASSETS ist nicht gebunden.');
   const key = str(url.searchParams.get('key'), 64);
   if (!/^(cover|pdf):[a-z0-9-]{2,48}$/.test(key)) throw new HttpError(400, 'Ungültiger Dateischlüssel.');
@@ -786,6 +906,14 @@ export default {
     const origin = request.headers.get('Origin');
     if (origin && !cors['Access-Control-Allow-Origin']) return json({ error: 'Origin nicht erlaubt.' }, 403, cors);
     const m = url.pathname.match(/^\/api\/([A-Za-z]+)$/);
+    if (m && (m[1] === 'subscribeNewsletter' || m[1] === 'trackReferral' || m[1] === 'recentSales')) {
+      if (request.method !== 'POST') return json({ error: 'Nur POST.' }, 405, cors);
+      try { return await publicShop(m[1], request, env, cors); }
+      catch (e) {
+        if (e instanceof HttpError) return json({ error: e.message }, e.status, cors);
+        return json({ error: 'Anfrage fehlgeschlagen.' }, 500, cors);
+      }
+    }
     if (!m || !Object.prototype.hasOwnProperty.call(routes, m[1])) return json({ error: 'Nicht gefunden.' }, 404, cors);
     if (request.method !== 'POST') return json({ error: 'Nur POST.' }, 405, cors);
     try {

@@ -1066,7 +1066,7 @@
         <section id="partner" class="mt-16 card p-6 sm:p-8" aria-labelledby="partnerHeading">
             <p class="kicker">Partner</p>
             <h2 id="partnerHeading" class="text-2xl font-extrabold text-white mt-2">Empfehlen und sparen</h2>
-            <p class="text-sm text-zinc-400 mt-2 max-w-2xl leading-relaxed">Teile deinen Link. Du und die eingeladene Person erhaltet einen lokalen Rabattcode. Die Server-Kasse löst nur Gutscheine ein, die im Admin in Firestore liegen – den Code kannst du dort anlegen.</p>
+            <p class="text-sm text-zinc-400 mt-2 max-w-2xl leading-relaxed">Nach dem Login bekommst du einen persönlichen Link. Klicks und spätere Käufe stehen im Admin unter Betrieb. Einen Rabatt legst du dort als Gutschein an.</p>
             <p class="mt-4 text-sm text-white">Dein Code: <b id="referralCode">—</b></p>
             <button type="button" class="btn btn-secondary mt-3" onclick="copyReferral()">Link kopieren</button>
         </section>
@@ -1074,7 +1074,7 @@
         <section class="mt-6 grid lg:grid-cols-2 gap-4">
             <form class="card p-6" onsubmit="event.preventDefault(); saveNewsletter();">
                 <h2 class="text-lg font-extrabold text-white">Newsletter</h2>
-                <p class="text-sm text-zinc-400 mt-1">Kurze Hinweise zu Aktionen. Kein externer Versanddienst – die Adresse bleibt in diesem Browser, bis ein Mail-Dienst angebunden ist.</p>
+                <p class="text-sm text-zinc-400 mt-1">Die Adresse wird einmalig in Firestore gespeichert. Ein Versanddienst ist noch nicht angebunden.</p>
                 <label class="field-label mt-4" for="newsEmail">E-Mail</label>
                 <div class="flex gap-2"><input id="newsEmail" type="email" required class="field" placeholder="du@example.com"><button class="btn btn-primary" type="submit">Eintragen</button></div>
                 <input id="newsHoney" class="hidden" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -1481,6 +1481,11 @@
                             <option value="storniert">Storniert</option>
                         </select>
                     </div>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-white" data-i18n="myPurchases">Meine Käufe</h3>
+                        <p class="text-xs text-zinc-400 mt-1" data-i18n="myPurchasesHint">Bezahlte Bestellungen und Downloads. Der Link gilt 15 Minuten und nur für dein Konto.</p>
+                        <div id="myPurchases" class="space-y-3 mt-3"></div>
+                    </div>
                     <div id="userOrdersList" class="space-y-3"></div>
                 </section>
 
@@ -1715,6 +1720,7 @@
                         <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="sub-tab" role="tab" aria-selected="false">Gutscheine</button>
                         <button onclick="switchAdminSubTab('ips')" id="admSub-ips" class="sub-tab" role="tab" aria-selected="false">IPs</button>
                         <button onclick="switchAdminSubTab('studio')" id="admSub-studio" class="sub-tab" role="tab" aria-selected="false">Studio</button>
+                        <button onclick="switchAdminSubTab('ops')" id="admSub-ops" class="sub-tab" role="tab" aria-selected="false">Betrieb</button>
                     </div>
 
                     <!-- Bestellungen -->
@@ -1817,6 +1823,33 @@
 
                     <!-- IPs (unverändert) -->
                     <div id="admBox-ips" class="hidden card p-4 sm:p-6 space-y-4 shadow-xl" role="tabpanel"><div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs"><table class="w-full text-left"><thead><tr class="text-zinc-400 text-xs border-b border-saBorder"><th class="py-3 px-3">Uhrzeit</th><th class="py-3 px-3">IP</th><th class="py-3 px-3">Standort</th><th class="py-3 px-3">Gerät</th></tr></thead><tbody id="adminIpLogTable" class="divide-y divide-saBorder/40"></tbody></table></div></div>
+                    <div id="admBox-ops" class="hidden space-y-4" role="tabpanel">
+                        <div class="card p-4 sm:p-6 space-y-3">
+                            <h3 class="text-sm font-extrabold text-white">Admins</h3>
+                            <p class="text-xs text-zinc-400">Jeder Admin darf Inhalte und Produkte pflegen. Nur l@valentinolopez.de darf einen Admin entfernen. Die Person muss schon ein Konto haben und sich danach neu anmelden. Das Dienstkonto braucht die Rolle „Firebase Authentication Admin“.</p>
+                            <form class="flex flex-col sm:flex-row gap-2" onsubmit="event.preventDefault(); grantAdmin();">
+                                <label class="sr-only" for="newAdminEmail">E-Mail</label>
+                                <input id="newAdminEmail" type="email" class="field" placeholder="name@example.com" required>
+                                <button class="btn btn-primary" type="submit">Admin hinzufügen</button>
+                            </form>
+                            <div id="adminPeople" class="space-y-2 text-sm"></div>
+                        </div>
+                        <div class="card p-4 sm:p-6 space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="text-sm font-extrabold text-white">Newsletter</h3>
+                                <button type="button" class="btn btn-secondary !py-2" onclick="exportSubscribers()">CSV</button>
+                            </div>
+                            <div id="subscriberList" class="text-sm text-zinc-300 space-y-1"></div>
+                        </div>
+                        <div class="card p-4 sm:p-6 space-y-3">
+                            <h3 class="text-sm font-extrabold text-white">Empfehlungen</h3>
+                            <div id="referralAdminList" class="text-sm text-zinc-300 space-y-1"></div>
+                        </div>
+                        <form class="card p-4 sm:p-6" onsubmit="event.preventDefault(); saveSalesToggle();">
+                            <label class="flex items-center gap-2 text-sm text-zinc-200"><input id="salesPopOn" type="checkbox" class="accent-pink-500" checked> Verkaufs-Hinweise aus echten Bestellungen zeigen</label>
+                            <button class="btn btn-secondary mt-3" type="submit">Speichern</button>
+                        </form>
+                    </div>
                     <div id="admBox-studio" class="hidden card p-4 sm:p-6 space-y-6" role="tabpanel">
                         <div>
                             <h3 class="text-sm font-extrabold text-white">Design und Marke</h3>
@@ -1867,6 +1900,17 @@
                                 <input id="faqQ" class="field" placeholder="Frage" required maxlength="200" aria-label="Frage">
                                 <textarea id="faqA" class="field" placeholder="Antwort" required maxlength="800" aria-label="Antwort"></textarea>
                                 <button class="btn btn-secondary" type="submit">FAQ speichern</button>
+                            </form>
+                        </div>
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-extrabold text-white">Blog / News</h3>
+                            <form class="grid gap-2" onsubmit="event.preventDefault(); savePostAdmin();">
+                                <input id="postId" class="field" placeholder="ID" required pattern="[A-Za-z0-9_-]{1,40}" aria-label="Beitrags-ID">
+                                <input id="postTitle" class="field" placeholder="Titel" required maxlength="120" aria-label="Titel">
+                                <input id="postDate" class="field" placeholder="Datum, z. B. November 2026" aria-label="Datum">
+                                <textarea id="postBody" class="field" rows="5" placeholder="Text. Absätze mit Leerzeile, **fett**, [Text](https://…)" aria-label="Text"></textarea>
+                                <label class="flex items-center gap-2 text-sm text-zinc-300"><input id="postPublished" type="checkbox" checked class="accent-pink-500"> veröffentlicht</label>
+                                <button class="btn btn-secondary" type="submit">Beitrag speichern</button>
                             </form>
                         </div>
                         <h3 class="text-sm font-extrabold text-white">Weitere Inhalte</h3>
@@ -1950,6 +1994,14 @@
         </div>
     </div>
 
+    <div id="postModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-[70] items-end sm:items-center justify-center p-0 sm:p-4" onclick="handleModalBackdrop(event, 'postModal')" role="dialog" aria-modal="true" aria-labelledby="postModalTitle">
+        <article class="bg-saCard border border-saBorder p-6 sm:p-8 rounded-t-3xl sm:rounded-3xl max-w-2xl w-full relative shadow-2xl max-h-[92vh] overflow-y-auto">
+            <button onclick="closeModalById('postModal')" class="icon-btn absolute top-4 right-4" aria-label="Beitrag schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            <p id="postModalDate" class="text-xs text-zinc-500"></p>
+            <h2 id="postModalTitle" class="text-2xl font-extrabold text-white mt-2 pr-10"></h2>
+            <div id="postModalBody" class="text-sm text-zinc-300 leading-relaxed mt-4"></div>
+        </article>
+    </div>
     <div id="orderDetailModal" class="modal fixed inset-0 bg-black/85 backdrop-blur-md z-[70] items-end sm:items-center justify-center p-0 sm:p-4" onclick="handleModalBackdrop(event, 'orderDetailModal')" role="dialog" aria-modal="true" aria-labelledby="orderDetailTitle">
         <div class="bg-saCard border border-saBorder p-6 sm:p-8 rounded-t-3xl sm:rounded-3xl max-w-lg w-full relative shadow-2xl max-h-[92vh] overflow-y-auto">
             <button onclick="closeModalById('orderDetailModal')" class="icon-btn absolute top-4 right-4" aria-label="Bestellung schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
@@ -2302,6 +2354,10 @@
                 needHelp: "Brauchst du Hilfe?",
                 contactSupport: "Support kontaktieren",
                 dashOrdersTitle: "Deine Bestellungen & Zugänge",
+                myPurchases: "Meine Käufe",
+                myPurchasesHint: "Bezahlte Bestellungen und Downloads. Der Link gilt 15 Minuten und nur für dein Konto.",
+                newsletterOk: "Eingetragen. Dieselbe Adresse wird nicht doppelt gespeichert.",
+                blogRead: "Weiterlesen",
                 ordersSub: "Status, Details und Download-/Streaming-Links zu jeder Bestellung.",
                 balanceHint: "Guthaben kann an der Kasse als Zahlungsart gewählt werden.",
                 displayName: "Anzeigename",
@@ -2438,6 +2494,10 @@
                 needHelp: "Need help?",
                 contactSupport: "Contact support",
                 dashOrdersTitle: "Your orders & access",
+                myPurchases: "My purchases",
+                myPurchasesHint: "Paid orders and downloads. The link lasts 15 minutes and only works for your account.",
+                newsletterOk: "Saved. The same address is not stored twice.",
+                blogRead: "Read more",
                 ordersSub: "Status, details and download/streaming links for every order.",
                 balanceHint: "Balance can be selected as a payment method at checkout.",
                 displayName: "Display name",
@@ -2647,7 +2707,7 @@
         function getProfile(email) { return JSON.parse(localStorage.getItem('profile_' + email) || '{}'); }
 
         /* ---------- Modals: Öffnen/Schließen, Scroll-Lock, ESC, Fokus ---------- */
-        const MODAL_IDS = ['paymentModal', 'authModal', 'dashboardModal', 'impressumModal', 'productDetailModal', 'cryptoModal', 'datenschutzModal', 'agbModal', 'widerrufModal', 'orderDetailModal'];
+        const MODAL_IDS = ['paymentModal', 'authModal', 'dashboardModal', 'impressumModal', 'productDetailModal', 'cryptoModal', 'datenschutzModal', 'agbModal', 'widerrufModal', 'orderDetailModal', 'postModal'];
         let lastFocused = null;
         function syncBodyScroll() {
             const anyOpen = MODAL_IDS.some(id => document.getElementById(id).classList.contains('active')) || document.getElementById('cartDrawer').classList.contains('active');
@@ -2678,7 +2738,7 @@
             if (e.key !== 'Escape') return;
             if (document.getElementById('cartDrawer').classList.contains('active')) return toggleCartModal();
             if (document.getElementById('cryptoModal').classList.contains('active')) return closeCryptoModal();
-            for (const id of ['orderDetailModal', 'agbModal', 'widerrufModal', 'datenschutzModal', 'productDetailModal', 'authModal', 'impressumModal', 'paymentModal', 'dashboardModal']) {
+            for (const id of ['postModal', 'orderDetailModal', 'agbModal', 'widerrufModal', 'datenschutzModal', 'productDetailModal', 'authModal', 'impressumModal', 'paymentModal', 'dashboardModal']) {
                 if (document.getElementById(id).classList.contains('active')) return closeModalById(id);
             }
             if (document.getElementById('helpChat') && document.getElementById('helpChat').classList.contains('is-open')) closeHelpChat();
@@ -3173,7 +3233,7 @@
                         ppMode = 'server';
                         if (!signedInUser()) { status.innerText = 'Bitte melde dich an.'; throw new Error('not signed in'); }
                         try {
-                            const r = await window.callServer('createPayPalOrder', { kind: 'order', items: cartServerItems(), coupon: appliedCouponCode, billing: collectBilling() });
+                            const r = await window.callServer('createPayPalOrder', { kind: 'order', items: cartServerItems(), coupon: appliedCouponCode, billing: collectBilling(), refCode: incomingRef() });
                             ppServerOrderId = r.orderId;
                             return r.paypalOrderId;
                         } catch (e) { status.innerText = friendlyErr(e); throw e; }
@@ -3207,7 +3267,7 @@
             const btn = document.getElementById('payWithBalanceBtn');
             btn.disabled = true;
             try {
-                const r = await window.callServer('payWithBalance', { items: cartServerItems(), coupon: appliedCouponCode, billing: collectBilling() });
+                const r = await window.callServer('payWithBalance', { items: cartServerItems(), coupon: appliedCouponCode, billing: collectBilling(), refCode: incomingRef() });
                 showToast("Erfolgreich mit Guthaben bezahlt!");
                 finishServerOrder({ orderId: r.orderId, invoice: r.invoice, totalCents: r.totalCents, method: 'Account-Guthaben' });
             } catch (e) {
@@ -3346,7 +3406,7 @@
             const btn = document.getElementById('cryptoStartBtn');
             btn.disabled = true;
             try {
-                const r = await window.callServer('createCryptoOrder', { items: cartServerItems(), coupon: appliedCouponCode, token, billing: collectBilling() });
+                const r = await window.callServer('createCryptoOrder', { items: cartServerItems(), coupon: appliedCouponCode, token, billing: collectBilling(), refCode: incomingRef() });
                 if (r.manual) {
                     document.getElementById('manualCoinText').textContent = r.asset + '-Adresse: ' + r.address + '. Bestellung #' + r.invoice + ' wartet auf manuelle Bestätigung. SOL/USDC bleiben automatisch.';
                     document.getElementById('manualCoinBox').classList.remove('hidden');
@@ -3673,6 +3733,9 @@
             if (orders.length === 0) list.innerHTML = emptyHTML;
             else if (filtered.length === 0) list.innerHTML = '<p class="text-sm text-zinc-400 py-8 text-center card">Keine Bestellungen mit diesem Status.</p>';
             else list.innerHTML = filtered.map(o => orderCardHTML(o, false)).join('');
+            const bought = orders.filter(o => o.kind !== 'topup' && ['bezahlt', 'geliefert'].includes(normalizeStatus(o.status)));
+            const mine = document.getElementById('myPurchases');
+            if (mine) mine.innerHTML = bought.length ? bought.map(o => orderCardHTML(o, false)).join('') : '<p class="text-sm text-zinc-400 card p-4">Noch keine bezahlten Käufe.</p>';
 
             const sel = document.getElementById('supportOrder');
             if (sel) sel.innerHTML = '<option value="">—</option>' + orders.map(o => `<option value="${esc(o.invoice)}">#${esc(o.invoice)} – ${esc(o.items)}</option>`).join('');
@@ -3786,13 +3849,14 @@
                 if (p.lang && p.lang !== currentLang) applyLanguage(p.lang);
                 if (p.currency && p.currency !== currentCurrency) changeCurrency(p.currency);
                 loadDashboardStats(user.email);
+                loadMyReferral();
             } else {
                 if (document.getElementById('tabContentAdmin') && !document.getElementById('tabContentAdmin').classList.contains('hidden')) switchTab('overview');
             }
         }
 
         /* ---------- Admin ---------- */
-        const ADMIN_SUBTABS = ['orders', 'revenue', 'products', 'coupons', 'ips', 'studio'];
+        const ADMIN_SUBTABS = ['orders', 'revenue', 'products', 'coupons', 'ips', 'studio', 'ops'];
         function switchAdminSubTab(sub) {
             ADMIN_SUBTABS.forEach(k => {
                 document.getElementById('admBox-' + k).classList.toggle('hidden', k !== sub);
@@ -3820,6 +3884,7 @@
             renderAdminProducts();
             updateAdminKPIs();
             fillStudioForms();
+            loadOpsPanel();
         }
 
         function updateAdminKPIs() {
@@ -4305,13 +4370,97 @@
             localStorage.setItem('store_cookie_ok', '1');
             document.getElementById('cookieBanner').classList.add('hidden');
         }
-        function saveNewsletter() {
+        function incomingRef() { return localStorage.getItem('store_ref_incoming') || ''; }
+        async function saveNewsletter() {
             if (!guardForm('newsHoney', 'newsCaptcha', 'newsCaptchaQ')) return;
             const email = document.getElementById('newsEmail').value.trim();
-            const list = JSON.parse(localStorage.getItem('store_newsletter') || '[]');
-            if (!list.includes(email)) list.push(email);
-            localStorage.setItem('store_newsletter', JSON.stringify(list));
-            document.getElementById('newsMsg').textContent = 'Gespeichert in diesem Browser. Ein Versanddienst ist nicht angebunden.';
+            const msg = document.getElementById('newsMsg');
+            try {
+                const res = await fetch(window.WORKER_URL + '/api/subscribeNewsletter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Origin: location.origin },
+                    body: JSON.stringify({ email, company: (document.getElementById('newsHoney') || {}).value || '' })
+                });
+                const j = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(j.error || 'Anmeldung fehlgeschlagen.');
+                msg.textContent = t('newsletterOk');
+            } catch (e) { msg.textContent = friendlyErr(e); }
+        }
+        function renderLite(src) {
+            const safe = escHtml(src || '');
+            return safe.split(/\n{2,}/).map(p => '<p class="mt-3">' + p.replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a class="text-accent underline" target="_blank" rel="noopener noreferrer" href="$2">$1</a>') + '</p>').join('');
+        }
+        function openPost(id) {
+            const post = window.cms && window.cms.posts && window.cms.posts[id];
+            if (!post) return;
+            document.getElementById('postModalTitle').textContent = post.title || '';
+            document.getElementById('postModalDate').textContent = post.date || '';
+            document.getElementById('postModalBody').innerHTML = renderLite(post.body || '');
+            openModalById('postModal');
+        }
+        async function savePostAdmin() {
+            const id = document.getElementById('postId').value.trim();
+            try {
+                await window.callServer('adminUpsert', { collection: 'posts', id, data: {
+                    title: document.getElementById('postTitle').value.trim(),
+                    date: document.getElementById('postDate').value.trim(),
+                    body: document.getElementById('postBody').value.trim(),
+                    published: document.getElementById('postPublished').checked
+                } });
+                showToast('Beitrag gespeichert.');
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function loadMyReferral() {
+            if (!signedInUser() || !window.callServer) return;
+            try {
+                const r = await window.callServer('myReferral', {});
+                if (!r.code) return;
+                localStorage.setItem('store_ref_code', r.code);
+                const el = document.getElementById('referralCode');
+                if (el) el.textContent = r.code;
+            } catch (e) {}
+        }
+        async function loadOpsPanel() {
+            if (!window.isAdminClaim || !window.callServer) return;
+            const people = document.getElementById('adminPeople');
+            const subs = document.getElementById('subscriberList');
+            const refs = document.getElementById('referralAdminList');
+            if (!people && !subs && !refs) return;
+            try {
+                const [admins, list, referrals] = await Promise.all([
+                    window.callServer('adminListAdmins', {}),
+                    window.callServer('adminListSubscribers', {}),
+                    window.callServer('adminListReferrals', {})
+                ]);
+                window.subscriberCache = list.subscribers || [];
+                if (people) people.innerHTML = (admins.admins || []).map(a => `<div class="flex justify-between gap-2 items-center"><span>${esc(a.email)} <span class="text-xs text-zinc-500">${esc(a.role)}</span></span>${admins.owner && a.role !== 'owner' ? `<button type="button" class="btn btn-danger !py-1 !text-xs" onclick="revokeAdmin('${esc(a.email)}')">Entfernen</button>` : ''}</div>`).join('') || '<p class="text-zinc-500">Keine Admins.</p>';
+                if (subs) subs.innerHTML = window.subscriberCache.length ? window.subscriberCache.map(s => `<p>${esc(s.email)}</p>`).join('') : '<p class="text-zinc-500">Noch keine Anmeldungen.</p>';
+                if (refs) refs.innerHTML = (referrals.referrals || []).length ? referrals.referrals.map(r => `<p><b class="text-white">${esc(r.code)}</b> · ${esc(r.email)} · ${r.clicks} Klicks · ${r.orders} Käufe</p>`).join('') : '<p class="text-zinc-500">Noch keine Codes.</p>';
+            } catch (e) { if (people) people.textContent = friendlyErr(e); }
+        }
+        async function grantAdmin() {
+            try { await window.callServer('adminGrantAdmin', { email: document.getElementById('newAdminEmail').value.trim() }); showToast('Admin gesetzt. Die Person muss sich neu anmelden.'); loadOpsPanel(); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function revokeAdmin(email) {
+            if (!confirm('Admin-Recht für ' + email + ' entfernen?')) return;
+            try { await window.callServer('adminRevokeAdmin', { email }); showToast('Entfernt.'); loadOpsPanel(); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        function exportSubscribers() {
+            const rows = window.subscriberCache || [];
+            const csv = 'email\n' + rows.map(s => '"' + String(s.email || '').replace(/"/g, '""') + '"').join('\n');
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+            a.download = 'newsletter.csv';
+            a.click();
+        }
+        async function saveSalesToggle() {
+            try {
+                await window.callServer('adminUpsert', { collection: 'siteSettings', id: 'main', data: { showSalesPop: document.getElementById('salesPopOn').checked } });
+                window.salesPopOn = document.getElementById('salesPopOn').checked;
+                showToast('Gespeichert.');
+            } catch (e) { showToast(friendlyErr(e)); }
         }
         async function showShopQr() {
             const dlg = document.getElementById('qrDialog');
@@ -4567,7 +4716,7 @@
             siteSettings: ['heroTitle', 'heroText', 'promoText', 'accent', 'accent2', 'brandName', 'linktree', 'discord', 'paypalPlanId', 'unitsSold', 'payments', 'legalName', 'legalStreet', 'legalZipCity', 'legalEmail', 'impressumDe', 'impressumEn', 'privacyDe', 'termsDe', 'widerrufDe', 'seoTitle', 'seoDescription', 'ogImage'],
             catalog: ['name', 'blurb', 'priceCents', 'stock', 'image', 'video', 'deliveryType', 'downloadKey', 'crypto', 'active'],
             reviews: ['name', 'quote'],
-            posts: ['title', 'date', 'body'],
+            posts: ['title', 'date', 'body', 'published'],
             faqs: ['productId', 'q', 'a'],
             partners: ['label', 'href'],
             bundles: ['name', 'productId', 'minQty', 'percent']
@@ -4606,6 +4755,8 @@
             setIfIdle('legalPrivacy', s.privacyDe || '');
             setIfIdle('legalTerms', s.termsDe || '');
             setIfIdle('legalWithdrawal', s.widerrufDe || '');
+            const salesBox = document.getElementById('salesPopOn');
+            if (salesBox && document.activeElement !== salesBox) salesBox.checked = s.showSalesPop !== false;
             if (s.accent && document.activeElement !== document.getElementById('themeAccent')) {
                 const el = document.getElementById('themeAccent'); if (el) el.value = s.accent;
             }
@@ -4765,10 +4916,11 @@
             if (reviews.length && document.getElementById('reviewGrid')) {
                 document.getElementById('reviewGrid').innerHTML = reviews.map(r => `<figure class="card p-5"><blockquote class="text-sm text-zinc-200">${escHtml(r.quote)}</blockquote><figcaption class="mt-3 text-xs font-bold text-white">${escHtml(r.name)}</figcaption></figure>`).join('');
             }
-            const posts = Object.values(cms.posts || {});
+            const posts = Object.entries(cms.posts || {}).filter(([, p]) => p && p.published !== false && p.title);
             if (posts.length && document.getElementById('journalGrid')) {
-                document.getElementById('journalGrid').innerHTML = posts.map(p => `<article class="card p-5"><p class="text-xs text-zinc-500">${escHtml(p.date)}</p><h3 class="text-base font-bold text-white mt-2">${escHtml(p.title)}</h3><p class="text-sm text-zinc-400 mt-2">${escHtml(p.body)}</p></article>`).join('');
+                document.getElementById('journalGrid').innerHTML = posts.map(([id, p]) => `<article class="card p-5"><p class="text-xs text-zinc-500">${escHtml(p.date || '')}</p><h3 class="text-base font-bold text-white mt-2">${escHtml(p.title)}</h3><p class="text-sm text-zinc-400 mt-2 line-clamp-3">${escHtml(String(p.body || '').slice(0, 180))}</p><button type="button" class="btn btn-secondary mt-3 !py-2" onclick="openPost('${escHtml(id)}')">${escHtml(t('blogRead'))}</button></article>`).join('');
             }
+            window.salesPopOn = settings.showSalesPop !== false;
             const faqs = Object.values(cms.faqs || {});
             if (faqs.length && document.getElementById('faqList')) {
                 document.getElementById('faqList').innerHTML = faqs.map(f => `<details class="border-b border-white/10 py-2"><summary class="font-semibold text-white">${escHtml(f.q)}</summary><p class="text-sm text-zinc-400 mt-2">${escHtml(f.a)}</p></details>`).join('');
@@ -4855,16 +5007,17 @@
                 renderWishlistUI();
                 applyFilters();
             }
-            let ref = localStorage.getItem('store_ref_code');
-            if (!ref) { ref = 'V' + Math.random().toString(36).slice(2, 7).toUpperCase(); localStorage.setItem('store_ref_code', ref); }
-            const refEl = document.getElementById('referralCode'); if (refEl) refEl.textContent = ref;
-            const incoming = (params.get('ref') || '').toUpperCase();
-            if (incoming && incoming !== ref && !localStorage.getItem('store_ref_seen_' + incoming)) {
-                localStorage.setItem('store_ref_seen_' + incoming, '1');
-                coupons['FREUND' + incoming.slice(0, 4)] = 1;
-                localStorage.setItem('store_coupons', JSON.stringify(coupons));
-                showToast('Empfehlung erkannt. Lokaler Code FREUND' + incoming.slice(0, 4) + ' über 1 € liegt bereit.');
+            let ref = localStorage.getItem('store_ref_code') || '';
+            const refEl = document.getElementById('referralCode'); if (refEl) refEl.textContent = ref || 'nach dem Login';
+            const incoming = (params.get('ref') || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (incoming && incoming !== ref) {
+                localStorage.setItem('store_ref_incoming', incoming);
+                if (!localStorage.getItem('store_ref_seen_' + incoming)) {
+                    localStorage.setItem('store_ref_seen_' + incoming, '1');
+                    fetch(window.WORKER_URL + '/api/trackReferral', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: location.origin }, body: JSON.stringify({ code: incoming }) }).catch(() => {});
+                }
             }
+            loadMyReferral();
             if (localStorage.getItem('store_promo_hidden') === '1') {
                 const b = document.getElementById('promoBanner'); if (b) b.remove();
             } else {
@@ -4898,17 +5051,25 @@
                     workerEl.className = 'font-semibold ' + (j && j.ok ? 'text-emerald-300' : 'text-amber-300');
                 }).catch(() => { workerEl.textContent = 'nicht erreichbar'; workerEl.className = 'font-semibold text-amber-300'; });
             }
-            const pop = document.getElementById('salePop');
-            const recent = [];
-            try { JSON.parse(localStorage.getItem('all_orders_global') || '[]').forEach(o => { if (o.items) recent.push(o.items); }); } catch (e) {}
-            if (pop && recent.length) {
-                let i = 0;
-                setInterval(() => {
-                    pop.textContent = 'Jemand hat gerade ' + String(recent[i % recent.length]).slice(0, 80) + ' gekauft.';
-                    pop.classList.remove('hidden');
-                    i++;
-                    setTimeout(() => pop.classList.add('hidden'), 4200);
-                }, 28000);
+            if (!window.salePopStarted) {
+                window.salePopStarted = true;
+                const pop = document.getElementById('salePop');
+                fetch(window.WORKER_URL + '/api/recentSales', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: location.origin }, body: '{}' })
+                    .then(r => r.json()).then(j => {
+                        const sales = Array.isArray(j.sales) ? j.sales : [];
+                        if (!pop || !sales.length) return;
+                        let i = 0;
+                        const show = () => {
+                            if (window.salesPopOn === false) { pop.classList.add('hidden'); return; }
+                            const name = String((sales[i % sales.length] || {}).product || 'ein Produkt').slice(0, 80);
+                            pop.textContent = (currentLang === 'en' ? 'Someone just bought ' : 'Jemand hat gerade ') + name + (currentLang === 'en' ? '.' : ' gekauft.');
+                            pop.classList.remove('hidden');
+                            i += 1;
+                            setTimeout(() => pop.classList.add('hidden'), 4200);
+                        };
+                        setTimeout(show, 5000);
+                        setInterval(show, 32000);
+                    }).catch(() => {});
             }
             const loyalty = document.createElement('p');
             loyalty.className = 'text-xs text-zinc-400 mt-2';
