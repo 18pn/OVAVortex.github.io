@@ -7,11 +7,18 @@ const DEFAULT_DELIVERY = {
   links: [],
 };
 
+// Sofortzugang, falls in Firestore noch kein deliveries/media liegt. Ein vorhandenes Dokument gewinnt.
+const MEDIA_FALLBACK = {
+  title: 'All-in-One Media Access',
+  instructions: 'Dein Zugang ist sofort verfügbar.',
+  links: ['https://yarrlist.net/'],
+};
+
 export async function buildDelivery(env, lines) {
   const out = [];
   for (const l of lines || []) {
     const doc = await fsGet(env, `deliveries/${l.productId}`);
-    const d = doc ? doc.data : DEFAULT_DELIVERY;
+    const d = doc ? doc.data : (l.productId === 'media' ? MEDIA_FALLBACK : DEFAULT_DELIVERY);
     out.push({
       productId: l.productId,
       name: l.name,

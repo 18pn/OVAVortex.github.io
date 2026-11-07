@@ -92,7 +92,7 @@ ok((await call('adminSaveCoupon', { code: 'SAVE5', valueCents: 500 }, t)).status
 ok((await call('adminSaveCoupon', { code: 'save5', valueCents: 500 }, adminT)).status === 200, 'Admin legt Gutschein an');
 let q = await call('quoteCart', { items: [{ id: 'basic', qty: 2 }], coupon: 'SAVE5' }, t);
 ok(q.body.totalCents === 2500 && q.body.discountCents === 500, 'quoteCart mit Gutschein = 25,00 €');
-ok((await call('quoteCart', { items: [{ id: 'media', qty: 1 }] }, t)).status === 400, 'Media-Produkt nicht im Server-Katalog -> 400');
+ok((await call('quoteCart', { items: [{ id: 'media', qty: 1 }] }, t)).body.totalCents === 50, 'Media-Produkt = 0,50 €, Krypto erlaubt');
 ok((await call('quoteCart', { items: [{ id: 'basic', qty: 1, price: 0.01 }] }, t)).body.totalCents === 1500, 'Client-Preis ignoriert');
 
 // Guthaben: zu wenig

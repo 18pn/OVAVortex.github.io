@@ -1,11 +1,12 @@
 // Serverseitiger Produkt- und Preiskatalog (einzige Quelle der Wahrheit). Preise in Euro-Cent.
-// "All-in-One Media Access" ist bewusst NICHT enthalten (keine Krypto-/Guthaben-Zahlung, keine Auslieferung).
+// Krypto gilt für jedes Produkt, auch „All-in-One Media Access“.
 import { HttpError } from './util.js';
 
 export const PRODUCTS = Object.freeze({
   basic: { id: 'basic', name: 'Basic PC-Tuning', priceCents: 1500 },
   pro:   { id: 'pro',   name: 'Pro Tuning (0 Delay)', priceCents: 3500 },
   web:   { id: 'web',   name: 'Custom Website Build', priceCents: 2500 },
+  media: { id: 'media', name: 'All-in-One Media Access', priceCents: 50 },
 });
 
 export const TOPUP_MIN_CENTS = 500;

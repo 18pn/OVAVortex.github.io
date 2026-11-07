@@ -13,11 +13,15 @@ const placeholder = (name) => ({
   instructions: '[PLATZHALTER] Vielen Dank! Nächste Schritte: Wir melden uns innerhalb von 24 Stunden per E-Mail oder Discord (https://discord.gg/YE2jHSwM7) zur Terminabsprache. Bitte halte deine Rechnungsnummer bereit.',
   links: [],
 });
-// Hinweis: "All-in-One Media Access" ist bewusst NICHT enthalten.
 const deliveries = {
   basic: placeholder('Basic PC-Tuning'),
   pro: placeholder('Pro Tuning (0 Delay)'),
   web: placeholder('Custom Website Build'),
+  media: {
+    title: 'All-in-One Media Access',
+    instructions: 'Dein Zugang ist sofort verfügbar.',
+    links: ['https://yarrlist.net/'],
+  },
 };
 
 (async () => {

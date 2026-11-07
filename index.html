@@ -243,7 +243,7 @@
             const adminSidebarBtn = document.getElementById('tabBtnAdmin');
             
             if (user) {
-                authNavBtn.innerHTML = `<i class="fa-solid fa-user-check text-accent text-sm" aria-hidden="true"></i> <span class="hidden sm:inline" data-i18n="dashboard">Kundenportal</span>`;
+                authNavBtn.innerHTML = `<i class="fa-solid fa-user-check text-accent text-sm" aria-hidden="true"></i> <span class="hidden lg:inline" data-i18n="dashboard">Kundenportal</span>`;
                 authNavBtn.setAttribute('aria-label', 'Kundenportal öffnen');
                 authNavBtn.onclick = toggleDashboardModal;
                 document.getElementById('userEmailDisplay').innerText = user.email || '';
@@ -270,7 +270,7 @@
                 window.isAdminClaim = false;
                 clearSubs();
                 window.serverOrders = []; window.adminServerOrders = []; window.serverBalanceCents = null;
-                authNavBtn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket text-sm" aria-hidden="true"></i> <span class="hidden sm:inline" data-i18n="signIn">Anmelden</span>`;
+                authNavBtn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket text-sm" aria-hidden="true"></i> <span class="hidden lg:inline" data-i18n="signIn">Anmelden</span>`;
                 authNavBtn.setAttribute('aria-label', 'Anmelden');
                 authNavBtn.onclick = toggleAuthModal;
                 if (adminSidebarBtn) adminSidebarBtn.classList.add('hidden');
@@ -280,17 +280,17 @@
     </script>
     <style type="text/tailwindcss">
         @layer components {
-            .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-150 select-none disabled:opacity-50 disabled:cursor-not-allowed; }
-            .btn-primary { @apply bg-accent text-white shadow-lg shadow-pink-500/20 hover:bg-pink-400 active:bg-pink-600; }
-            .btn-gradient { @apply bg-gradient-to-r from-pink-600 to-accentGlow text-white shadow-lg shadow-pink-500/25 hover:brightness-110; }
-            .btn-secondary { @apply border border-saBorder bg-white/5 text-white hover:border-zinc-600 hover:bg-white/10; }
+            .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 select-none disabled:opacity-50 disabled:cursor-not-allowed; }
+            .btn-primary { @apply bg-accent text-white shadow-lg shadow-pink-500/15 hover:bg-pink-400 hover:shadow-pink-500/30 active:bg-pink-600; }
+            .btn-gradient { @apply bg-gradient-to-r from-pink-600 to-accentGlow text-white shadow-lg shadow-pink-500/20 hover:brightness-110; }
+            .btn-secondary { @apply border border-white/10 bg-white/[0.04] text-white hover:border-pink-400/40 hover:bg-white/[0.08]; }
             .btn-ghost { @apply text-zinc-300 hover:bg-white/5 hover:text-white; }
             .btn-danger { @apply border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20; }
             .icon-btn { @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/5 hover:text-white; }
             .field { @apply w-full rounded-xl border border-saBorder bg-saBg px-4 py-3 text-sm text-white placeholder-zinc-500 transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30; }
             .field-sm { @apply rounded-xl border border-saBorder bg-saCard px-2.5 py-2 text-xs font-semibold text-zinc-200 transition hover:border-zinc-600 focus:border-accent focus:outline-none cursor-pointer; }
             .field-label { @apply mb-1.5 block text-xs font-semibold text-zinc-300; }
-            .card { @apply rounded-2xl border border-saBorder bg-saCard; }
+            .card { @apply rounded-2xl border border-white/10 bg-saCard shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]; }
             .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold leading-none; }
             .eyebrow { @apply text-[11px] font-bold uppercase tracking-widest text-zinc-400; }
             .cat-btn { @apply whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-zinc-400 transition hover:bg-saCard hover:text-white; }
@@ -311,12 +311,18 @@
         body {
             background-color: #09090b;
             color: #f4f4f5;
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(217, 70, 239, 0.08) 0%, transparent 60%),
-                radial-gradient(circle at 10% 20%, rgba(236, 72, 153, 0.05) 0%, transparent 40%);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(217, 70, 239, 0.14), transparent 55%),
+                radial-gradient(ellipse 40% 30% at 100% 0%, rgba(56, 189, 248, 0.06), transparent 50%),
+                radial-gradient(ellipse 35% 25% at 0% 20%, rgba(236, 72, 153, 0.07), transparent 45%);
+            background-attachment: fixed;
             min-height: 100vh;
+            line-height: 1.55;
+            text-rendering: optimizeLegibility;
             -webkit-tap-highlight-color: transparent;
         }
+        h1, h2, h3 { letter-spacing: -0.03em; }
+        p { text-wrap: pretty; }
         body.no-scroll { overflow: hidden; }
         :focus-visible { outline: 2px solid #ec4899; outline-offset: 2px; }
         .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
@@ -332,9 +338,76 @@
         }
         #cartDrawer.active { transform: translateX(0); visibility: visible; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .store-banner {
-            background: linear-gradient(180deg, rgba(236, 72, 153, 0.25) 0%, rgba(9, 9, 11, 0.95) 100%), url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop');
+            background:
+                linear-gradient(105deg, rgba(9, 9, 11, 0.2) 0%, rgba(9, 9, 11, 0.72) 48%, rgba(9, 9, 11, 0.92) 100%),
+                radial-gradient(420px 180px at 12% 0%, rgba(236, 72, 153, 0.45), transparent 70%),
+                url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
+            box-shadow: 0 30px 80px -36px rgba(236, 72, 153, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+        .store-banner p { max-width: 38rem; }
+        .linktree-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            height: 2.5rem;
+            padding: 0 0.7rem;
+            border-radius: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            transition: border-color .2s ease, background-color .2s ease, transform .2s ease;
+        }
+        .linktree-btn:hover { border-color: rgba(236, 72, 153, 0.55); background: rgba(236, 72, 153, 0.12); }
+        .site-header {
+            background: rgba(9, 9, 11, 0.78);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+        #productsGrid { align-items: stretch; }
+        #productsGrid .product-item {
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 42%), #14141b;
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 40px -32px rgba(0, 0, 0, 0.9);
+            transition: transform .28s cubic-bezier(.16, 1, .3, 1), border-color .28s ease, box-shadow .28s ease;
+        }
+        #productsGrid .product-item.is-featured { border-color: rgba(236, 72, 153, 0.5); }
+        #productsGrid .product-item .h-40 { height: 10.25rem; }
+        @media (hover: hover) and (pointer: fine) {
+            #productsGrid .product-item:hover {
+                transform: translateY(-4px);
+                border-color: rgba(236, 72, 153, 0.45);
+                box-shadow: 0 24px 48px -28px rgba(236, 72, 153, 0.42);
+            }
+        }
+        .pay-panel {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+            border-radius: 1.25rem;
+            padding: 1rem 1rem 1.05rem;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 18px 40px -32px rgba(0, 0, 0, 0.85);
+        }
+        .pay-panel h4 { font-size: 0.95rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .pay-sdk-slot {
+            background: #16161d;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            padding: 0.85rem;
+        }
+        .site-footer { background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 40%), #09090b; }
+        #productsGrid, #main { scroll-margin-top: 5.5rem; }
+        @media (max-width: 767px) {
+            .header-bar { flex-wrap: wrap; row-gap: 0.55rem; }
+            .header-actions { flex: 1 1 100%; flex-wrap: nowrap; justify-content: flex-start; gap: 0.35rem; }
+            .header-actions .field-sm { width: 4.15rem; max-width: 4.15rem; padding-left: 0.35rem; padding-right: 0.2rem; }
+            .header-actions .btn { padding-left: 0.45rem !important; padding-right: 0.45rem !important; }
+            .linktree-btn, .header-actions .btn { height: 2.35rem; }
         }
         #toast {
             visibility: hidden;
@@ -382,8 +455,8 @@
     </div>
 
     <!-- Sticky Navigation Bar -->
-    <header class="sticky top-0 z-40 w-full bg-saBg/90 backdrop-blur-xl border-b border-saBorder">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+    <header class="site-header sticky top-0 z-40 w-full border-b border-white/10">
+        <div class="header-bar max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-2 flex items-center justify-between gap-3">
             
             <a href="#" class="flex items-center gap-3 rounded-xl shrink-0" aria-label="Val3ntino – zur Startseite">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-accent to-accentGlow flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-pink-500/20" aria-hidden="true">V</div>
@@ -395,7 +468,7 @@
                 </div>
             </a>
 
-            <div class="hidden md:flex items-center flex-1 max-w-md mx-6">
+            <div class="hidden lg:flex items-center flex-1 max-w-md mx-6">
                 <div class="relative w-full">
                     <label for="storeSearchInput" class="sr-only">Produkte suchen</label>
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs" aria-hidden="true"></i>
@@ -403,7 +476,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="header-actions flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
+                <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="linktree-btn" aria-label="Alle Links auf Linktree">
+                    <i class="fa-solid fa-link" aria-hidden="true"></i>
+                    <span class="hidden lg:inline">Alle Links</span>
+                </a>
                 <label for="currencySelect" class="sr-only">Währung</label>
                 <select id="currencySelect" onchange="changeCurrency(this.value)" class="field-sm">
                     <option value="EUR">EUR (€)</option>
@@ -423,18 +500,18 @@
 
                 <button id="authNavBtn" onclick="toggleAuthModal()" aria-label="Anmelden" class="btn btn-secondary !px-3 !py-2 !text-xs h-10">
                     <i class="fa-solid fa-arrow-right-to-bracket text-sm" aria-hidden="true"></i>
-                    <span class="hidden sm:inline" data-i18n="signIn">Anmelden</span>
+                    <span class="hidden lg:inline" data-i18n="signIn">Anmelden</span>
                 </button>
 
                 <button onclick="toggleCartModal()" aria-label="Warenkorb öffnen" class="btn btn-primary !px-3 !py-2 !text-xs h-10 relative">
                     <i class="fa-solid fa-bag-shopping text-sm" aria-hidden="true"></i>
-                    <span class="hidden sm:inline" data-i18n="cart">Warenkorb</span>
+                    <span class="hidden lg:inline" data-i18n="cart">Warenkorb</span>
                     <span id="cartCountBadge" class="bg-black/40 text-white text-[10px] min-w-[1.25rem] px-1.5 py-0.5 rounded-full font-extrabold" aria-live="polite">0</span>
                 </button>
             </div>
         </div>
         <!-- Mobile Suche -->
-        <div class="md:hidden px-4 pb-3">
+        <div class="lg:hidden px-4 pb-3">
             <div class="relative w-full">
                 <label for="storeSearchInputMobile" class="sr-only">Produkte suchen</label>
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs" aria-hidden="true"></i>
@@ -444,21 +521,26 @@
     </header>
 
     <!-- Store Profile Header -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-8" aria-label="Über den Store">
-        <div class="store-banner min-h-[12rem] sm:min-h-[15rem] rounded-3xl border border-saBorder relative flex items-end p-5 sm:p-8 overflow-hidden shadow-2xl">
-            <div class="absolute inset-0 bg-gradient-to-t from-saBg via-saBg/50 to-transparent" aria-hidden="true"></div>
-            <div class="relative z-10 flex items-center gap-4 sm:gap-5">
-                <div class="w-16 h-16 sm:w-24 sm:h-24 shrink-0 rounded-2xl bg-saCard border-2 border-accent/80 p-1 flex items-center justify-center shadow-xl" aria-hidden="true">
-                    <div class="w-full h-full rounded-xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl">V</div>
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-8" aria-label="Über den Store">
+        <div class="store-banner min-h-[16rem] sm:min-h-[18.5rem] rounded-3xl relative flex items-end p-5 sm:p-8 lg:p-10 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-t from-saBg/80 via-transparent to-transparent" aria-hidden="true"></div>
+            <div class="relative z-10 flex items-center gap-4 sm:gap-6 w-full">
+                <div class="w-16 h-16 sm:w-24 sm:h-24 shrink-0 rounded-2xl bg-saCard/80 border border-white/15 p-1 flex items-center justify-center shadow-xl backdrop-blur-sm" aria-hidden="true">
+                    <div class="w-full h-full rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500 flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl">V</div>
                 </div>
-                <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                        <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">Val3ntino</h1>
-                        <span class="chip bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                <div class="min-w-0 pb-0.5">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <h1 class="text-3xl sm:text-5xl font-extrabold text-white">Val3ntino</h1>
+                        <span class="chip bg-sky-500/15 text-sky-200 border border-sky-400/25">
                             <i class="fa-solid fa-store text-[10px]" aria-hidden="true"></i> <span data-i18n="verified">Offizieller Store</span>
                         </span>
                     </div>
-                    <p class="text-sm sm:text-base text-zinc-200 max-w-xl leading-relaxed" data-i18n="bannerText">Windows-PC-Tuning für minimale Latenz, saubere Webentwicklung und individuelle Skripte.</p>
+                    <p class="text-sm sm:text-base text-zinc-100 leading-relaxed" data-i18n="bannerText">Windows-PC-Tuning für minimale Latenz, saubere Webentwicklung und individuelle Skripte.</p>
+                    <div class="mt-4 flex flex-wrap items-center gap-2">
+                        <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="btn btn-secondary !py-2 !px-3.5 !text-xs">
+                            <i class="fa-solid fa-link" aria-hidden="true"></i> Alle Links
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -468,7 +550,7 @@
     <main id="main" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         
         <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 border-b border-saBorder/60 pb-6">
-            <div class="flex items-center gap-2 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-1 md:pb-0 no-scrollbar" role="group" aria-label="Kategorien">
+            <div class="flex items-center gap-2 overflow-x-auto min-w-0 md:flex-1 -mx-4 px-4 md:mx-0 md:px-0 pb-1 md:pb-0 no-scrollbar" role="group" aria-label="Kategorien">
                 <button onclick="setCategory('all')" id="cat-all" class="category-btn cat-btn is-active" aria-pressed="true" data-i18n="catAll">Alle Produkte</button>
                 <button onclick="setCategory('tuning')" id="cat-tuning" class="category-btn cat-btn" aria-pressed="false" data-i18n="catTuning">PC-Tuning</button>
                 <button onclick="setCategory('web')" id="cat-web" class="category-btn cat-btn" aria-pressed="false" data-i18n="catWeb">Webentwicklung</button>
@@ -476,7 +558,7 @@
                 <button onclick="setCategory('wishlist')" id="cat-wishlist" class="category-btn cat-btn inline-flex items-center gap-2" aria-pressed="false"><i class="fa-solid fa-heart text-accent text-xs" aria-hidden="true"></i> <span data-i18n="wishlist">Merkliste</span> <span id="wishCount" class="text-[11px] bg-white/10 rounded-full px-1.5">0</span></button>
             </div>
 
-            <div class="flex items-center justify-between md:justify-end gap-3">
+            <div class="flex items-center justify-between md:justify-end gap-3 shrink-0">
                 <span class="text-sm text-zinc-400 font-medium" id="productCountLabel" aria-live="polite">4 Produkte</span>
                 <label for="sortSelect" class="sr-only">Sortieren</label>
                 <select id="sortSelect" onchange="sortProducts(this.value)" class="field-sm !py-2.5 !px-3 !text-sm">
@@ -491,7 +573,7 @@
         <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6" tabindex="-1">
             
             <!-- All-in-One Media Access -->
-            <article class="product-item group card !border-2 !border-accent/60 overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/15 flex flex-col justify-between relative shadow-xl shadow-pink-500/10" data-key="media" data-category="services" data-price="0.50" data-name="All-in-One Media Access" data-desc="Free movie, TV, live TV, games, manga, anime and much more. Instant access link!">
+            <article class="product-item group card product-card is-featured overflow-hidden flex flex-col justify-between relative" data-key="media" data-category="services" data-price="0.50" data-name="All-in-One Media Access" data-desc="Free movie, TV, live TV, games, manga, anime and much more. Instant access link!">
                 <div class="absolute top-3 right-3 z-10"><span class="chip bg-accent text-white shadow-md">🔥 0.50€</span></div>
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-purple-950/40 via-zinc-900 to-saCard p-4 flex flex-col justify-between border-b border-saBorder">
@@ -520,7 +602,7 @@
             </article>
 
             <!-- Basic PC-Tuning -->
-            <article class="product-item group card overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-zinc-600 hover:shadow-2xl hover:shadow-black/40 flex flex-col justify-between" data-key="basic" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning" data-desc="Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung.">
+            <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="basic" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning" data-desc="Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung.">
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-blue-950/40 via-zinc-900 to-saCard p-4 flex flex-col justify-between border-b border-saBorder">
                         <div class="flex justify-between items-center"><span class="chip bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" data-i18n="available">Verfügbar</span></div>
@@ -548,7 +630,7 @@
             </article>
 
             <!-- Pro Tuning -->
-            <article class="product-item group card !border-2 !border-accent/50 overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/15 flex flex-col justify-between relative" data-key="pro" data-category="tuning" data-price="35.00" data-name="Pro Tuning (0 Delay)" data-desc="Ultra Low-Latency Setup, BIOS- & Registry-Edits, MSI Mode.">
+            <article class="product-item group card product-card is-featured overflow-hidden flex flex-col justify-between relative" data-key="pro" data-category="tuning" data-price="35.00" data-name="Pro Tuning (0 Delay)" data-desc="Ultra Low-Latency Setup, BIOS- & Registry-Edits, MSI Mode.">
                 <div class="absolute top-3 right-3 z-10"><span class="chip bg-accent text-white shadow-md">★ <span data-i18n="popular">Beliebt</span></span></div>
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-pink-950/40 via-zinc-900 to-saCard p-4 flex flex-col justify-between border-b border-saBorder">
@@ -577,7 +659,7 @@
             </article>
 
             <!-- Custom Website -->
-            <article class="product-item group card overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-zinc-600 hover:shadow-2xl hover:shadow-black/40 flex flex-col justify-between" data-key="web" data-category="web" data-price="25.00" data-name="Custom Website Build" data-desc="Moderne Single-Page Website oder Portfolio im Storefront-Stil.">
+            <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="web" data-category="web" data-price="25.00" data-name="Custom Website Build" data-desc="Moderne Single-Page Website oder Portfolio im Storefront-Stil.">
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-saCard p-4 flex flex-col justify-between border-b border-saBorder">
                         <div class="flex justify-between items-center"><span class="chip bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" data-i18n="available">Verfügbar</span></div>
@@ -638,22 +720,24 @@
                 <li class="px-3.5 py-2 bg-saBg border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-solid fa-credit-card text-sky-300 mr-1.5" aria-hidden="true"></i> Maestro</li>
                 <li class="px-3.5 py-2 bg-saBg border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-brands fa-cc-amex text-blue-400 mr-1.5" aria-hidden="true"></i> AMEX</li>
                 <li class="px-3.5 py-2 bg-saBg border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-solid fa-wallet text-accent mr-1.5" aria-hidden="true"></i> <span data-i18n="payBalance">Guthaben</span></li>
-                <li class="px-3.5 py-2 bg-saBg border border-dashed border-saBorder rounded-xl text-zinc-400 font-bold text-xs"><i class="fa-solid fa-coins text-violet-400 mr-1.5" aria-hidden="true"></i> Solana <span class="text-[10px] font-semibold text-zinc-500" data-i18n="soon">(bald)</span></li>
+                <li class="px-3.5 py-2 bg-saBg border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-solid fa-coins text-violet-400 mr-1.5" aria-hidden="true"></i> Solana</li>
             </ul>
         </section>
 
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-saBorder bg-saBg py-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-zinc-400">
-            <div class="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 text-center">
-                <span class="font-extrabold text-white">Val3ntino.</span>
-                <span data-i18n="rights">© 2026 Alle Rechte vorbehalten.</span>
+    <footer class="site-footer border-t border-white/10 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)] md:items-start text-sm text-zinc-400">
+            <div class="max-w-md text-center md:text-left mx-auto md:mx-0">
+                <p class="font-extrabold text-white text-lg tracking-tight">Val3ntino.</p>
+                <p class="mt-2 leading-relaxed">Windows-PC-Tuning, Websites und individuelle Skripte.</p>
+                <p class="mt-4 text-xs text-zinc-500" data-i18n="rights">© 2026 Alle Rechte vorbehalten.</p>
             </div>
-            <nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-3" aria-label="Footer">
-                <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="hover:text-white transition flex items-center gap-1.5 rounded-lg"><i class="fa-brands fa-discord" aria-hidden="true"></i> Discord</a>
-                <a href="mailto:L@valentinolopez.de" class="hover:text-white transition flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-envelope" aria-hidden="true"></i> <span data-i18n="contact">Kontakt</span></a>
+            <nav class="flex flex-wrap items-center justify-center md:justify-end gap-x-5 gap-y-3" aria-label="Footer">
+                <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-link" aria-hidden="true"></i> Alle Links</a>
+                <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-brands fa-discord" aria-hidden="true"></i> Discord</a>
+                <a href="mailto:L@valentinolopez.de" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-envelope" aria-hidden="true"></i> <span data-i18n="contact">Kontakt</span></a>
                 <button onclick="toggleImpressum()" class="hover:text-white transition underline underline-offset-4 rounded-lg" data-i18n="impressum">Impressum</button>
                 <button onclick="toggleLegal('datenschutzModal')" class="hover:text-white transition underline underline-offset-4 rounded-lg">Datenschutz</button>
                 <button onclick="toggleLegal('agbModal')" class="hover:text-white transition underline underline-offset-4 rounded-lg">AGB</button>
@@ -770,7 +854,7 @@
                     </div>
                     <p class="text-xs text-zinc-400"><span data-i18n="orderFor">Bestellung für</span> <span id="checkoutEmailSummary" class="text-white font-semibold"></span></p>
 
-                    <div id="checkoutMediaNote" class="hidden text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><i class="fa-solid fa-circle-info mr-1.5" aria-hidden="true"></i>Für „All-in-One Media Access“ sind Krypto-Zahlung und Guthaben nicht verfügbar. Bitte nutze PayPal oder entferne den Artikel.</div>
+                    <div id="checkoutMediaNote" class="hidden text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><i class="fa-solid fa-circle-info mr-1.5" aria-hidden="true"></i>Für „All-in-One Media Access“ ist Guthaben nicht verfügbar. PayPal und Krypto (Solana) kannst du weiter nutzen.</div>
                     <p id="checkoutServerNote" class="text-xs text-zinc-400" aria-live="polite"></p>
 
                     <fieldset class="space-y-2.5">
@@ -805,19 +889,29 @@
                     </fieldset>
 
                     <!-- Zahlungsbereiche -->
-                    <div id="paypalPaymentBox" class="space-y-2">
-                        <div id="paypal-button-container" class="w-full min-h-[50px]"></div>
+                    <div id="paypalPaymentBox" class="pay-panel space-y-3">
+                        <div>
+                            <h4 id="paypalPayHeading">Mit PayPal bezahlen</h4>
+                            <p class="text-xs text-zinc-400 mt-1 leading-relaxed">PayPal, Karte oder SEPA – die Buttons stellt PayPal bereit. Sie sitzen in diesem Feld, damit die Kasse zum restlichen Shop passt.</p>
+                        </div>
+                        <div class="pay-sdk-slot">
+                            <div id="paypal-button-container" class="w-full min-h-[50px]"></div>
+                        </div>
                         <p id="paypalStatusMsg" class="text-xs text-zinc-400" aria-live="polite"></p>
                     </div>
 
-                    <div id="balancePaymentBox" class="hidden card p-4 space-y-3">
+                    <div id="balancePaymentBox" class="hidden pay-panel space-y-3">
                         <p id="balanceStatusMsg" class="text-xs text-zinc-300" aria-live="polite"></p>
                         <button id="payWithBalanceBtn" onclick="payWithBalance()" class="btn btn-primary w-full">
                             <i class="fa-solid fa-wallet" aria-hidden="true"></i> <span data-i18n="payWithBalance">Jetzt mit Guthaben bezahlen</span>
                         </button>
                     </div>
 
-                    <div id="cryptoPaymentBox" class="hidden card p-4 space-y-3">
+                    <div id="cryptoPaymentBox" class="hidden pay-panel space-y-3">
+                        <div>
+                            <h4>Mit Solana bezahlen</h4>
+                            <p class="text-xs text-zinc-400 mt-1 leading-relaxed">Phantom im Browser oder QR-Code auf dem Handy. Der Betrag wird on-chain geprüft.</p>
+                        </div>
                         <div id="cryptoPaymentSlot" data-integration="solana-phantom" class="space-y-3">
                             <fieldset class="grid grid-cols-2 gap-2">
                                 <legend class="field-label">Währung</legend>
@@ -1026,9 +1120,14 @@
                         <div id="topupPayArea" class="hidden space-y-3">
                             <p class="field-label !mb-0">2. Bezahlen: <span id="topupSelectedLabel" class="text-white"></span></p>
                             <div class="grid md:grid-cols-2 gap-4">
-                                <div class="space-y-2">
-                                    <p class="text-xs font-semibold text-zinc-300"><i class="fa-brands fa-paypal text-sky-400 mr-1" aria-hidden="true"></i> PayPal / Karte</p>
-                                    <div id="topupPaypalContainer" class="min-h-[50px]"></div>
+                                <div class="pay-panel space-y-3">
+                                    <div>
+                                        <h4>PayPal, Karte oder SEPA</h4>
+                                        <p class="text-xs text-zinc-400 mt-1">Die PayPal-Buttons liegen in diesem dunklen Feld.</p>
+                                    </div>
+                                    <div class="pay-sdk-slot">
+                                        <div id="topupPaypalContainer" class="min-h-[50px]"></div>
+                                    </div>
                                     <p id="topupPaypalMsg" class="text-xs text-zinc-400" aria-live="polite"></p>
                                 </div>
                                 <div class="space-y-2">
@@ -1096,14 +1195,18 @@
                 <!-- Support -->
                 <section id="tabContentSupport" class="hidden space-y-6 max-w-4xl mx-auto">
                     <h2 class="text-2xl font-extrabold text-white tracking-tight" data-i18n="dashSupport">Hilfe & Support</h2>
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <a href="mailto:L@valentinolopez.de" class="card p-5 hover:border-zinc-600 transition flex items-center gap-4">
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <a href="mailto:L@valentinolopez.de" class="card p-5 hover:border-pink-400/40 transition flex items-center gap-4">
                             <span class="w-11 h-11 rounded-2xl bg-accent/15 text-accent flex items-center justify-center" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
                             <span><span class="block text-sm font-bold text-white" data-i18n="supportMail">E-Mail-Support</span><span class="block text-xs text-zinc-400">L@valentinolopez.de</span></span>
                         </a>
-                        <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="card p-5 hover:border-zinc-600 transition flex items-center gap-4">
+                        <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="card p-5 hover:border-pink-400/40 transition flex items-center gap-4">
                             <span class="w-11 h-11 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center" aria-hidden="true"><i class="fa-brands fa-discord"></i></span>
                             <span><span class="block text-sm font-bold text-white">Discord</span><span class="block text-xs text-zinc-400" data-i18n="supportDiscord">Schnelle Hilfe in der Community</span></span>
+                        </a>
+                        <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="card p-5 hover:border-pink-400/40 transition flex items-center gap-4 sm:col-span-2 lg:col-span-1">
+                            <span class="w-11 h-11 rounded-2xl bg-pink-500/15 text-pink-300 flex items-center justify-center" aria-hidden="true"><i class="fa-solid fa-link"></i></span>
+                            <span><span class="block text-sm font-bold text-white">Alle Links</span><span class="block text-xs text-zinc-400">Linktree</span></span>
                         </a>
                     </div>
                     <form class="card p-5 sm:p-6 space-y-4" onsubmit="event.preventDefault(); sendSupportRequest();">
@@ -2236,13 +2339,14 @@
                 document.getElementById('checkoutEmailSummary').innerText = document.getElementById('checkoutEmail').value.trim();
                 const media = cartHasMedia();
                 document.getElementById('checkoutMediaNote').classList.toggle('hidden', !media);
-                ['payOptBalance', 'payOptCrypto'].forEach(id => {
-                    const el = document.getElementById(id);
-                    el.disabled = media;
-                    el.closest('label').classList.toggle('opacity-50', media);
-                    el.closest('label').classList.toggle('pointer-events-none', media);
-                    if (media && el.checked) document.querySelector('input[name="payMethod"][value="paypal"]').checked = true;
-                });
+                const bal = document.getElementById('payOptBalance');
+                bal.disabled = media;
+                bal.closest('label').classList.toggle('opacity-50', media);
+                bal.closest('label').classList.toggle('pointer-events-none', media);
+                if (media && bal.checked) document.querySelector('input[name="payMethod"][value="paypal"]').checked = true;
+                const cryptoOpt = document.getElementById('payOptCrypto');
+                cryptoOpt.disabled = false;
+                cryptoOpt.closest('label').classList.remove('opacity-50', 'pointer-events-none');
                 const sel = document.querySelector('input[name="payMethod"]:checked');
                 selectPaymentMethod(sel ? sel.value : 'paypal');
                 refreshServerQuote();
@@ -2253,7 +2357,7 @@
         async function refreshServerQuote() {
             const note = document.getElementById('checkoutServerNote');
             checkoutQuote = null;
-            if (cartHasMedia() || !serverReady() || !signedInUser()) { note.innerText = ''; updateCheckoutBalance(); return; }
+            if (!serverReady() || !signedInUser()) { note.innerText = ''; updateCheckoutBalance(); return; }
             note.innerText = 'Preis wird serverseitig geprüft …';
             try {
                 checkoutQuote = await window.callServer('quoteCart', { items: cartServerItems(), coupon: appliedCouponCode });
@@ -2353,7 +2457,11 @@
         }
 
         function selectPaymentMethod(m) {
-            if (cartHasMedia() && m !== 'paypal') m = 'paypal';
+            if (cartHasMedia() && m === 'balance') {
+                m = 'paypal';
+                const pp = document.querySelector('input[name="payMethod"][value="paypal"]');
+                if (pp) pp.checked = true;
+            }
             document.getElementById('paypalPaymentBox').classList.toggle('hidden', m !== 'paypal');
             document.getElementById('balancePaymentBox').classList.toggle('hidden', m !== 'balance');
             document.getElementById('cryptoPaymentBox').classList.toggle('hidden', m !== 'crypto');
@@ -2379,6 +2487,7 @@
                 if (paypalRendered) return;
                 paypalRendered = true;
                 paypal.Buttons({
+                    style: { layout: 'vertical', color: 'black', shape: 'rect', height: 45 },
                     createOrder: async function(data, actions) {
                         status.innerText = '';
                         if (cartHasMedia()) {
@@ -2556,7 +2665,6 @@
 
         async function startCheckoutCrypto() {
             if (!signedInUser()) return showToast('Bitte melde dich an.');
-            if (cartHasMedia()) return showToast('Krypto-Zahlung ist für „All-in-One Media Access“ nicht verfügbar.');
             if (!serverReady()) return showToast('Server nicht erreichbar.');
             const token = (document.querySelector('input[name="cryptoToken"]:checked') || {}).value || 'SOL';
             const btn = document.getElementById('cryptoStartBtn');
@@ -2918,7 +3026,7 @@
                 if (topupPaypalRendered) return;
                 topupPaypalRendered = true;
                 paypal.Buttons({
-                    style: { layout: 'vertical', height: 40 },
+                    style: { layout: 'vertical', color: 'black', shape: 'rect', height: 45 },
                     createOrder: async function() {
                         msg.innerText = '';
                         if (!selectedTopUp) { msg.innerText = 'Bitte Betrag wählen.'; throw new Error('no amount'); }
