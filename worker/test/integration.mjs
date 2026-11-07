@@ -96,7 +96,7 @@ ok((await call('adminSaveProduct', { id: 'basic', name: 'Basic PC-Tuning', blurb
 let q = await call('quoteCart', { items: [{ id: 'basic', qty: 2 }], coupon: 'SAVE5' }, t);
 ok(q.body.totalCents === 2500 && q.body.discountCents === 500, 'quoteCart mit Gutschein = 25,00 €');
 ok((await call('quoteCart', { items: [{ id: 'media', qty: 1 }] }, t)).body.totalCents === 50, 'Media-Produkt = 0,50 €, Krypto erlaubt');
-ok((await call('createCryptoOrder', { items: [{ id: 'krypto-einsteiger', qty: 1 }], token: 'SOL' }, t)).status === 503, 'Guide ohne private PDF -> 503');
+ok((await call('createCryptoOrder', { items: [{ id: 'krypto-einsteiger-2026', qty: 1 }], token: 'SOL' }, t)).status === 503, 'Guide ohne PDF in KV -> 503');
 ok((await call('quoteCart', { items: [{ id: 'basic', qty: 1, price: 0.01 }] }, t)).body.totalCents === 1500, 'Client-Preis ignoriert');
 
 // Guthaben: zu wenig

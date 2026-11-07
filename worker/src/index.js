@@ -10,7 +10,7 @@ import * as sol from './solana.js';
 import { paypalCreateOrder, paypalCaptureAndVerify } from './paypal.js';
 import { buildDelivery } from './delivery.js';
 import { randomBase32, verifyTotp } from './totp.js';
-import { GUIDE_OBJECT, GUIDE_NAMES, loadGuide } from './guides.js';
+import { GUIDES, PLACEHOLDER_PNG, readAsset } from './guides.js';
 
 const CRYPTO_EXPIRY_MS = 30 * 60 * 1000;
 const MIN_PAYMENT_CENTS = 50;
@@ -72,9 +72,10 @@ async function bundleDiscount(env, lines) {
 
 async function assertGuidesReady(env, lines) {
   for (const line of lines || []) {
-    if (!GUIDE_OBJECT[line.productId]) continue;
-    const bytes = await loadGuide(env, line.productId);
-    if (!bytes) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im privaten Speicher.');
+    const spec = GUIDES[line.productId];
+    if (!spec) continue;
+    const bytes = await readAsset(env, spec.pdf);
+    if (!bytes) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im Speicher. Bitte upload-assets.js ausführen.');
   }
 }
 
@@ -632,8 +633,8 @@ const routes = {
     const order = await getOwnOrder(env, user, orderId);
     if (order.status !== 'bezahlt' && order.status !== 'geliefert') throw new HttpError(402, 'Die Bestellung ist noch nicht bezahlt.');
     const owns = (order.items || []).some(l => l.productId === productId) || (order.delivery || []).some(d => d.downloadKey === productId || d.productId === productId);
-    if (!owns || !GUIDE_OBJECT[productId]) throw new HttpError(404, 'Kein PDF für diese Bestellung.');
-    if (!(await loadGuide(env, productId))) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im privaten Speicher.');
+    if (!owns || !GUIDES[productId]) throw new HttpError(404, 'Kein PDF für diese Bestellung.');
+    if (!(await readAsset(env, GUIDES[productId].pdf))) throw new HttpError(503, 'Die PDF-Datei liegt noch nicht im Speicher.');
     const token = await signDownload(env, { orderId, productId, uid: user.uid, exp: Date.now() + 15 * 60 * 1000 });
     return { token, productId, orderId };
   },
@@ -683,14 +684,14 @@ async function servePaidPdf(request, env, orderId, url, cors) {
     if (!order || order.data.uid !== payload.uid) return json({ error: 'Bestellung nicht gefunden.' }, 404, cors);
     if (order.data.status !== 'bezahlt' && order.data.status !== 'geliefert') return json({ error: 'Bestellung ist nicht bezahlt.' }, 402, cors);
     const owns = (order.data.items || []).some(l => l.productId === productId);
-    const bytes = await loadGuide(env, productId);
+    const bytes = await readAsset(env, GUIDES[productId].pdf);
     if (!owns || !bytes) return json({ error: 'Keine passende Datei.' }, 404, cors);
     return new Response(bytes, {
       status: 200,
       headers: {
         ...cors,
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${GUIDE_NAMES[productId] || 'guide.pdf'}"`,
+        'Content-Disposition': `attachment; filename="${GUIDES[productId].filename}"`,
         'Cache-Control': 'private, no-store',
       },
     });
@@ -707,6 +708,15 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: cors['Access-Control-Allow-Origin'] ? 204 : 403, headers: cors });
     const url = new URL(request.url);
     if (url.pathname === '/health') return json({ ok: true, manual: { ETH: env.ETH_ADDRESS || '', BTC: env.BTC_ADDRESS || '' }, push: !!env.VAPID_PUBLIC_KEY }, 200, cors);
+    const coverMatch = url.pathname.match(/^\/asset\/cover\/([a-z0-9-]+)$/);
+    if (coverMatch && request.method === 'GET') {
+      const spec = GUIDES[coverMatch[1]];
+      const bytes = spec ? await readAsset(env, spec.cover) : null;
+      return new Response(bytes || PLACEHOLDER_PNG, {
+        status: 200,
+        headers: { ...cors, 'Content-Type': 'image/png', 'Cache-Control': bytes ? 'public, max-age=3600' : 'no-store' },
+      });
+    }
     const downloadMatch = url.pathname.match(/^\/api\/download\/([A-Za-z0-9]{10,40})$/);
     if (downloadMatch && request.method === 'GET') return servePaidPdf(request, env, downloadMatch[1], url, cors);
     const origin = request.headers.get('Origin');

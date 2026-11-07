@@ -7,9 +7,9 @@ export const PRODUCTS = Object.freeze({
   pro:   { id: 'pro',   name: 'Pro Tuning (0 Delay)', priceCents: 3500 },
   web:   { id: 'web',   name: 'Custom Website Build', priceCents: 2500 },
   media: { id: 'media', name: 'All-in-One Media Access', priceCents: 50 },
-  'krypto-einsteiger': { id: 'krypto-einsteiger', name: 'Krypto für Einsteiger 2026: Wallet, Sicherheit & erste Schritte', priceCents: 1990 },
-  'discord-playbook': { id: 'discord-playbook', name: 'Discord-Server aufbauen & monetarisieren', priceCents: 2490 },
-  'digital-business': { id: 'digital-business', name: 'Mit digitalen Produkten Geld verdienen: Von der Nische zum ersten Verkauf', priceCents: 2490 },
+  'krypto-einsteiger-2026': { id: 'krypto-einsteiger-2026', name: 'Krypto für Einsteiger 2026: Wallet, Sicherheit & erste Schritte', priceCents: 1990 },
+  'discord-server-playbook': { id: 'discord-server-playbook', name: 'Discord-Server aufbauen & monetarisieren', priceCents: 2490 },
+  'digitale-produkte-business-guide': { id: 'digitale-produkte-business-guide', name: 'Mit digitalen Produkten Geld verdienen: Von der Nische zum ersten Verkauf', priceCents: 2490 },
 });
 
 export const TOPUP_MIN_CENTS = 500;

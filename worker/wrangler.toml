@@ -27,9 +27,9 @@ VAPID_PUBLIC_KEY = ""
 #   optional: npx wrangler secret put VAPID_PRIVATE_KEY
 #   optional: npx wrangler secret put BACKUP_WEBHOOK   (URL, die den nächtlichen Zähler empfängt)
 #   Pflicht für PDF-Downloads: npx wrangler secret put DOWNLOAD_TOKEN_SECRET
-# Privater PDF-Speicher (nicht ins Git, sonst wäre die Datei über GitHub Pages öffentlich):
-#   npx wrangler r2 bucket create valentinolopez-guides
-#   dann die Kommentarzeichen entfernen:
-# [[r2_buckets]]
-# binding = "GUIDES"
-# bucket_name = "valentinolopez-guides"
+
+# Cover und PDFs. Nicht ins Git. Nach `npx wrangler kv namespace create ASSETS`
+# die ausgegebene id unten einsetzen (die Zeile "id = ...").
+[[kv_namespaces]]
+binding = "ASSETS"
+id = "ERSETZEN_NACH_KV_NAMESPACE_CREATE"

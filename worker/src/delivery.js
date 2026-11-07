@@ -14,7 +14,7 @@ const MEDIA_FALLBACK = {
   links: ['https://yarrlist.net/'],
 };
 
-const GUIDE_IDS = new Set(['krypto-einsteiger', 'discord-playbook', 'digital-business']);
+const GUIDE_IDS = new Set(['krypto-einsteiger-2026', 'discord-server-playbook', 'digitale-produkte-business-guide']);
 
 export async function buildDelivery(env, lines) {
   const out = [];
