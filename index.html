@@ -409,6 +409,48 @@
             .header-actions .btn { padding-left: 0.45rem !important; padding-right: 0.45rem !important; }
             .linktree-btn, .header-actions .btn { height: 2.35rem; }
         }
+        .help-chat { position: fixed; z-index: 45; right: 1.15rem; bottom: max(1.15rem, env(safe-area-inset-bottom)); }
+        .help-launcher {
+            width: 3.35rem; height: 3.35rem; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+            background: linear-gradient(160deg, #f472b6, #db2777); color: #fff;
+            box-shadow: 0 12px 30px -12px rgba(236, 72, 153, 0.85);
+            display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .help-launcher:hover { transform: translateY(-2px); }
+        .help-panel {
+            position: absolute; right: 0; bottom: 4.15rem; width: min(24rem, calc(100vw - 2.2rem));
+            height: min(36rem, calc(100dvh - 7.5rem));
+            display: flex; flex-direction: column; overflow: hidden;
+            border-radius: 1.35rem; border: 1px solid rgba(255,255,255,0.1);
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 28%), #121217;
+            box-shadow: 0 24px 60px -28px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.05);
+            transform-origin: bottom right;
+            transform: translateY(10px) scale(0.98); opacity: 0; visibility: hidden; pointer-events: none;
+            transition: transform .22s cubic-bezier(.16,1,.3,1), opacity .22s ease, visibility 0s linear .22s;
+        }
+        .help-chat.is-open .help-panel { transform: none; opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+        .help-chat-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 0.9rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .help-chat-log { flex: 1; overflow-y: auto; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.65rem; }
+        .help-msg { max-width: 92%; border-radius: 1rem; padding: 0.7rem 0.8rem; font-size: 0.875rem; line-height: 1.5; white-space: pre-wrap; }
+        .help-msg.is-bot { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #e4e4e7; }
+        .help-msg.is-user { align-self: flex-end; background: rgba(236,72,153,0.18); border: 1px solid rgba(236,72,153,0.35); color: #fff; }
+        .help-msg a { color: #f9a8d4; text-decoration: underline; text-underline-offset: 2px; }
+        .help-quick { display: flex; gap: 0.4rem; overflow-x: auto; padding: 0.55rem 0.75rem; border-top: 1px solid rgba(255,255,255,0.06); }
+        .help-quick button {
+            flex: 0 0 auto; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04); color: #f4f4f5; font-size: 0.72rem; font-weight: 700;
+            padding: 0.4rem 0.7rem; transition: border-color .15s ease, background .15s ease;
+        }
+        .help-quick button:hover, .help-quick button[aria-pressed="true"] { border-color: rgba(236,72,153,0.55); background: rgba(236,72,153,0.14); }
+        .help-form { display: flex; gap: 0.45rem; padding: 0.7rem; border-top: 1px solid rgba(255,255,255,0.08); }
+        .help-form input { flex: 1; }
+        @media (max-width: 639px) {
+            .help-chat.is-open .help-panel {
+                position: fixed; left: 0.45rem; right: 0.45rem; top: max(0.45rem, env(safe-area-inset-top));
+                bottom: max(0.45rem, env(safe-area-inset-bottom)); width: auto; height: auto; border-radius: 1.15rem;
+            }
+        }
         #toast {
             visibility: hidden;
             min-width: 260px;
@@ -421,7 +463,7 @@
             position: fixed;
             z-index: 100;
             right: 24px;
-            bottom: 24px;
+            bottom: 5.6rem;
             border: 1px solid rgba(236, 72, 153, 0.5);
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             font-size: 14px;
@@ -431,7 +473,8 @@
         @keyframes saFadeIn { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes saFadeOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(14px); opacity: 0; } }
         @media (max-width: 639px) {
-            #toast { left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); min-width: 0; }
+            #toast { left: 16px; right: 16px; bottom: calc(5.4rem + env(safe-area-inset-bottom)); min-width: 0; }
+            body.help-chat-open { overflow: hidden; }
             /* verhindert Auto-Zoom auf iOS beim Fokussieren von Feldern */
             input, select, textarea { font-size: 16px !important; }
         }
@@ -1531,6 +1574,37 @@
         </article>
     </div>
 
+    <div id="helpChat" class="help-chat">
+        <section id="helpChatPanel" class="help-panel" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="helpChatTitle" tabindex="-1">
+            <div class="help-chat-head">
+                <span class="w-9 h-9 rounded-xl bg-accent/20 text-accent inline-flex items-center justify-center" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
+                <div class="min-w-0 flex-1">
+                    <h2 id="helpChatTitle" class="text-sm font-extrabold text-white">Hilfe-Chat</h2>
+                    <p class="text-[11px] text-zinc-400">Antworten aus dem Shop – ohne externe KI</p>
+                </div>
+                <button type="button" class="icon-btn" onclick="closeHelpChat()" aria-label="Hilfe-Chat schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <div id="helpChatLog" class="help-chat-log" aria-live="polite"></div>
+            <div id="helpChatQuick" class="help-quick no-scrollbar" role="group" aria-label="Häufige Themen">
+                <button type="button" data-topic="payment" aria-pressed="false">Zahlung (PayPal &amp; Krypto/Solana)</button>
+                <button type="button" data-topic="crypto" aria-pressed="false">Krypto-Zahlung Schritt für Schritt</button>
+                <button type="button" data-topic="delivery" aria-pressed="false">Lieferung/Auto-Lieferung</button>
+                <button type="button" data-topic="products" aria-pressed="false">Produkte &amp; Preise</button>
+                <button type="button" data-topic="balance" aria-pressed="false">Guthaben aufladen</button>
+                <button type="button" data-topic="account" aria-pressed="false">Konto/Login</button>
+                <button type="button" data-topic="contact" aria-pressed="false">Kontakt/Links</button>
+            </div>
+            <form id="helpChatForm" class="help-form">
+                <label for="helpChatInput" class="sr-only">Frage an den Hilfe-Chat</label>
+                <input id="helpChatInput" class="field !py-2.5" type="text" maxlength="240" autocomplete="off" placeholder="Frage eingeben …">
+                <button type="submit" class="btn btn-primary shrink-0" aria-label="Frage senden"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
+            </form>
+        </section>
+        <button type="button" id="helpChatToggle" class="help-launcher" onclick="toggleHelpChat()" aria-expanded="false" aria-controls="helpChatPanel" aria-label="Hilfe-Chat öffnen">
+            <i class="fa-solid fa-comments" aria-hidden="true"></i>
+        </button>
+    </div>
+
     <!-- ==================== SCRIPT ENGINE ==================== -->
     <script>
         let cart = JSON.parse(localStorage.getItem('store_cart_items') || '[]');
@@ -2040,6 +2114,7 @@
             for (const id of ['agbModal', 'widerrufModal', 'datenschutzModal', 'productDetailModal', 'authModal', 'impressumModal', 'paymentModal', 'dashboardModal']) {
                 if (document.getElementById(id).classList.contains('active')) return closeModalById(id);
             }
+            if (document.getElementById('helpChat') && document.getElementById('helpChat').classList.contains('is-open')) closeHelpChat();
         });
 
         /* ---------- Sprache & Währung ---------- */
@@ -3392,6 +3467,184 @@
             applyFilters();
         })();
         trackVisitorIP();
+
+        /* ---------- Hilfe-Chat (lokal, ohne externe KI) ---------- */
+        const HELP_TOPICS = [
+            {
+                id: 'crypto',
+                label: 'Krypto-Zahlung Schritt für Schritt',
+                keywords: ['krypto', 'crypto', 'solana', 'phantom', 'usdc', 'sol', 'qr', 'qrcode', 'wallet', 'blockchain', 'on-chain', 'onchain', 'referenz', 'schritt', 'anleitung'],
+                text: 'So bezahlst du mit Solana – für jedes Produkt, auch „All-in-One Media Access“:\n1. Melde dich an.\n2. Lege den Artikel in den Warenkorb und öffne die Kasse.\n3. Trag deine E-Mail ein und bestätige AGB sowie den Hinweis zum Widerruf.\n4. Wähle „Krypto (Solana via Phantom)“ und danach SOL oder USDC.\n5. Tippe auf „Mit Krypto bezahlen“. Der Euro-Betrag wird live umgerechnet und 30 Minuten reserviert.\n6. Zahle mit Phantom im Browser oder per QR-Code in der Wallet-App. Nur so steckt die Referenz in der Transaktion, an der wir die Zahlung erkennen.\n7. Nach der Bestätigung on-chain wird die Bestellung automatisch freigeschaltet. Den Status siehst du im Kundenportal unter „Bestellungen“. Die Netzwerkgebühr trägst du selbst.'
+            },
+            {
+                id: 'balance',
+                label: 'Guthaben aufladen',
+                keywords: ['guthaben', 'aufladen', 'aufladung', 'topup', 'top-up', 'balance', 'gutschrift'],
+                text: 'Guthaben kaufst du im Kundenportal unter „Guthaben“. Du musst angemeldet sein. Wähle einen Betrag zwischen 5 € und 500 € und bezahle ihn per PayPal oder per Krypto (SOL oder USDC). Gutgeschrieben wird das Guthaben erst nach bestätigter Zahlung, nicht schon beim Auswählen des Betrags. Danach kannst du an der Kasse „Account-Guthaben“ wählen. Für „All-in-One Media Access“ ist Guthaben nicht verfügbar.'
+            },
+            {
+                id: 'delivery',
+                label: 'Lieferung/Auto-Lieferung',
+                keywords: ['lieferung', 'liefern', 'automatisch', 'zugang', 'download', 'freigeschaltet', 'bestellung', 'tuning termin'],
+                text: 'Nach bestätigter Zahlung liegt der Zugang im Kundenportal unter „Bestellungen“. Bei Krypto passiert das automatisch, sobald die Transaktion on-chain bestätigt ist. „All-in-One Media Access“ wird als Sofort-Link freigeschaltet. Bei PC-Tuning und Custom Website melden wir uns per E-Mail oder Discord zur Terminabsprache, in der Regel innerhalb von 24 Stunden.'
+            },
+            {
+                id: 'products',
+                label: 'Produkte & Preise',
+                keywords: ['produkt', 'produkte', 'preis', 'preise', 'kosten', 'euro', 'gutschein', 'coupon', 'rabatt', 'val3ntino', 'cent50', 'basic', 'pro', 'website', 'media', 'tuning'],
+                text: 'Aktuelle Preise in Euro:\n• All-in-One Media Access – 0,50 €\n• Basic PC-Tuning – 15 €\n• Pro Tuning (0 Delay) – 35 €\n• Custom Website Build – 25 €\nDie Anzeige kannst du auf USD, GBP oder CHF umstellen; abgerechnet wird in Euro. Gutscheine an der Kasse: VAL3NTINO (−5 €) und CENT50 (−0,50 €).'
+            },
+            {
+                id: 'account',
+                label: 'Konto/Login',
+                keywords: ['konto', 'login', 'anmelden', 'registr', 'passwort', 'firebase', 'google', 'apple', 'portal', 'kundenportal', 'profil'],
+                text: 'Das Konto läuft über Firebase: E-Mail und Passwort, Google oder Apple. Ein neues Passwort bekommst du als Link per E-Mail. Nach dem Login öffnest du oben das Kundenportal für Bestellungen, Guthaben und Profil. Krypto, Guthaben und die serverseitige PayPal-Zahlung brauchen ein angemeldetes Konto.'
+            },
+            {
+                id: 'contact',
+                label: 'Kontakt/Links',
+                keywords: ['kontakt', 'linktree', 'links', 'discord', 'email', 'e-mail', 'mail', 'support', 'hilfe', 'impressum', 'agb'],
+                text: 'Alle Links stehen gesammelt auf Linktree. Discord und E-Mail erreichst du auch direkt. Impressum, Datenschutz, AGB und Widerruf findest du unten auf dieser Seite.',
+                links: [
+                    { href: 'https://linktr.ee/val3nt1no', label: 'Alle Links (Linktree)' },
+                    { href: 'https://discord.gg/YE2jHSwM7', label: 'Discord' },
+                    { href: 'mailto:L@valentinolopez.de', label: 'L@valentinolopez.de' }
+                ]
+            },
+            {
+                id: 'payment',
+                label: 'Zahlung (PayPal & Krypto/Solana)',
+                keywords: ['zahlung', 'bezahlen', 'bezahlung', 'paypal', 'karte', 'sepa', 'lastschrift', 'visa', 'kasse', 'checkout', 'rabattcode'],
+                text: 'An der Kasse zahlst du mit PayPal (im PayPal-Fenster auch Karte oder SEPA), mit Account-Guthaben oder mit Krypto über Solana (SOL oder USDC, Phantom). Krypto gibt es für jedes Produkt, auch für „All-in-One Media Access“. Guthaben ist nur für dieses Media-Produkt nicht verfügbar. Den Preis prüft der Server in Euro. Rabattcodes: VAL3NTINO (−5 €) und CENT50 (−0,50 €).'
+            }
+        ];
+        const HELP_FALLBACK = {
+            text: 'Dazu habe ich keine passende Kurzantwort. Über Alle Links erreichst du Discord und die E-Mail – dort helfen wir dir weiter.',
+            links: [
+                { href: 'https://linktr.ee/val3nt1no', label: 'Alle Links (Linktree)' },
+                { href: 'mailto:L@valentinolopez.de', label: 'E-Mail schreiben' }
+            ]
+        };
+        function helpNorm(s) {
+            return String(s || '').toLowerCase()
+                .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+                .replace(/[^a-z0-9]+/g, ' ').trim();
+        }
+        function matchHelpTopic(query) {
+            const n = helpNorm(query);
+            if (!n) return null;
+            if (/^(hallo|hi|hey|moin|servus|danke|guten tag|guten morgen)\b/.test(n)) return { greet: true };
+            let best = null, bestScore = 0;
+            const tokens = new Set(n.split(' ').filter(Boolean));
+            HELP_TOPICS.forEach(topic => {
+                let score = 0;
+                topic.keywords.forEach(raw => {
+                    const k = helpNorm(raw);
+                    if (!k) return;
+                    const hit = k.includes(' ') ? n.includes(k) : tokens.has(k);
+                    if (hit) score += k.length >= 6 ? 3 : 2;
+                });
+                if (score > bestScore) { best = topic; bestScore = score; }
+            });
+            return bestScore >= 2 ? best : null;
+        }
+        function appendHelpMessage(role, payload) {
+            const log = document.getElementById('helpChatLog');
+            const bubble = document.createElement('div');
+            bubble.className = 'help-msg ' + (role === 'user' ? 'is-user' : 'is-bot');
+            const text = document.createElement('p');
+            text.textContent = payload.text || '';
+            bubble.appendChild(text);
+            (payload.links || []).forEach(link => {
+                const a = document.createElement('a');
+                a.href = link.href;
+                a.textContent = link.label;
+                if (!link.href.startsWith('mailto:')) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+                a.style.display = 'inline-block';
+                a.style.marginTop = '0.45rem';
+                a.style.marginRight = '0.75rem';
+                bubble.appendChild(a);
+            });
+            log.appendChild(bubble);
+            log.scrollTop = log.scrollHeight;
+        }
+        function showHelpTopic(topic, fromUser) {
+            if (fromUser) appendHelpMessage('user', { text: fromUser });
+            document.querySelectorAll('#helpChatQuick button').forEach(b => b.setAttribute('aria-pressed', b.dataset.topic === topic.id ? 'true' : 'false'));
+            appendHelpMessage('bot', topic);
+        }
+        function answerHelpQuery(query) {
+            const q = query.trim();
+            if (!q) return;
+            const hit = matchHelpTopic(q);
+            if (hit && hit.greet) {
+                appendHelpMessage('user', { text: q });
+                appendHelpMessage('bot', { text: 'Hallo! Wähl ein Thema über den Buttons oder frag zum Beispiel nach PayPal, Phantom, Lieferung oder Gutscheinen.' });
+                return;
+            }
+            if (hit) showHelpTopic(hit, q);
+            else {
+                appendHelpMessage('user', { text: q });
+                appendHelpMessage('bot', HELP_FALLBACK);
+                document.querySelectorAll('#helpChatQuick button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+            }
+        }
+        let helpChatGreeted = false;
+        function openHelpChat() {
+            const root = document.getElementById('helpChat');
+            const panel = document.getElementById('helpChatPanel');
+            const btn = document.getElementById('helpChatToggle');
+            if (root.classList.contains('is-open')) return;
+            root.classList.add('is-open');
+            document.body.classList.add('help-chat-open');
+            panel.setAttribute('aria-hidden', 'false');
+            btn.setAttribute('aria-expanded', 'true');
+            btn.setAttribute('aria-label', 'Hilfe-Chat schließen');
+            if (!helpChatGreeted) {
+                helpChatGreeted = true;
+                appendHelpMessage('bot', { text: 'Hallo! Ich bin der Hilfe-Chat von Val3ntino. Ich kenne Zahlung, Krypto mit Phantom, Lieferung, Produkte, Guthaben und das Konto. Wähl ein Thema oder schreib deine Frage.' });
+            }
+            panel.focus();
+        }
+        function closeHelpChat() {
+            const root = document.getElementById('helpChat');
+            const panel = document.getElementById('helpChatPanel');
+            const btn = document.getElementById('helpChatToggle');
+            if (!root.classList.contains('is-open')) return;
+            root.classList.remove('is-open');
+            document.body.classList.remove('help-chat-open');
+            panel.setAttribute('aria-hidden', 'true');
+            btn.setAttribute('aria-expanded', 'false');
+            btn.setAttribute('aria-label', 'Hilfe-Chat öffnen');
+            btn.focus();
+        }
+        function toggleHelpChat() {
+            document.getElementById('helpChat').classList.contains('is-open') ? closeHelpChat() : openHelpChat();
+        }
+        window.toggleHelpChat = toggleHelpChat;
+        window.closeHelpChat = closeHelpChat;
+        document.getElementById('helpChatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('helpChatInput');
+            const q = input.value;
+            input.value = '';
+            if (!document.getElementById('helpChat').classList.contains('is-open')) openHelpChat();
+            answerHelpQuery(q);
+        });
+        document.getElementById('helpChatQuick').addEventListener('click', (e) => {
+            const b = e.target.closest('button[data-topic]');
+            if (!b) return;
+            const topic = HELP_TOPICS.find(t => t.id === b.dataset.topic);
+            if (topic) showHelpTopic(topic, topic.label);
+        });
+        document.getElementById('helpChatPanel').addEventListener('keydown', (e) => {
+            if (e.key !== 'Tab') return;
+            const focusable = [...document.getElementById('helpChatPanel').querySelectorAll('button, a[href], input')].filter(el => !el.disabled);
+            if (!focusable.length) return;
+            const first = focusable[0], last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        });
     </script>
 </body>
 </html>
