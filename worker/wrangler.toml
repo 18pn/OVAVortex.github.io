@@ -19,6 +19,9 @@ ETH_ADDRESS = ""                # öffentliche Empfangsadresse, manuelle ETH-Bes
 BTC_ADDRESS = ""                # öffentliche Empfangsadresse, manuelle BTC-Bestätigung
 # VAPID_PUBLIC_KEY bleibt leer, bis Web Push eingerichtet ist (Secret: VAPID_PRIVATE_KEY)
 VAPID_PUBLIC_KEY = ""
+DISCORD_GUILD_ID = "1557536531567214672"
+DISCORD_TICKET_CATEGORY_ID = ""   # optionale Kategorie-ID für private Ticket-Kanäle
+DISCORD_SUPPORT_ROLE_ID = ""      # optionale Rollen-ID, die Tickets sehen darf
 
 # Geheimnisse (NICHT hier eintragen) – per:
 #   npx wrangler secret put GOOGLE_SERVICE_ACCOUNT   (kompletter JSON-Inhalt des Dienstkonto-Schlüssels)
@@ -27,6 +30,9 @@ VAPID_PUBLIC_KEY = ""
 #   optional: npx wrangler secret put VAPID_PRIVATE_KEY
 #   optional: npx wrangler secret put BACKUP_WEBHOOK   (URL, die den nächtlichen Zähler empfängt)
 #   Pflicht für PDF-Downloads: npx wrangler secret put DOWNLOAD_TOKEN_SECRET
+#   optional: npx wrangler secret put DISCORD_WEBHOOK_URL   (Kauf/Restock/Newsletter, nicht öffentlich)
+#   für Tickets: npx wrangler secret put DISCORD_PUBLIC_KEY
+#                npx wrangler secret put DISCORD_BOT_TOKEN
 
 # Cover und PDFs. Nicht ins Git. Nach `npx wrangler kv namespace create ASSETS`
 # die ausgegebene id unten einsetzen (die Zeile "id = ...").

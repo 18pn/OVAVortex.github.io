@@ -168,4 +168,15 @@ ok((await call('adminRevokeAdmin', { email: 'l@valentinolopez.de' }, adminT)).st
 const sales = await worker.fetch(new Request('https://api.example/api/recentSales', { method: 'POST', headers: { Origin: 'https://valentinolopez.de', 'Content-Type': 'application/json' }, body: '{}' }), env);
 const salesBody = await sales.json();
 ok(sales.status === 200 && Array.isArray(salesBody.sales) && !JSON.stringify(salesBody).includes('@'), 'Verkäufe ohne E-Mail');
+const ping = await worker.fetch(new Request('https://api.example/discord/interactions', { method: 'POST', body: '{}' }), env);
+ok(ping.status === 401, 'Discord ohne Signatur -> 401');
+const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
+const pub = new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey));
+env.DISCORD_PUBLIC_KEY = [...pub].map(b => b.toString(16).padStart(2, '0')).join('');
+const pingBody = JSON.stringify({ type: 1 });
+const ts = String(Math.floor(Date.now() / 1000));
+const sig = new Uint8Array(await crypto.subtle.sign({ name: 'Ed25519' }, pair.privateKey, new TextEncoder().encode(ts + pingBody)));
+const sigHex = [...sig].map(b => b.toString(16).padStart(2, '0')).join('');
+const pong = await worker.fetch(new Request('https://api.example/discord/interactions', { method: 'POST', headers: { 'X-Signature-Ed25519': sigHex, 'X-Signature-Timestamp': ts, 'Content-Type': 'application/json' }, body: pingBody }), env);
+ok(pong.status === 200 && (await pong.json()).type === 1, 'Discord PING -> PONG');
 process.exit(fail ? 1 : 0);

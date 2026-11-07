@@ -12,6 +12,7 @@ import { buildDelivery } from './delivery.js';
 import { randomBase32, verifyTotp } from './totp.js';
 import { GUIDES, PLACEHOLDER_PNG, coverKey, pdfKey, pdfFilename, readAsset, readAssetMeta } from './guides.js';
 import { lookupUserByEmail, setAdminClaim } from './identity.js';
+import { notifyPaidOrder, notifyRestock, notifyNewsletter, handleDiscordInteraction } from './discord.js';
 
 const CRYPTO_EXPIRY_MS = 30 * 60 * 1000;
 const MIN_PAYMENT_CENTS = 50;
@@ -148,6 +149,7 @@ async function markPaidAndFulfill(env, orderId, { signature = null, paypalCaptur
   if (!result.already && result.order.kind === 'order') {
     await deliverOrder(env, orderId);
     await countReferralOrder(env, result.order.refCode, result.order.uid);
+    await notifyPaidOrder(env, orderId, result.order);
   }
   return result;
 }
@@ -470,6 +472,10 @@ const routes = {
     const name = str(b.name, 120);
     const blurb = str(b.blurb, 600);
     const active = b.active !== false;
+    const prevShop = await fsGet(env, `shopProducts/${id}`);
+    const prevCat = await fsGet(env, `catalog/${id}`);
+    const prevStock = prevShop && Number.isFinite(Number(prevShop.data.stock)) ? Number(prevShop.data.stock) : (prevCat && Number.isFinite(Number(prevCat.data.stock)) ? Number(prevCat.data.stock) : null);
+    const prevActive = prevShop ? prevShop.data.active !== false : (prevCat ? prevCat.data.active !== false : true);
     const writes = [writeDoc(env, `shopProducts/${id}`, { name, blurb, stock, active }, { serverTime: ['updatedAt'] })];
     if (b.priceCents != null && b.priceCents !== '') {
       const priceCents = Math.round(Number(b.priceCents));
@@ -485,6 +491,7 @@ const routes = {
       }, { serverTime: ['updatedAt'] }));
     }
     await fsCommit(env, writes);
+    if (prevStock !== null && (prevStock === 0 || prevActive === false) && stock > 0 && active) await notifyRestock(env, name || id);
     return { ok: true, id };
   },
 
@@ -637,6 +644,15 @@ const routes = {
     await assertAdmin(env, user, b);
     const rows = await fsList(env, 'subscribers', 200);
     return { subscribers: rows.map(r => ({ email: r.data.email || r.id })) };
+  },
+
+  async adminSetDiscordWebhook(env, user, b) {
+    if (!isOwner(user)) throw new HttpError(403, 'Nur der Inhaber speichert die Webhook-Adresse.');
+    await assertAdmin(env, user, b);
+    const url = str(b.webhookUrl, 300).trim();
+    if (url && !/^https:\/\/(discord\.com|discordapp\.com)\/api\/webhooks\/\d+\/[\w.-]+$/.test(url)) throw new HttpError(400, 'Das ist keine Discord-Webhook-Adresse.');
+    await fsCommit(env, [writeDoc(env, 'privateConfig/discord', { webhookUrl: url }, { merge: true })]);
+    return { ok: true, stored: !!url };
   },
 
   async adminListReferrals(env, user, b) {
@@ -807,6 +823,7 @@ async function publicShop(name, request, env, cors) {
     const cur = await fsGet(env, `subscribers/${id}`);
     if (cur) return json({ ok: true, duplicate: true }, 200, cors);
     await fsCommit(env, [writeDoc(env, `subscribers/${id}`, { email }, { serverTime: ['createdAt'], exists: false })]);
+    await notifyNewsletter(env);
     return json({ ok: true, duplicate: false }, 200, cors);
   }
   if (name === 'trackReferral') {
@@ -881,7 +898,11 @@ export default {
     const cors = corsHeaders(env, request);
     if (request.method === 'OPTIONS') return new Response(null, { status: cors['Access-Control-Allow-Origin'] ? 204 : 403, headers: cors });
     const url = new URL(request.url);
-    if (url.pathname === '/health') return json({ ok: true, manual: { ETH: env.ETH_ADDRESS || '', BTC: env.BTC_ADDRESS || '' }, push: !!env.VAPID_PUBLIC_KEY }, 200, cors);
+    if (url.pathname === '/health') return json({ ok: true, manual: { ETH: env.ETH_ADDRESS || '', BTC: env.BTC_ADDRESS || '' }, push: !!env.VAPID_PUBLIC_KEY, discord: !!env.DISCORD_PUBLIC_KEY }, 200, cors);
+    if (url.pathname === '/discord/interactions' && request.method === 'POST') {
+      const rawBody = await request.text();
+      return handleDiscordInteraction(request, env, rawBody);
+    }
     const coverMatch = url.pathname.match(/^\/asset\/cover\/([a-z0-9_-]+)$/);
     if (coverMatch && request.method === 'GET') {
       const asset = await readAssetMeta(env, coverKey(coverMatch[1]));

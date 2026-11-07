@@ -16,14 +16,32 @@
     <meta property="og:title" content="Val3ntino | Official Store & Services">
     <meta property="og:description" content="PC-Tuning, Websites und Skripte. Bezahlen mit PayPal, Karte, Guthaben oder Solana.">
     <meta property="og:url" content="https://valentinolopez.de/">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1200&auto=format&fit=crop">
+    <meta property="og:image" id="ogImage" content="https://valentinolopez.de/icon.svg">
+    <meta property="og:image:alt" content="Val3ntino">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Val3ntino | Official Store & Services">
     <meta name="twitter:description" content="PC-Tuning, Websites und Skripte. PayPal, Karte, Guthaben oder Solana.">
-    <meta name="twitter:image" content="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1200&auto=format&fit=crop">
+    <meta name="twitter:image" id="twitterImage" content="https://valentinolopez.de/icon.svg">
     <meta name="theme-color" content="#09090b">
     <meta name="color-scheme" content="dark">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23ec4899'/%3E%3Cstop offset='1' stop-color='%23d946ef'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='900' font-size='34' text-anchor='middle' fill='white'%3EV%3C/text%3E%3C/svg%3E">
+    <link id="siteIcon" rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.svg">
+    <script>
+        (function () {
+            var brand = 'https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/brand';
+            var probe = new Image();
+            probe.onload = function () {
+                if (probe.naturalWidth <= 48) return;
+                var icon = document.getElementById('siteIcon');
+                if (icon) { icon.href = brand; icon.type = 'image/png'; }
+                var og = document.getElementById('ogImage');
+                var tw = document.getElementById('twitterImage');
+                if (og && !og.getAttribute('data-cms')) og.content = brand;
+                if (tw) tw.content = brand;
+            };
+            probe.src = brand;
+        })();
+    </script>
 
     <!-- Verbindungen früh aufbauen -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -753,12 +771,13 @@
                 <span class="logo-pill">Performance</span>
             </div>
         </div>
-        <a id="discordWidget" data-discord href="https://discord.gg/KZgBuDzRx7" target="_blank" rel="noopener noreferrer" class="card mt-4 p-4 sm:p-5 flex items-center justify-between gap-4 hover:border-pink-400/40 transition">
+        <a id="discordWidget" data-discord href="https://discord.gg/KZgBuDzRx7" target="_blank" rel="noopener noreferrer" class="card mt-4 p-4 sm:p-5 flex items-center justify-between gap-4 hover:border-pink-400/40 transition" aria-label="Discord-Server beitreten">
             <span class="flex items-center gap-3 min-w-0">
                 <span class="w-11 h-11 shrink-0 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center" aria-hidden="true"><i class="fa-brands fa-discord text-lg"></i></span>
                 <span class="min-w-0">
                     <span class="block text-sm font-extrabold text-white">Discord beitreten</span>
-                    <span class="block text-xs text-zinc-400 truncate">Community, Support und Updates. Der Link ist im Admin änderbar.</span>
+                    <span class="block text-xs text-zinc-400">Community, Support und Updates. Der Link ist im Admin änderbar.</span>
+                    <span id="socialProof" class="block text-xs text-zinc-500 mt-1">Bezahlte Käufe erscheinen dezent als Hinweis.</span>
                 </span>
             </span>
             <span class="btn btn-primary shrink-0 !py-2">Beitreten</span>
@@ -924,7 +943,7 @@
             <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="krypto-einsteiger-2026" data-category="guides" data-price="19.90" data-name="Krypto für Einsteiger 2026: Wallet, Sicherheit & erste Schritte" data-desc="Verstehe Wallets, Solana und Phantom, ohne blind ins Risiko zu gehen. Mit sicheren Transferabläufen, Betrugswarnungen, Glossar und Zahlungs-Checkliste.">
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-violet-950/50 via-zinc-900 to-saCard border-b border-saBorder overflow-hidden">
-                        <img src="https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/krypto-einsteiger-2026" alt="Cover: Krypto für Einsteiger 2026" class="absolute inset-0 h-full w-full object-cover">
+                        <img src="https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/krypto-einsteiger-2026" alt="Cover: Krypto für Einsteiger 2026" width="640" height="360" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover">
                         <div class="relative z-10 p-4 flex justify-between"><span class="chip bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">PDF</span></div>
                     </div>
                     <div class="p-5">
@@ -947,7 +966,7 @@
             <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="discord-server-playbook" data-category="guides" data-price="24.90" data-name="Discord-Server aufbauen & monetarisieren" data-desc="Baue eine strukturierte Community mit sicheren Rollen, hilfreichen Formaten und nachvollziehbarem Bezahlmodell. Inklusive Textvorlagen, 30-Tage-Startplan und Launch-Checkliste.">
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-indigo-950/50 via-zinc-900 to-saCard border-b border-saBorder overflow-hidden">
-                        <img src="https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/discord-server-playbook" alt="Cover: Discord-Server aufbauen" class="absolute inset-0 h-full w-full object-cover">
+                        <img src="https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/discord-server-playbook" alt="Cover: Discord-Server aufbauen" width="640" height="360" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover">
                         <div class="relative z-10 p-4 flex justify-between"><span class="chip bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">PDF</span></div>
                     </div>
                     <div class="p-5">
@@ -970,7 +989,7 @@
             <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="digitale-produkte-business-guide" data-category="guides" data-price="24.90" data-name="Mit digitalen Produkten Geld verdienen: Von der Nische zum ersten Verkauf" data-desc="Entwickle ein nützliches Downloadprodukt statt eines leeren Einkommensversprechens. Mit Nachfracheprüfung, Produktion, Preisrechnung, Marketing sowie Zahlung und Lieferung per PayPal oder Krypto.">
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-fuchsia-950/40 via-zinc-900 to-saCard border-b border-saBorder overflow-hidden">
-                        <img src="https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/digitale-produkte-business-guide" alt="Cover: Digitale Produkte" class="absolute inset-0 h-full w-full object-cover">
+                        <img src="https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/digitale-produkte-business-guide" alt="Cover: Digitale Produkte" width="640" height="360" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover">
                         <div class="relative z-10 p-4 flex justify-between"><span class="chip bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">PDF</span></div>
                     </div>
                     <div class="p-5">
@@ -1845,9 +1864,15 @@
                             <h3 class="text-sm font-extrabold text-white">Empfehlungen</h3>
                             <div id="referralAdminList" class="text-sm text-zinc-300 space-y-1"></div>
                         </div>
-                        <form class="card p-4 sm:p-6" onsubmit="event.preventDefault(); saveSalesToggle();">
+                        <form class="card p-4 sm:p-6 space-y-3" onsubmit="event.preventDefault(); saveSalesToggle();">
                             <label class="flex items-center gap-2 text-sm text-zinc-200"><input id="salesPopOn" type="checkbox" class="accent-pink-500" checked> Verkaufs-Hinweise aus echten Bestellungen zeigen</label>
-                            <button class="btn btn-secondary mt-3" type="submit">Speichern</button>
+                            <label class="flex items-center gap-2 text-sm text-zinc-200"><input id="discordNotify" type="checkbox" class="accent-pink-500" checked> Discord-Webhook für Käufe, Restock und Newsletter</label>
+                            <div>
+                                <label class="field-label" for="discordWebhook">Webhook-URL, nur wenn kein Secret gesetzt ist</label>
+                                <input id="discordWebhook" type="password" autocomplete="off" class="field" placeholder="https://discord.com/api/webhooks/…">
+                            </div>
+                            <p class="text-xs text-zinc-500">Bevorzugt bleibt die Adresse das Secret DISCORD_WEBHOOK_URL. Dieses Feld landet nicht im öffentlichen siteSettings, sondern nur für den Worker. Ein Eintrag discordWebhookUrl in den Einstellungen würde dagegen öffentlich lesbar sein.</p>
+                            <button class="btn btn-secondary" type="submit">Speichern</button>
                         </form>
                     </div>
                     <div id="admBox-studio" class="hidden card p-4 sm:p-6 space-y-6" role="tabpanel">
@@ -4457,8 +4482,12 @@
         }
         async function saveSalesToggle() {
             try {
-                await window.callServer('adminUpsert', { collection: 'siteSettings', id: 'main', data: { showSalesPop: document.getElementById('salesPopOn').checked } });
-                window.salesPopOn = document.getElementById('salesPopOn').checked;
+                const data = { showSalesPop: document.getElementById('salesPopOn').checked, discordNotify: document.getElementById('discordNotify').checked };
+                await window.callServer('adminUpsert', { collection: 'siteSettings', id: 'main', data });
+                window.salesPopOn = data.showSalesPop;
+                const hook = document.getElementById('discordWebhook').value.trim();
+                if (hook) await window.callServer('adminSetDiscordWebhook', { webhookUrl: hook });
+                document.getElementById('discordWebhook').value = '';
                 showToast('Gespeichert.');
             } catch (e) { showToast(friendlyErr(e)); }
         }
@@ -4757,6 +4786,8 @@
             setIfIdle('legalWithdrawal', s.widerrufDe || '');
             const salesBox = document.getElementById('salesPopOn');
             if (salesBox && document.activeElement !== salesBox) salesBox.checked = s.showSalesPop !== false;
+            const notifyBox = document.getElementById('discordNotify');
+            if (notifyBox && document.activeElement !== notifyBox) notifyBox.checked = s.discordNotify !== false;
             if (s.accent && document.activeElement !== document.getElementById('themeAccent')) {
                 const el = document.getElementById('themeAccent'); if (el) el.value = s.accent;
             }
@@ -4878,7 +4909,7 @@
             }
             if (settings.ogImage) {
                 const ogi = document.querySelector('meta[property="og:image"]');
-                if (ogi) ogi.setAttribute('content', settings.ogImage);
+                if (ogi) { ogi.setAttribute('content', settings.ogImage); ogi.setAttribute('data-cms', '1'); }
             }
             showLegalCustom('legalPrivacyCustom', settings.privacyDe);
             showLegalCustom('legalTermsCustom', settings.termsDe);
@@ -5057,6 +5088,8 @@
                 fetch(window.WORKER_URL + '/api/recentSales', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: location.origin }, body: '{}' })
                     .then(r => r.json()).then(j => {
                         const sales = Array.isArray(j.sales) ? j.sales : [];
+                        const proof = document.getElementById('socialProof');
+                        if (proof && sales.length) proof.textContent = 'Zuletzt bezahlt: ' + sales.slice(0, 3).map(s => s.product).join(' · ');
                         if (!pop || !sales.length) return;
                         let i = 0;
                         const show = () => {
