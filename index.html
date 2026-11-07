@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="https://valentinolopez-api.workers.dev"><!-- an WORKER_URL anpassen -->
+    <link rel="dns-prefetch" href="https://valentinolopez-api.valentinolopez.workers.dev"><!-- an WORKER_URL anpassen -->
     <link rel="dns-prefetch" href="https://www.paypal.com">
     <link rel="preload" as="image" href="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop">
 
@@ -82,7 +82,7 @@
 
         // ===== Server: Cloudflare Worker (siehe Ordner worker/) =====
         // NACH DEM DEPLOY HIER DIE ADRESSE DEINES WORKERS EINTRAGEN (ohne / am Ende):
-        const WORKER_URL = 'https://valentinolopez-api.DEIN-SUBDOMAIN.workers.dev';
+        const WORKER_URL = 'https://valentinolopez-api.valentinolopez.workers.dev';
         window.WORKER_URL = WORKER_URL;
 
         window.callServer = async function(name, data) {
