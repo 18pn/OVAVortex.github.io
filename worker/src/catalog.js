@@ -1,30 +1,35 @@
 // Serverseitiger Produkt- und Preiskatalog (einzige Quelle der Wahrheit). Preise in Euro-Cent.
-// "All-in-One Media Access" ist bewusst NICHT enthalten (keine Krypto-/Guthaben-Zahlung, keine Auslieferung).
+// Krypto gilt für jedes Produkt, auch „All-in-One Media Access“.
 import { HttpError } from './util.js';
 
 export const PRODUCTS = Object.freeze({
   basic: { id: 'basic', name: 'Basic PC-Tuning', priceCents: 1500 },
   pro:   { id: 'pro',   name: 'Pro Tuning (0 Delay)', priceCents: 3500 },
   web:   { id: 'web',   name: 'Custom Website Build', priceCents: 2500 },
+  media: { id: 'media', name: 'All-in-One Media Access', priceCents: 50 },
+  'krypto-einsteiger-2026': { id: 'krypto-einsteiger-2026', name: 'Krypto für Einsteiger 2026: Wallet, Sicherheit & erste Schritte', priceCents: 1990 },
+  'discord-server-playbook': { id: 'discord-server-playbook', name: 'Discord-Server aufbauen & monetarisieren', priceCents: 2490 },
+  'digitale-produkte-business-guide': { id: 'digitale-produkte-business-guide', name: 'Mit digitalen Produkten Geld verdienen: Von der Nische zum ersten Verkauf', priceCents: 2490 },
 });
 
 export const TOPUP_MIN_CENTS = 500;
 export const TOPUP_MAX_CENTS = 50000;
 
-export function priceItems(items) {
+export function priceItems(items, products = PRODUCTS) {
   if (!Array.isArray(items) || items.length === 0 || items.length > 20) throw new HttpError(400, 'Ungültiger Warenkorb.');
   const merged = {};
   for (const it of items) {
     const id = String((it && it.id) || '');
     const qty = Math.floor(Number(it && it.qty));
-    if (!PRODUCTS[id]) throw new HttpError(400, 'Ein Produkt im Warenkorb kann mit dieser Zahlungsart nicht gekauft werden.');
+    if (!products[id]) throw new HttpError(400, 'Ein Produkt im Warenkorb kann mit dieser Zahlungsart nicht gekauft werden.');
     if (!Number.isFinite(qty) || qty < 1 || qty > 20) throw new HttpError(400, 'Ungültige Menge.');
     merged[id] = (merged[id] || 0) + qty;
   }
   const lines = Object.entries(merged).map(([id, qty]) => ({
-    productId: id, name: PRODUCTS[id].name, qty, unitCents: PRODUCTS[id].priceCents, lineCents: PRODUCTS[id].priceCents * qty,
+    productId: id, name: products[id].name, qty, unitCents: products[id].priceCents, lineCents: products[id].priceCents * qty,
+    crypto: products[id].crypto !== false,
   }));
-  return { lines, subtotalCents: lines.reduce((s, l) => s + l.lineCents, 0) };
+  return { lines, subtotalCents: lines.reduce((s, l) => s + l.lineCents, 0), noCrypto: lines.some(l => l.crypto === false) };
 }
 
 export function validateTopUpCents(amountEUR) {

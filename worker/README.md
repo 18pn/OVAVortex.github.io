@@ -85,6 +85,6 @@ In `wrangler.toml` muss `ALLOWED_ORIGINS` `https://valentinolopez.de` enthalten 
 
 ## Sicherheit
 - Kein privater Wallet-Schlüssel, keine Passwörter (Login nur über Firebase Auth). Einziges Geheimnis: Dienstkonto-JSON (+ PayPal-Secret) als Worker-Secret.
-- Preise nur aus `src/catalog.js`; „All-in-One Media Access“ ist nicht enthalten (kein Krypto/Guthaben/automatische Auslieferung).
+- Preise nur aus `src/catalog.js`. Krypto (Solana/Phantom) gilt für alle Produkte inklusive „All-in-One Media Access“. Guthaben bleibt im Shop für dieses Produkt ausgeblendet.
 - Zahlung gilt nur nach Prüfung: PayPal-Capture (Betrag, Währung, custom_id) bzw. on-chain (Referenz, Empfänger, Betrag ≥ 99,9 %, Mint, confirmed, Signatur nur einmal verwendbar).
 - Das Firebase-Admin-Dienstkonto hat Vollzugriff. Optional sicherer: in Google Cloud IAM ein eigenes Dienstkonto nur mit Rolle „Cloud Datastore User“ anlegen und dessen Schlüssel als `GOOGLE_SERVICE_ACCOUNT` nutzen.

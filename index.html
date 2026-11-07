@@ -4,7 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title data-i18n="storeTitle">Val3ntino | Official Store & Services</title>
-    <meta name="description" content="Val3ntino – professionelles Windows-PC-Tuning für minimale Latenz, moderne Websites und individuelle Skripte. Sicher bezahlen mit PayPal, Karte oder Guthaben.">
+    <meta name="description" content="Val3ntino – professionelles Windows-PC-Tuning für minimale Latenz, moderne Websites und individuelle Skripte. Sicher bezahlen mit PayPal, Karte, Guthaben oder Solana.">
+    <link rel="canonical" href="https://valentinolopez.de/">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Val3ntino">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:site_name" content="Val3ntino">
+    <meta property="og:title" content="Val3ntino | Official Store & Services">
+    <meta property="og:description" content="PC-Tuning, Websites und Skripte. Bezahlen mit PayPal, Karte, Guthaben oder Solana.">
+    <meta property="og:url" content="https://valentinolopez.de/">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1200&auto=format&fit=crop">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Val3ntino | Official Store & Services">
+    <meta name="twitter:description" content="PC-Tuning, Websites und Skripte. PayPal, Karte, Guthaben oder Solana.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1200&auto=format&fit=crop">
     <meta name="theme-color" content="#09090b">
     <meta name="color-scheme" content="dark">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23ec4899'/%3E%3Cstop offset='1' stop-color='%23d946ef'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='900' font-size='34' text-anchor='middle' fill='white'%3EV%3C/text%3E%3C/svg%3E">
@@ -62,7 +78,7 @@
             updateProfile
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import {
-            getFirestore, doc, getDoc, collection, query, where, limit, onSnapshot
+            getFirestore, doc, getDoc, setDoc, collection, query, where, limit, onSnapshot
         } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -79,6 +95,22 @@
         const auth = getAuth(app);
         window.firebaseAuth = auth;
         const db = getFirestore(app);
+        // Bestand/Texte aus Firestore (Regeln: shopProducts lesbar). Schreiben nur über den Worker.
+        onSnapshot(collection(db, 'shopProducts'), (qs) => {
+            const map = {};
+            qs.forEach(d => { map[d.id] = d.data(); });
+            window.shopProducts = map;
+            if (typeof window.applyShopProducts === 'function') window.applyShopProducts();
+        }, () => {});
+        ['siteSettings', 'catalog', 'reviews', 'posts', 'faqs', 'partners', 'bundles'].forEach((name) => {
+            onSnapshot(collection(db, name), (qs) => {
+                window.cms = window.cms || {};
+                const map = {};
+                qs.forEach((d) => { map[d.id] = d.data(); });
+                window.cms[name] = map;
+                if (typeof window.applyPublicCms === 'function') window.applyPublicCms();
+            }, () => {});
+        });
 
         // ===== Server: Cloudflare Worker (siehe Ordner worker/) =====
         // NACH DEM DEPLOY HIER DIE ADRESSE DEINES WORKERS EINTRAGEN (ohne / am Ende):
@@ -109,6 +141,24 @@
         // Gutscheine verwalten nur über den Worker (prüft Custom Claim admin==true)
         window.adminSaveCoupon = (code, valueCents) => window.callServer('adminSaveCoupon', { code, valueCents, active: true });
         window.adminDeleteCoupon = (code) => window.callServer('adminDeleteCoupon', { code });
+        window.persistHelpChat = async (messages) => {
+            const slice = (messages || []).slice(-40);
+            try { localStorage.setItem('help_chat_v1', JSON.stringify(slice)); } catch (e) {}
+            const u = auth.currentUser;
+            if (!u) return;
+            try { await setDoc(doc(db, 'supportChats', u.uid), { messages: slice, updatedAt: Date.now() }); } catch (e) {}
+        };
+        window.loadHelpChat = async () => {
+            let local = [];
+            try { local = JSON.parse(localStorage.getItem('help_chat_v1') || '[]'); } catch (e) {}
+            const u = auth.currentUser;
+            if (!u) return local;
+            try {
+                const s = await getDoc(doc(db, 'supportChats', u.uid));
+                if (s.exists() && Array.isArray(s.data().messages) && s.data().messages.length) return s.data().messages;
+            } catch (e) {}
+            return local;
+        };
 
         let unsubs = [];
         function clearSubs() { unsubs.forEach(u => { try { u(); } catch (e) {} }); unsubs = []; }
@@ -243,7 +293,7 @@
             const adminSidebarBtn = document.getElementById('tabBtnAdmin');
             
             if (user) {
-                authNavBtn.innerHTML = `<i class="fa-solid fa-user-check text-accent text-sm" aria-hidden="true"></i> <span class="hidden sm:inline" data-i18n="dashboard">Kundenportal</span>`;
+                authNavBtn.innerHTML = `<i class="fa-solid fa-user-check text-accent text-sm" aria-hidden="true"></i> <span class="hidden lg:inline" data-i18n="dashboard">Kundenportal</span>`;
                 authNavBtn.setAttribute('aria-label', 'Kundenportal öffnen');
                 authNavBtn.onclick = toggleDashboardModal;
                 document.getElementById('userEmailDisplay').innerText = user.email || '';
@@ -270,7 +320,7 @@
                 window.isAdminClaim = false;
                 clearSubs();
                 window.serverOrders = []; window.adminServerOrders = []; window.serverBalanceCents = null;
-                authNavBtn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket text-sm" aria-hidden="true"></i> <span class="hidden sm:inline" data-i18n="signIn">Anmelden</span>`;
+                authNavBtn.innerHTML = `<i class="fa-solid fa-arrow-right-to-bracket text-sm" aria-hidden="true"></i> <span class="hidden lg:inline" data-i18n="signIn">Anmelden</span>`;
                 authNavBtn.setAttribute('aria-label', 'Anmelden');
                 authNavBtn.onclick = toggleAuthModal;
                 if (adminSidebarBtn) adminSidebarBtn.classList.add('hidden');
@@ -280,17 +330,17 @@
     </script>
     <style type="text/tailwindcss">
         @layer components {
-            .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-150 select-none disabled:opacity-50 disabled:cursor-not-allowed; }
-            .btn-primary { @apply bg-accent text-white shadow-lg shadow-pink-500/20 hover:bg-pink-400 active:bg-pink-600; }
-            .btn-gradient { @apply bg-gradient-to-r from-pink-600 to-accentGlow text-white shadow-lg shadow-pink-500/25 hover:brightness-110; }
-            .btn-secondary { @apply border border-saBorder bg-white/5 text-white hover:border-zinc-600 hover:bg-white/10; }
+            .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 select-none disabled:opacity-50 disabled:cursor-not-allowed; }
+            .btn-primary { @apply bg-accent text-white shadow-lg shadow-pink-500/15 hover:bg-pink-400 hover:shadow-pink-500/30 active:bg-pink-600; }
+            .btn-gradient { @apply bg-gradient-to-r from-pink-600 to-accentGlow text-white shadow-lg shadow-pink-500/20 hover:brightness-110; }
+            .btn-secondary { @apply border border-white/10 bg-white/[0.04] text-white hover:border-pink-400/40 hover:bg-white/[0.08]; }
             .btn-ghost { @apply text-zinc-300 hover:bg-white/5 hover:text-white; }
             .btn-danger { @apply border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20; }
             .icon-btn { @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-white/5 hover:text-white; }
             .field { @apply w-full rounded-xl border border-saBorder bg-saBg px-4 py-3 text-sm text-white placeholder-zinc-500 transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30; }
             .field-sm { @apply rounded-xl border border-saBorder bg-saCard px-2.5 py-2 text-xs font-semibold text-zinc-200 transition hover:border-zinc-600 focus:border-accent focus:outline-none cursor-pointer; }
             .field-label { @apply mb-1.5 block text-xs font-semibold text-zinc-300; }
-            .card { @apply rounded-2xl border border-saBorder bg-saCard; }
+            .card { @apply rounded-2xl border border-white/10 bg-saCard shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]; }
             .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold leading-none; }
             .eyebrow { @apply text-[11px] font-bold uppercase tracking-widest text-zinc-400; }
             .cat-btn { @apply whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-zinc-400 transition hover:bg-saCard hover:text-white; }
@@ -311,12 +361,19 @@
         body {
             background-color: #09090b;
             color: #f4f4f5;
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(217, 70, 239, 0.08) 0%, transparent 60%),
-                radial-gradient(circle at 10% 20%, rgba(236, 72, 153, 0.05) 0%, transparent 40%);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(217, 70, 239, 0.14), transparent 55%),
+                radial-gradient(ellipse 40% 30% at 100% 0%, rgba(56, 189, 248, 0.06), transparent 50%),
+                radial-gradient(ellipse 35% 25% at 0% 20%, rgba(236, 72, 153, 0.07), transparent 45%);
+            background-attachment: fixed;
             min-height: 100vh;
+            overflow-x: clip;
+            line-height: 1.55;
+            text-rendering: optimizeLegibility;
             -webkit-tap-highlight-color: transparent;
         }
+        h1, h2, h3 { letter-spacing: -0.03em; }
+        p { text-wrap: pretty; }
         body.no-scroll { overflow: hidden; }
         :focus-visible { outline: 2px solid #ec4899; outline-offset: 2px; }
         .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
@@ -332,9 +389,129 @@
         }
         #cartDrawer.active { transform: translateX(0); visibility: visible; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .store-banner {
-            background: linear-gradient(180deg, rgba(236, 72, 153, 0.25) 0%, rgba(9, 9, 11, 0.95) 100%), url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop');
+            background:
+                linear-gradient(105deg, rgba(9, 9, 11, 0.2) 0%, rgba(9, 9, 11, 0.72) 48%, rgba(9, 9, 11, 0.92) 100%),
+                radial-gradient(420px 180px at 12% 0%, rgba(236, 72, 153, 0.45), transparent 70%),
+                url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
+            box-shadow: 0 30px 80px -36px rgba(236, 72, 153, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+        .store-banner p { max-width: 38rem; }
+        .hero-motion { position: absolute; inset: -8%; background:
+            radial-gradient(420px 180px at 18% 40%, rgba(236,72,153,.55), transparent 62%),
+            radial-gradient(380px 200px at 78% 20%, rgba(56,189,248,.22), transparent 60%),
+            url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop') center/cover;
+            animation: heroDrift 22s ease-in-out infinite alternate; }
+        .hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .38; }
+        @keyframes heroDrift { from { transform: scale(1) translate3d(0,0,0); } to { transform: scale(1.08) translate3d(-2%, -1%, 0); } }
+        .logo-strip { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+        .logo-pill { padding: .7rem 1rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); color: #e4e4e7; font-weight: 800; letter-spacing: .08em; font-size: .72rem; text-transform: uppercase; }
+        .linktree-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            height: 2.5rem;
+            padding: 0 0.7rem;
+            border-radius: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            transition: border-color .2s ease, background-color .2s ease, transform .2s ease;
+        }
+        .linktree-btn:hover { border-color: rgba(236, 72, 153, 0.55); background: rgba(236, 72, 153, 0.12); }
+        .site-header {
+            background: rgba(9, 9, 11, 0.78);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+        #productsGrid { align-items: stretch; }
+        #productsGrid .product-item {
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 42%), #14141b;
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 40px -32px rgba(0, 0, 0, 0.9);
+            transition: transform .28s cubic-bezier(.16, 1, .3, 1), border-color .28s ease, box-shadow .28s ease;
+        }
+        #productsGrid .product-item.is-featured { border-color: rgba(236, 72, 153, 0.5); }
+        #productsGrid .product-item .h-40 { height: 10.25rem; }
+        @media (hover: hover) and (pointer: fine) {
+            #productsGrid .product-item:hover {
+                transform: translateY(-4px);
+                border-color: rgba(236, 72, 153, 0.45);
+                box-shadow: 0 24px 48px -28px rgba(236, 72, 153, 0.42);
+            }
+        }
+        .pay-panel {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+            border-radius: 1.25rem;
+            padding: 1rem 1rem 1.05rem;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 18px 40px -32px rgba(0, 0, 0, 0.85);
+        }
+        .pay-panel h4 { font-size: 0.95rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .pay-sdk-slot {
+            background: #16161d;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            padding: 0.85rem;
+        }
+        .site-footer { background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 40%), #09090b; }
+        #productsGrid, #main { scroll-margin-top: 5.5rem; }
+        @media (max-width: 767px) {
+            .header-bar { flex-wrap: wrap; row-gap: 0.55rem; }
+            .header-actions { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-start; gap: 0.3rem; }
+            #currencySelect { width: 5.1rem; max-width: none; }
+            #langSelect { width: 3.4rem; max-width: none; }
+            .header-actions .linktree-btn, .header-actions .btn { padding-left: 0.45rem; padding-right: 0.45rem; }
+            .header-actions .btn { padding-left: 0.45rem !important; padding-right: 0.45rem !important; }
+            .linktree-btn, .header-actions .btn { height: 2.35rem; }
+        }
+        .help-chat { position: fixed; z-index: 45; right: 1.15rem; bottom: max(1.15rem, env(safe-area-inset-bottom)); }
+        .help-launcher {
+            width: 3.35rem; height: 3.35rem; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+            background: linear-gradient(160deg, #f472b6, #db2777); color: #fff;
+            box-shadow: 0 12px 30px -12px rgba(236, 72, 153, 0.85);
+            display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .help-launcher:hover { transform: translateY(-2px); }
+        .help-panel {
+            position: absolute; right: 0; bottom: 4.15rem; width: min(24rem, calc(100vw - 2.2rem));
+            height: min(36rem, calc(100dvh - 7.5rem));
+            display: flex; flex-direction: column; overflow: hidden;
+            border-radius: 1.35rem; border: 1px solid rgba(255,255,255,0.1);
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 28%), #121217;
+            box-shadow: 0 24px 60px -28px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.05);
+            transform-origin: bottom right;
+            transform: translateY(10px) scale(0.98); opacity: 0; visibility: hidden; pointer-events: none;
+            transition: transform .22s cubic-bezier(.16,1,.3,1), opacity .22s ease, visibility 0s linear .22s;
+        }
+        .help-chat.is-open .help-panel { transform: none; opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
+        .help-chat-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 0.9rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .help-chat-log { flex: 1; overflow-y: auto; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.65rem; }
+        .help-msg { max-width: 92%; border-radius: 1rem; padding: 0.7rem 0.8rem; font-size: 0.875rem; line-height: 1.5; white-space: pre-wrap; }
+        .help-msg.is-bot { align-self: flex-start; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #e4e4e7; }
+        .help-msg.is-user { align-self: flex-end; background: rgba(236,72,153,0.18); border: 1px solid rgba(236,72,153,0.35); color: #fff; }
+        .help-msg a { color: #f9a8d4; text-decoration: underline; text-underline-offset: 2px; }
+        .help-quick { display: flex; gap: 0.4rem; overflow-x: auto; padding: 0.55rem 0.75rem; border-top: 1px solid rgba(255,255,255,0.06); }
+        .help-quick button {
+            flex: 0 0 auto; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04); color: #f4f4f5; font-size: 0.72rem; font-weight: 700;
+            padding: 0.4rem 0.7rem; transition: border-color .15s ease, background .15s ease;
+        }
+        .help-quick button:hover, .help-quick button[aria-pressed="true"] { border-color: rgba(236,72,153,0.55); background: rgba(236,72,153,0.14); }
+        .help-form { display: flex; gap: 0.45rem; padding: 0.7rem; border-top: 1px solid rgba(255,255,255,0.08); }
+        .help-form input { flex: 1; }
+        @media (max-width: 639px) {
+            .help-chat.is-open .help-panel {
+                position: fixed; left: 0.45rem; right: 0.45rem; top: max(0.45rem, env(safe-area-inset-top));
+                bottom: max(0.45rem, env(safe-area-inset-bottom)); width: auto; height: auto; border-radius: 1.15rem;
+            }
         }
         #toast {
             visibility: hidden;
@@ -348,7 +525,7 @@
             position: fixed;
             z-index: 100;
             right: 24px;
-            bottom: 24px;
+            bottom: 5.6rem;
             border: 1px solid rgba(236, 72, 153, 0.5);
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             font-size: 14px;
@@ -358,16 +535,52 @@
         @keyframes saFadeIn { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes saFadeOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(14px); opacity: 0; } }
         @media (max-width: 639px) {
-            #toast { left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); min-width: 0; }
+            #toast { left: 16px; right: 16px; bottom: calc(5.4rem + env(safe-area-inset-bottom)); min-width: 0; }
+            body.help-chat-open { overflow: hidden; }
             /* verhindert Auto-Zoom auf iOS beim Fokussieren von Feldern */
             input, select, textarea { font-size: 16px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+            .hero-video, .hero-motion { animation: none !important; }
         }
         details > summary { list-style: none; cursor: pointer; }
         details > summary::-webkit-details-marker { display: none; }
         details[open] .chev { transform: rotate(180deg); }
+
+        /* Premium surfaces */
+        .kicker { font-size: 0.68rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #f9a8d4; }
+        .promo-banner { background: linear-gradient(90deg, rgba(236,72,153,.18), rgba(217,70,239,.08) 40%, rgba(9,9,11,.2)); border-bottom: 1px solid rgba(255,255,255,.08); }
+        .trust-bar { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .75rem; }
+        @media (min-width: 768px) { .trust-bar { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+        .trust-item { display: flex; gap: .75rem; align-items: center; padding: .9rem 1rem; border-radius: 1rem; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.025); }
+        .review-card { min-height: 100%; }
+        .section-head { max-width: 40rem; margin-bottom: 1.5rem; }
+        .product-item.is-sold-out { filter: grayscale(.35); }
+        .product-item.is-sold-out .grid button:last-child { pointer-events: none; opacity: .45; }
+        .stock-badge { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+        .cookie-banner, .sale-pop { position: fixed; z-index: 55; }
+        .cookie-banner { left: 1rem; right: 1rem; bottom: 5.6rem; max-width: 36rem; }
+        .sale-pop { left: 1rem; bottom: 5.6rem; max-width: 18rem; }
+        html[data-theme="light"] { color-scheme: light; }
+        html[data-theme="light"] body { background: #f6f5f7; color: #1c1917; background-image: radial-gradient(ellipse 70% 40% at 50% -10%, rgba(236,72,153,.12), transparent 55%); }
+        html[data-theme="light"] .text-white { color: #1c1917; }
+        html[data-theme="light"] .btn-primary, html[data-theme="light"] .btn-gradient, html[data-theme="light"] .help-launcher, html[data-theme="light"] .chip.bg-accent, html[data-theme="light"] .cat-btn.is-active { color: #fff; }
+        html[data-theme="light"] .bg-saBg, html[data-theme="light"] .site-header, html[data-theme="light"] .site-footer { background-color: #f6f5f7; }
+        html[data-theme="light"] .bg-saCard, html[data-theme="light"] .card, html[data-theme="light"] #productsGrid .product-item { background-color: #fff; }
+        html[data-theme="light"] .text-zinc-300, html[data-theme="light"] .text-zinc-400, html[data-theme="light"] .text-zinc-200 { color: #52525b; }
+        html[data-theme="light"] .border-saBorder, html[data-theme="light"] .border-white\/10 { border-color: #e7e5e4; }
+        html[data-theme="light"] .store-banner .text-white,
+        html[data-theme="light"] .store-banner .text-zinc-100,
+        html[data-theme="light"] .store-banner .kicker { color: #fff; }
+        html[data-theme="light"] .logo-mark { background: #18181b; color: #fff; }
+        html[data-brand="custom"] .btn-primary { background: var(--brand); }
+        .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: repeat(4, 1fr); gap: .25rem; padding: .4rem .4rem calc(.4rem + env(safe-area-inset-bottom)); background: rgba(9,9,11,.92); border-top: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(16px); }
+        .bottom-nav a, .bottom-nav button { color: #d4d4d8; font-size: .68rem; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: .15rem; min-height: 2.75rem; }
+        @media (min-width: 768px) { .bottom-nav { display: none; } body { padding-bottom: 0; } }
+        @media (max-width: 767px) { body { padding-bottom: 4.5rem; } .help-chat { bottom: calc(4.6rem + env(safe-area-inset-bottom)); } }
+        #compareBar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 5.2rem; z-index: 44; }
+        dialog.card { background: #121217; color: #f4f4f5; border: 1px solid rgba(255,255,255,.1); border-radius: 1.25rem; }
     </style>
 </head>
 <body class="antialiased font-sans selection:bg-accent selection:text-white">
@@ -376,17 +589,22 @@
     <div id="toast" role="status" aria-live="polite">Benachrichtigung</div>
 
     <!-- Announcement Bar -->
-    <div class="w-full bg-saCard border-b border-saBorder/80 py-2.5 px-4 text-center text-xs font-semibold text-zinc-300 flex items-center justify-center gap-2 flex-wrap">
-        <span class="chip bg-accent/20 text-accent border border-accent/30 uppercase text-[10px] tracking-wide">Aktion</span>
-        <span data-i18n="announcement">Mit dem Code VAL3NTINO sparst du 5,00 € an der Kasse!</span>
+    <div id="promoBanner" class="promo-banner w-full py-2.5 px-4 text-center text-xs font-semibold text-zinc-200">
+        <div class="max-w-7xl mx-auto flex items-center justify-center gap-x-3 gap-y-1 flex-wrap">
+            <span class="chip bg-accent/20 text-accent border border-accent/30 uppercase text-[10px] tracking-wide">Aktion</span>
+            <span data-i18n="announcement">Mit dem Code VAL3NTINO sparst du 5,00 € an der Kasse!</span>
+            <span class="text-zinc-400">CENT50 −0,50 €</span>
+            <span id="promoCountdown" class="font-mono text-white tabular-nums" aria-live="polite"></span>
+            <button type="button" id="promoDismiss" class="icon-btn !h-7 !w-7" aria-label="Aktion ausblenden"><i class="fa-solid fa-xmark text-xs" aria-hidden="true"></i></button>
+        </div>
     </div>
 
     <!-- Sticky Navigation Bar -->
-    <header class="sticky top-0 z-40 w-full bg-saBg/90 backdrop-blur-xl border-b border-saBorder">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+    <header class="site-header sticky top-0 z-40 w-full border-b border-white/10">
+        <div class="header-bar max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-2 flex items-center justify-between gap-3">
             
             <a href="#" class="flex items-center gap-3 rounded-xl shrink-0" aria-label="Val3ntino – zur Startseite">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-accent to-accentGlow flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-pink-500/20" aria-hidden="true">V</div>
+                <div class="logo-mark w-9 h-9 rounded-xl bg-gradient-to-tr from-accent to-accentGlow flex items-center justify-center text-white font-extrabold text-lg shadow-lg shadow-pink-500/20" aria-hidden="true">V</div>
                 <div class="hidden min-[420px]:flex flex-col">
                     <span class="text-base font-extrabold text-white tracking-tight flex items-center gap-1.5">
                         Val3ntino<span class="text-accent">.</span>
@@ -395,7 +613,7 @@
                 </div>
             </a>
 
-            <div class="hidden md:flex items-center flex-1 max-w-md mx-6">
+            <div class="hidden lg:flex items-center flex-1 max-w-md mx-6">
                 <div class="relative w-full">
                     <label for="storeSearchInput" class="sr-only">Produkte suchen</label>
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs" aria-hidden="true"></i>
@@ -403,7 +621,12 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="header-actions flex flex-nowrap items-center justify-end gap-1.5 sm:gap-2">
+                <button type="button" id="themeToggle" class="linktree-btn" aria-label="Helles Design einschalten"><i class="fa-solid fa-sun" aria-hidden="true"></i></button>
+                <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="linktree-btn" aria-label="Alle Links auf Linktree">
+                    <i class="fa-solid fa-link" aria-hidden="true"></i>
+                    <span class="hidden lg:inline">Alle Links</span>
+                </a>
                 <label for="currencySelect" class="sr-only">Währung</label>
                 <select id="currencySelect" onchange="changeCurrency(this.value)" class="field-sm">
                     <option value="EUR">EUR (€)</option>
@@ -423,18 +646,18 @@
 
                 <button id="authNavBtn" onclick="toggleAuthModal()" aria-label="Anmelden" class="btn btn-secondary !px-3 !py-2 !text-xs h-10">
                     <i class="fa-solid fa-arrow-right-to-bracket text-sm" aria-hidden="true"></i>
-                    <span class="hidden sm:inline" data-i18n="signIn">Anmelden</span>
+                    <span class="hidden lg:inline" data-i18n="signIn">Anmelden</span>
                 </button>
 
                 <button onclick="toggleCartModal()" aria-label="Warenkorb öffnen" class="btn btn-primary !px-3 !py-2 !text-xs h-10 relative">
                     <i class="fa-solid fa-bag-shopping text-sm" aria-hidden="true"></i>
-                    <span class="hidden sm:inline" data-i18n="cart">Warenkorb</span>
+                    <span class="hidden lg:inline" data-i18n="cart">Warenkorb</span>
                     <span id="cartCountBadge" class="bg-black/40 text-white text-[10px] min-w-[1.25rem] px-1.5 py-0.5 rounded-full font-extrabold" aria-live="polite">0</span>
                 </button>
             </div>
         </div>
         <!-- Mobile Suche -->
-        <div class="md:hidden px-4 pb-3">
+        <div class="lg:hidden px-4 pb-3">
             <div class="relative w-full">
                 <label for="storeSearchInputMobile" class="sr-only">Produkte suchen</label>
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs" aria-hidden="true"></i>
@@ -444,41 +667,76 @@
     </header>
 
     <!-- Store Profile Header -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-8" aria-label="Über den Store">
-        <div class="store-banner min-h-[12rem] sm:min-h-[15rem] rounded-3xl border border-saBorder relative flex items-end p-5 sm:p-8 overflow-hidden shadow-2xl">
-            <div class="absolute inset-0 bg-gradient-to-t from-saBg via-saBg/50 to-transparent" aria-hidden="true"></div>
-            <div class="relative z-10 flex items-center gap-4 sm:gap-5">
-                <div class="w-16 h-16 sm:w-24 sm:h-24 shrink-0 rounded-2xl bg-saCard border-2 border-accent/80 p-1 flex items-center justify-center shadow-xl" aria-hidden="true">
-                    <div class="w-full h-full rounded-xl bg-gradient-to-br from-zinc-800 to-black flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl">V</div>
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-8" aria-label="Über den Store">
+        <div class="store-banner min-h-[16rem] sm:min-h-[18.5rem] rounded-3xl relative flex items-end p-5 sm:p-8 lg:p-10 overflow-hidden">
+            <div class="hero-motion" aria-hidden="true"></div>
+            <video id="heroVideo" class="hero-video" poster="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=70&w=1600&auto=format&fit=crop" autoplay muted loop playsinline preload="none"></video>
+            <!-- Video-Datei selbst hosten und hier src setzen, z. B. src="hero.webm". Ohne Datei läuft die CSS-Bewegung. -->
+            <div class="absolute inset-0 bg-gradient-to-t from-saBg/85 via-saBg/25 to-transparent" aria-hidden="true"></div>
+            <div class="relative z-10 flex items-center gap-4 sm:gap-6 w-full">
+                <div class="w-16 h-16 sm:w-24 sm:h-24 shrink-0 rounded-2xl bg-saCard/80 border border-white/15 p-1 flex items-center justify-center shadow-xl backdrop-blur-sm" aria-hidden="true">
+                    <div class="w-full h-full rounded-xl bg-gradient-to-br from-pink-500 to-fuchsia-500 flex items-center justify-center text-white font-extrabold text-2xl sm:text-3xl">V</div>
                 </div>
-                <div class="min-w-0">
-                    <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                        <h1 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">Val3ntino</h1>
-                        <span class="chip bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                <div class="min-w-0 pb-0.5">
+                    <p class="kicker mb-2">Performance Studio</p>
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <h1 class="text-4xl sm:text-6xl font-extrabold text-white leading-none">Val3ntino</h1>
+                        <span class="chip bg-sky-500/15 text-sky-200 border border-sky-400/25">
                             <i class="fa-solid fa-store text-[10px]" aria-hidden="true"></i> <span data-i18n="verified">Offizieller Store</span>
                         </span>
                     </div>
-                    <p class="text-sm sm:text-base text-zinc-200 max-w-xl leading-relaxed" data-i18n="bannerText">Windows-PC-Tuning für minimale Latenz, saubere Webentwicklung und individuelle Skripte.</p>
+                    <p class="text-sm sm:text-lg text-zinc-100 leading-relaxed max-w-xl" data-i18n="bannerText">Windows-PC-Tuning für minimale Latenz, saubere Webentwicklung und individuelle Skripte.</p>
+                    <div class="mt-5 flex flex-wrap items-center gap-2">
+                        <a href="#productsGrid" class="btn btn-primary !py-2.5 !px-4">Zum Sortiment</a>
+                        <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="btn btn-secondary !py-2.5 !px-4">
+                            <i class="fa-solid fa-link" aria-hidden="true"></i> Alle Links
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="mt-6" aria-label="Bekannt aus">
+            <p class="kicker mb-3">Bekannt aus</p>
+            <div id="logoStrip" class="logo-strip">
+                <span class="logo-pill">Discord</span>
+                <span class="logo-pill">Linktree</span>
+                <span class="logo-pill">Val3ntino Studio</span>
+                <span class="logo-pill">Performance</span>
+            </div>
+        </div>
+        <ul class="trust-bar mt-4" aria-label="Vertrauen">
+            <li class="trust-item"><i class="fa-brands fa-paypal text-sky-400" aria-hidden="true"></i><span class="text-sm font-semibold text-white">PayPal, Karte, SEPA</span></li>
+            <li class="trust-item"><i class="fa-solid fa-coins text-violet-300" aria-hidden="true"></i><span class="text-sm font-semibold text-white">Solana, on-chain geprüft</span></li>
+            <li class="trust-item"><i class="fa-solid fa-bolt text-accent" aria-hidden="true"></i><span class="text-sm font-semibold text-white">Digitale Lieferung</span></li>
+            <li class="trust-item"><i class="fa-solid fa-shield-halved text-emerald-300" aria-hidden="true"></i><span class="text-sm font-semibold text-white">Kundenportal</span></li>
+        </ul>
     </section>
 
     <!-- Filter & Products -->
     <main id="main" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         
         <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-8 border-b border-saBorder/60 pb-6">
-            <div class="flex items-center gap-2 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-1 md:pb-0 no-scrollbar" role="group" aria-label="Kategorien">
+            <div class="flex items-center gap-2 overflow-x-auto min-w-0 md:flex-1 -mx-4 px-4 md:mx-0 md:px-0 pb-1 md:pb-0 no-scrollbar" role="group" aria-label="Kategorien">
                 <button onclick="setCategory('all')" id="cat-all" class="category-btn cat-btn is-active" aria-pressed="true" data-i18n="catAll">Alle Produkte</button>
                 <button onclick="setCategory('tuning')" id="cat-tuning" class="category-btn cat-btn" aria-pressed="false" data-i18n="catTuning">PC-Tuning</button>
                 <button onclick="setCategory('web')" id="cat-web" class="category-btn cat-btn" aria-pressed="false" data-i18n="catWeb">Webentwicklung</button>
                 <button onclick="setCategory('services')" id="cat-services" class="category-btn cat-btn" aria-pressed="false" data-i18n="catServices">Services & Media</button>
+                <button onclick="setCategory('guides')" id="cat-guides" class="category-btn cat-btn" aria-pressed="false">Ratgeber</button>
                 <button onclick="setCategory('wishlist')" id="cat-wishlist" class="category-btn cat-btn inline-flex items-center gap-2" aria-pressed="false"><i class="fa-solid fa-heart text-accent text-xs" aria-hidden="true"></i> <span data-i18n="wishlist">Merkliste</span> <span id="wishCount" class="text-[11px] bg-white/10 rounded-full px-1.5">0</span></button>
             </div>
 
-            <div class="flex items-center justify-between md:justify-end gap-3">
+            <div class="flex flex-wrap items-center justify-start md:justify-end gap-2 w-full md:w-auto min-w-0">
                 <span class="text-sm text-zinc-400 font-medium" id="productCountLabel" aria-live="polite">4 Produkte</span>
+                <span id="soldCounter" class="text-xs text-zinc-500">Direkt vom Studio</span>
                 <label for="sortSelect" class="sr-only">Sortieren</label>
+                <label for="priceBand" class="sr-only">Preisfilter</label>
+                <select id="priceBand" onchange="setPriceBand(this.value)" class="field-sm !py-2.5 !px-3 !text-sm">
+                    <option value="all">Alle Preise</option>
+                    <option value="low">Unter 10 €</option>
+                    <option value="mid">10–30 €</option>
+                    <option value="high">Über 30 €</option>
+                </select>
+                <button type="button" onclick="shareWishlist()" class="btn btn-secondary !py-2 !px-3 !text-xs" aria-label="Merkliste teilen"><i class="fa-solid fa-share-nodes" aria-hidden="true"></i></button>
                 <select id="sortSelect" onchange="sortProducts(this.value)" class="field-sm !py-2.5 !px-3 !text-sm">
                     <option value="featured" data-i18n="sortFeatured">Empfohlen</option>
                     <option value="low-high" data-i18n="sortLowHigh">Preis: niedrig → hoch</option>
@@ -491,7 +749,7 @@
         <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6" tabindex="-1">
             
             <!-- All-in-One Media Access -->
-            <article class="product-item group card !border-2 !border-accent/60 overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/15 flex flex-col justify-between relative shadow-xl shadow-pink-500/10" data-key="media" data-category="services" data-price="0.50" data-name="All-in-One Media Access" data-desc="Free movie, TV, live TV, games, manga, anime and much more. Instant access link!">
+            <article class="product-item group card product-card is-featured overflow-hidden flex flex-col justify-between relative" data-key="media" data-category="services" data-price="0.50" data-name="All-in-One Media Access" data-desc="Free movie, TV, live TV, games, manga, anime and much more. Instant access link!">
                 <div class="absolute top-3 right-3 z-10"><span class="chip bg-accent text-white shadow-md">🔥 0.50€</span></div>
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-purple-950/40 via-zinc-900 to-saCard p-4 flex flex-col justify-between border-b border-saBorder">
@@ -520,7 +778,7 @@
             </article>
 
             <!-- Basic PC-Tuning -->
-            <article class="product-item group card overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-zinc-600 hover:shadow-2xl hover:shadow-black/40 flex flex-col justify-between" data-key="basic" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning" data-desc="Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung.">
+            <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="basic" data-category="tuning" data-price="15.00" data-name="Basic PC-Tuning" data-desc="Windows Service-Bereinigung, Hintergrund-Debloat, FPS-Stabilisierung.">
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-blue-950/40 via-zinc-900 to-saCard p-4 flex flex-col justify-between border-b border-saBorder">
                         <div class="flex justify-between items-center"><span class="chip bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" data-i18n="available">Verfügbar</span></div>
@@ -548,7 +806,7 @@
             </article>
 
             <!-- Pro Tuning -->
-            <article class="product-item group card !border-2 !border-accent/50 overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-pink-500/15 flex flex-col justify-between relative" data-key="pro" data-category="tuning" data-price="35.00" data-name="Pro Tuning (0 Delay)" data-desc="Ultra Low-Latency Setup, BIOS- & Registry-Edits, MSI Mode.">
+            <article class="product-item group card product-card is-featured overflow-hidden flex flex-col justify-between relative" data-key="pro" data-category="tuning" data-price="35.00" data-name="Pro Tuning (0 Delay)" data-desc="Ultra Low-Latency Setup, BIOS- & Registry-Edits, MSI Mode.">
                 <div class="absolute top-3 right-3 z-10"><span class="chip bg-accent text-white shadow-md">★ <span data-i18n="popular">Beliebt</span></span></div>
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-pink-950/40 via-zinc-900 to-saCard p-4 flex flex-col justify-between border-b border-saBorder">
@@ -577,7 +835,7 @@
             </article>
 
             <!-- Custom Website -->
-            <article class="product-item group card overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:border-zinc-600 hover:shadow-2xl hover:shadow-black/40 flex flex-col justify-between" data-key="web" data-category="web" data-price="25.00" data-name="Custom Website Build" data-desc="Moderne Single-Page Website oder Portfolio im Storefront-Stil.">
+            <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="web" data-category="web" data-price="25.00" data-name="Custom Website Build" data-desc="Moderne Single-Page Website oder Portfolio im Storefront-Stil.">
                 <div>
                     <div class="relative h-40 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-saCard p-4 flex flex-col justify-between border-b border-saBorder">
                         <div class="flex justify-between items-center"><span class="chip bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" data-i18n="available">Verfügbar</span></div>
@@ -604,8 +862,81 @@
                 </div>
             </article>
 
+            <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="krypto-einsteiger-2026" data-category="guides" data-price="19.90" data-name="Krypto für Einsteiger 2026: Wallet, Sicherheit & erste Schritte" data-desc="Verstehe Wallets, Solana und Phantom, ohne blind ins Risiko zu gehen. Mit sicheren Transferabläufen, Betrugswarnungen, Glossar und Zahlungs-Checkliste.">
+                <div>
+                    <div class="relative h-40 bg-gradient-to-br from-violet-950/50 via-zinc-900 to-saCard border-b border-saBorder overflow-hidden">
+                        <img src="https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/krypto-einsteiger-2026" alt="Cover: Krypto für Einsteiger 2026" class="absolute inset-0 h-full w-full object-cover">
+                        <div class="relative z-10 p-4 flex justify-between"><span class="chip bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">PDF</span></div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-base font-bold text-white mb-1.5">Krypto für Einsteiger 2026: Wallet, Sicherheit & erste Schritte</h3>
+                        <p class="text-sm text-zinc-400 line-clamp-3 mb-4 leading-relaxed">Verstehe Wallets, Solana und Phantom, ohne blind ins Risiko zu gehen. Mit sicheren Transferabläufen, Betrugswarnungen, Glossar und Zahlungs-Checkliste.</p>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
+                        <span class="text-xs text-zinc-400">Nur</span>
+                        <span class="text-xl font-extrabold text-white product-price" data-base="19.90">€19.90 <span class="text-xs text-zinc-400 font-normal currency-label">EUR</span></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="openProductDetail('krypto-einsteiger-2026')" class="btn btn-secondary w-full" aria-label="Details zum Krypto-Ratgeber"><span data-i18n="details">Details</span></button>
+                        <button onclick="addToCartDirect('Krypto für Einsteiger 2026: Wallet, Sicherheit & erste Schritte', 19.90)" class="btn btn-primary w-full" aria-label="Krypto-Ratgeber in den Warenkorb"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> <span data-i18n="buy">Kaufen</span></button>
+                    </div>
+                </div>
+            </article>
+
+            <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="discord-server-playbook" data-category="guides" data-price="24.90" data-name="Discord-Server aufbauen & monetarisieren" data-desc="Baue eine strukturierte Community mit sicheren Rollen, hilfreichen Formaten und nachvollziehbarem Bezahlmodell. Inklusive Textvorlagen, 30-Tage-Startplan und Launch-Checkliste.">
+                <div>
+                    <div class="relative h-40 bg-gradient-to-br from-indigo-950/50 via-zinc-900 to-saCard border-b border-saBorder overflow-hidden">
+                        <img src="https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/discord-server-playbook" alt="Cover: Discord-Server aufbauen" class="absolute inset-0 h-full w-full object-cover">
+                        <div class="relative z-10 p-4 flex justify-between"><span class="chip bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">PDF</span></div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-base font-bold text-white mb-1.5">Discord-Server aufbauen & monetarisieren</h3>
+                        <p class="text-sm text-zinc-400 line-clamp-3 mb-4 leading-relaxed">Baue eine strukturierte Community mit sicheren Rollen, hilfreichen Formaten und nachvollziehbarem Bezahlmodell. Inklusive Textvorlagen, 30-Tage-Startplan und Launch-Checkliste.</p>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
+                        <span class="text-xs text-zinc-400">Nur</span>
+                        <span class="text-xl font-extrabold text-white product-price" data-base="24.90">€24.90 <span class="text-xs text-zinc-400 font-normal currency-label">EUR</span></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="openProductDetail('discord-server-playbook')" class="btn btn-secondary w-full" aria-label="Details zum Discord-Playbook"><span data-i18n="details">Details</span></button>
+                        <button onclick="addToCartDirect('Discord-Server aufbauen & monetarisieren', 24.90)" class="btn btn-primary w-full" aria-label="Discord-Playbook in den Warenkorb"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> <span data-i18n="buy">Kaufen</span></button>
+                    </div>
+                </div>
+            </article>
+
+            <article class="product-item group card product-card overflow-hidden flex flex-col justify-between" data-key="digitale-produkte-business-guide" data-category="guides" data-price="24.90" data-name="Mit digitalen Produkten Geld verdienen: Von der Nische zum ersten Verkauf" data-desc="Entwickle ein nützliches Downloadprodukt statt eines leeren Einkommensversprechens. Mit Nachfracheprüfung, Produktion, Preisrechnung, Marketing sowie Zahlung und Lieferung per PayPal oder Krypto.">
+                <div>
+                    <div class="relative h-40 bg-gradient-to-br from-fuchsia-950/40 via-zinc-900 to-saCard border-b border-saBorder overflow-hidden">
+                        <img src="https://valentinolopez-api.valentinolopez.workers.dev/asset/cover/digitale-produkte-business-guide" alt="Cover: Digitale Produkte" class="absolute inset-0 h-full w-full object-cover">
+                        <div class="relative z-10 p-4 flex justify-between"><span class="chip bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">PDF</span></div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-base font-bold text-white mb-1.5">Mit digitalen Produkten Geld verdienen: Von der Nische zum ersten Verkauf</h3>
+                        <p class="text-sm text-zinc-400 line-clamp-3 mb-4 leading-relaxed">Entwickle ein nützliches Downloadprodukt statt eines leeren Einkommensversprechens. Mit Nachfracheprüfung, Produktion, Preisrechnung, Marketing sowie Zahlung und Lieferung per PayPal oder Krypto.</p>
+                    </div>
+                </div>
+                <div class="p-5 pt-0">
+                    <div class="flex items-baseline justify-between border-t border-saBorder/60 pt-4 mb-3">
+                        <span class="text-xs text-zinc-400">Nur</span>
+                        <span class="text-xl font-extrabold text-white product-price" data-base="24.90">€24.90 <span class="text-xs text-zinc-400 font-normal currency-label">EUR</span></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="openProductDetail('digitale-produkte-business-guide')" class="btn btn-secondary w-full" aria-label="Details zum Business-Guide"><span data-i18n="details">Details</span></button>
+                        <button onclick="addToCartDirect('Mit digitalen Produkten Geld verdienen: Von der Nische zum ersten Verkauf', 24.90)" class="btn btn-primary w-full" aria-label="Business-Guide in den Warenkorb"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> <span data-i18n="buy">Kaufen</span></button>
+                    </div>
+                </div>
+            </article>
+
         </div>
 
+        <section id="recommendSection" class="mt-10" aria-labelledby="recommendHeading">
+            <h2 id="recommendHeading" class="text-lg font-extrabold text-white">Das könnte dir gefallen</h2>
+            <div id="recommendGrid" class="mt-3 grid sm:grid-cols-3 gap-3"></div>
+        </section>
         <div id="noProductsMsg" class="hidden card p-10 text-center">
             <i class="fa-solid fa-magnifying-glass text-2xl text-zinc-500 mb-3" aria-hidden="true"></i>
             <p class="text-sm text-zinc-300 font-semibold" data-i18n="noProducts">Keine passenden Produkte gefunden.</p>
@@ -638,22 +969,89 @@
                 <li class="px-3.5 py-2 bg-saBg border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-solid fa-credit-card text-sky-300 mr-1.5" aria-hidden="true"></i> Maestro</li>
                 <li class="px-3.5 py-2 bg-saBg border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-brands fa-cc-amex text-blue-400 mr-1.5" aria-hidden="true"></i> AMEX</li>
                 <li class="px-3.5 py-2 bg-saBg border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-solid fa-wallet text-accent mr-1.5" aria-hidden="true"></i> <span data-i18n="payBalance">Guthaben</span></li>
-                <li class="px-3.5 py-2 bg-saBg border border-dashed border-saBorder rounded-xl text-zinc-400 font-bold text-xs"><i class="fa-solid fa-coins text-violet-400 mr-1.5" aria-hidden="true"></i> Solana <span class="text-[10px] font-semibold text-zinc-500" data-i18n="soon">(bald)</span></li>
+                <li class="px-3.5 py-2 bg-saBg border border-saBorder rounded-xl text-white font-bold text-xs"><i class="fa-solid fa-coins text-violet-400 mr-1.5" aria-hidden="true"></i> Solana</li>
             </ul>
+        </section>
+
+        <section class="mt-16" aria-labelledby="reviewHeading">
+            <div class="section-head">
+                <p class="kicker">Stimmen</p>
+                <h2 id="reviewHeading" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">Was Kundinnen und Kunden sagen</h2>
+            </div>
+            <div id="reviewGrid" class="grid md:grid-cols-3 gap-4">
+                <figure class="card review-card p-5"><blockquote class="text-sm text-zinc-200 leading-relaxed">„Das Pro-Tuning hat die Eingabe spürbar ruhiger gemacht. Ablauf über Discord war klar.“</blockquote><figcaption class="mt-4 text-xs font-bold text-white">Lena · Pro Tuning</figcaption></figure>
+                <figure class="card review-card p-5"><blockquote class="text-sm text-zinc-200 leading-relaxed">„Website stand schnell, und die Zahlung mit PayPal war unkompliziert.“</blockquote><figcaption class="mt-4 text-xs font-bold text-white">Jonas · Custom Website</figcaption></figure>
+                <figure class="card review-card p-5"><blockquote class="text-sm text-zinc-200 leading-relaxed">„Solana-Zahlung wurde nach der Bestätigung direkt im Portal freigeschaltet.“</blockquote><figcaption class="mt-4 text-xs font-bold text-white">Mara · Media Access</figcaption></figure>
+            </div>
+        </section>
+
+        <section id="journal" class="mt-16" aria-labelledby="journalHeading">
+            <div class="section-head">
+                <p class="kicker">Journal</p>
+                <h2 id="journalHeading" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">Neuigkeiten</h2>
+            </div>
+            <div id="journalGrid" class="grid md:grid-cols-3 gap-4">
+                <article class="card p-5"><p class="text-xs text-zinc-500">November 2026</p><h3 class="text-base font-bold text-white mt-2">Krypto für jedes Produkt</h3><p class="text-sm text-zinc-400 mt-2 leading-relaxed">SOL und USDC über Phantom gelten jetzt auch für All-in-One Media Access. Die Prüfung bleibt on-chain.</p></article>
+                <article class="card p-5"><p class="text-xs text-zinc-500">November 2026</p><h3 class="text-base font-bold text-white mt-2">Gutscheine</h3><p class="text-sm text-zinc-400 mt-2 leading-relaxed">VAL3NTINO nimmt 5 €, CENT50 nimmt 0,50 €. Einlösbar im Warenkorb, der Server prüft den Betrag.</p></article>
+                <article class="card p-5"><p class="text-xs text-zinc-500">Oktober 2026</p><h3 class="text-base font-bold text-white mt-2">Kundenportal</h3><p class="text-sm text-zinc-400 mt-2 leading-relaxed">Bestellungen, Zugänge und Guthaben liegen nach dem Login an einem Ort.</p></article>
+            </div>
+        </section>
+
+        <section id="faqSection" class="mt-16" aria-labelledby="faqHeading">
+            <div class="section-head"><p class="kicker">FAQ</p><h2 id="faqHeading" class="text-2xl font-extrabold text-white mt-2">Fragen zu den Produkten</h2></div>
+            <div id="faqList" class="card p-5 space-y-2">
+                <details class="border-b border-white/10 py-2"><summary class="font-semibold text-white">Wann ist die Krypto-Zahlung fertig?</summary><p class="text-sm text-zinc-400 mt-2">SOL und USDC werden on-chain geprüft. ETH und BTC bestätigt der Shop manuell.</p></details>
+            </div>
+        </section>
+        <p id="abandonedCart" class="hidden mt-6 card p-4 text-sm text-zinc-200" role="status">Du hast noch Artikel im Warenkorb. <button type="button" class="text-accent underline" onclick="toggleCartModal()">Warenkorb öffnen</button></p>
+        <section id="partner" class="mt-16 card p-6 sm:p-8" aria-labelledby="partnerHeading">
+            <p class="kicker">Partner</p>
+            <h2 id="partnerHeading" class="text-2xl font-extrabold text-white mt-2">Empfehlen und sparen</h2>
+            <p class="text-sm text-zinc-400 mt-2 max-w-2xl leading-relaxed">Teile deinen Link. Du und die eingeladene Person erhaltet einen lokalen Rabattcode. Die Server-Kasse löst nur Gutscheine ein, die im Admin in Firestore liegen – den Code kannst du dort anlegen.</p>
+            <p class="mt-4 text-sm text-white">Dein Code: <b id="referralCode">—</b></p>
+            <button type="button" class="btn btn-secondary mt-3" onclick="copyReferral()">Link kopieren</button>
+        </section>
+
+        <section class="mt-6 grid lg:grid-cols-2 gap-4">
+            <form class="card p-6" onsubmit="event.preventDefault(); saveNewsletter();">
+                <h2 class="text-lg font-extrabold text-white">Newsletter</h2>
+                <p class="text-sm text-zinc-400 mt-1">Kurze Hinweise zu Aktionen. Kein externer Versanddienst – die Adresse bleibt in diesem Browser, bis ein Mail-Dienst angebunden ist.</p>
+                <label class="field-label mt-4" for="newsEmail">E-Mail</label>
+                <div class="flex gap-2"><input id="newsEmail" type="email" required class="field" placeholder="du@example.com"><button class="btn btn-primary" type="submit">Eintragen</button></div>
+                <input id="newsHoney" class="hidden" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <label class="text-xs text-zinc-400 mt-2 block">Schutz: <span id="newsCaptchaQ"></span> <input id="newsCaptcha" class="field !py-1 !w-16 inline-block" inputmode="numeric" aria-label="Rechenaufgabe"></label>
+                <p id="newsMsg" class="text-xs text-emerald-300 mt-2" role="status"></p>
+                <button type="button" class="btn btn-secondary mt-3" onclick="enablePush()">Hinweise per Push</button>
+                <p id="pushMsg" class="text-xs text-zinc-400 mt-2"></p>
+            </form>
+            <section id="status" class="card p-6" aria-labelledby="statusHeading">
+                <h2 id="statusHeading" class="text-lg font-extrabold text-white">Status</h2>
+                <p class="text-sm text-zinc-400 mt-1">Shop-Seite ist geladen. Der Worker wird direkt abgefragt.</p>
+                <ul class="mt-4 space-y-2 text-sm">
+                    <li class="flex justify-between gap-3"><span class="text-zinc-400">Webseite</span><span class="text-emerald-300 font-semibold">online</span></li>
+                    <li class="flex justify-between gap-3"><span class="text-zinc-400">Worker</span><span id="workerStatus" class="text-zinc-200 font-semibold">prüfe …</span></li>
+                </ul>
+                <button type="button" class="btn btn-secondary mt-4" onclick="showShopQr()">QR-Code zum Shop</button>
+            </section>
         </section>
 
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-saBorder bg-saBg py-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-zinc-400">
-            <div class="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-2.5 text-center">
-                <span class="font-extrabold text-white">Val3ntino.</span>
-                <span data-i18n="rights">© 2026 Alle Rechte vorbehalten.</span>
+    <footer class="site-footer border-t border-white/10 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)] md:items-start text-sm text-zinc-400">
+            <div class="max-w-md text-center md:text-left mx-auto md:mx-0">
+                <p class="font-extrabold text-white text-lg tracking-tight">Val3ntino.</p>
+                <p class="mt-2 leading-relaxed">Windows-PC-Tuning, Websites und individuelle Skripte.</p>
+                <p class="mt-4 text-xs text-zinc-500" data-i18n="rights">© 2026 Alle Rechte vorbehalten.</p>
             </div>
-            <nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-3" aria-label="Footer">
-                <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="hover:text-white transition flex items-center gap-1.5 rounded-lg"><i class="fa-brands fa-discord" aria-hidden="true"></i> Discord</a>
-                <a href="mailto:L@valentinolopez.de" class="hover:text-white transition flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-envelope" aria-hidden="true"></i> <span data-i18n="contact">Kontakt</span></a>
+            <nav class="flex flex-wrap items-center justify-center md:justify-end gap-x-5 gap-y-3" aria-label="Footer">
+                <a href="#journal" class="hover:text-white transition rounded-lg">Journal</a>
+                <a href="#partner" class="hover:text-white transition rounded-lg">Partner</a>
+                <a href="#status" class="hover:text-white transition rounded-lg">Status</a>
+                <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-link" aria-hidden="true"></i> Alle Links</a>
+                <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-brands fa-discord" aria-hidden="true"></i> Discord</a>
+                <a href="mailto:L@valentinolopez.de" class="hover:text-white transition inline-flex items-center gap-1.5 rounded-lg"><i class="fa-solid fa-envelope" aria-hidden="true"></i> <span data-i18n="contact">Kontakt</span></a>
                 <button onclick="toggleImpressum()" class="hover:text-white transition underline underline-offset-4 rounded-lg" data-i18n="impressum">Impressum</button>
                 <button onclick="toggleLegal('datenschutzModal')" class="hover:text-white transition underline underline-offset-4 rounded-lg">Datenschutz</button>
                 <button onclick="toggleLegal('agbModal')" class="hover:text-white transition underline underline-offset-4 rounded-lg">AGB</button>
@@ -749,6 +1147,15 @@
                         <label for="checkoutEmail" class="field-label" data-i18n="emailLabel">E-Mail-Adresse *</label>
                         <input type="email" id="checkoutEmail" placeholder="deine-email@example.com" autocomplete="email" inputmode="email" required aria-describedby="checkoutEmailHint checkoutEmailError" class="field">
                         <p id="checkoutEmailHint" class="text-xs text-zinc-400 mt-1.5" data-i18n="emailHint">Hierhin senden wir Bestellbestätigung und Zugangsdaten.</p>
+                        <label class="flex items-center gap-2 text-sm text-zinc-200 mt-3"><input type="checkbox" id="bizToggle" class="accent-pink-500" onchange="document.getElementById('bizFields').classList.toggle('hidden', !this.checked)"> Geschäftskunde (Rechnung mit USt-IdNr.)</label>
+                        <div id="bizFields" class="hidden grid sm:grid-cols-2 gap-3 mt-3">
+                            <div class="sm:col-span-2"><label class="field-label" for="bizCompany">Firma</label><input id="bizCompany" class="field" autocomplete="organization" maxlength="80"></div>
+                            <div class="sm:col-span-2"><label class="field-label" for="bizStreet">Straße</label><input id="bizStreet" class="field" autocomplete="street-address" maxlength="120"></div>
+                            <div><label class="field-label" for="bizZip">PLZ</label><input id="bizZip" class="field" autocomplete="postal-code" maxlength="12"></div>
+                            <div><label class="field-label" for="bizCity">Ort</label><input id="bizCity" class="field" autocomplete="address-level2" maxlength="80"></div>
+                            <div><label class="field-label" for="bizCountry">Land</label><input id="bizCountry" class="field" value="DE" maxlength="2"></div>
+                            <div><label class="field-label" for="bizVat">USt-IdNr.</label><input id="bizVat" class="field" placeholder="DE123456789" maxlength="20"></div>
+                        </div>
                         <p id="checkoutEmailError" class="hidden text-xs text-red-400 mt-1.5 font-medium" role="alert"></p>
                     </div>
                     <label class="flex items-start gap-3 text-xs text-zinc-300 leading-relaxed cursor-pointer">
@@ -766,11 +1173,16 @@
                 <section id="checkoutStepPayment" class="hidden space-y-4" aria-labelledby="stepPaymentHeading">
                     <div class="flex items-center justify-between gap-3">
                         <h3 id="stepPaymentHeading" class="text-lg font-extrabold text-white" data-i18n="paymentHeading">Zahlungsart wählen</h3>
+                    <div id="solLiveBox" class="card p-3 text-xs text-zinc-300 flex flex-col sm:flex-row sm:items-end gap-3">
+                        <p>SOL-Kurs: <b id="solLiveRate" class="text-white">…</b></p>
+                        <label class="flex items-center gap-2">EUR <input id="solEurInput" type="number" min="0" step="0.01" class="field !py-1.5 !w-24" value="35" oninput="updateSolConverter()"></label>
+                        <p aria-live="polite">≈ <b id="solConvertOut" class="text-white">—</b> SOL</p>
+                    </div>
                         <button onclick="goToCheckoutStep(2)" class="text-xs text-zinc-400 hover:text-white underline underline-offset-4 rounded" data-i18n="edit">Ändern</button>
                     </div>
                     <p class="text-xs text-zinc-400"><span data-i18n="orderFor">Bestellung für</span> <span id="checkoutEmailSummary" class="text-white font-semibold"></span></p>
 
-                    <div id="checkoutMediaNote" class="hidden text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><i class="fa-solid fa-circle-info mr-1.5" aria-hidden="true"></i>Für „All-in-One Media Access“ sind Krypto-Zahlung und Guthaben nicht verfügbar. Bitte nutze PayPal oder entferne den Artikel.</div>
+                    <div id="checkoutMediaNote" class="hidden text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><i class="fa-solid fa-circle-info mr-1.5" aria-hidden="true"></i>Für „All-in-One Media Access“ ist Guthaben nicht verfügbar. PayPal und Krypto (Solana) kannst du weiter nutzen.</div>
                     <p id="checkoutServerNote" class="text-xs text-zinc-400" aria-live="polite"></p>
 
                     <fieldset class="space-y-2.5">
@@ -805,26 +1217,41 @@
                     </fieldset>
 
                     <!-- Zahlungsbereiche -->
-                    <div id="paypalPaymentBox" class="space-y-2">
-                        <div id="paypal-button-container" class="w-full min-h-[50px]"></div>
+                    <div id="paypalPaymentBox" class="pay-panel space-y-3">
+                        <div>
+                            <h4 id="paypalPayHeading">Mit PayPal bezahlen</h4>
+                            <p class="text-xs text-zinc-400 mt-1 leading-relaxed">PayPal, Karte oder SEPA – die Buttons stellt PayPal bereit. Sie sitzen in diesem Feld, damit die Kasse zum restlichen Shop passt.</p>
+                        </div>
+                        <div class="pay-sdk-slot">
+                            <div id="paypal-button-container" class="w-full min-h-[50px]"></div>
+                        </div>
                         <p id="paypalStatusMsg" class="text-xs text-zinc-400" aria-live="polite"></p>
                     </div>
 
-                    <div id="balancePaymentBox" class="hidden card p-4 space-y-3">
+                    <div id="balancePaymentBox" class="hidden pay-panel space-y-3">
                         <p id="balanceStatusMsg" class="text-xs text-zinc-300" aria-live="polite"></p>
                         <button id="payWithBalanceBtn" onclick="payWithBalance()" class="btn btn-primary w-full">
                             <i class="fa-solid fa-wallet" aria-hidden="true"></i> <span data-i18n="payWithBalance">Jetzt mit Guthaben bezahlen</span>
                         </button>
                     </div>
 
-                    <div id="cryptoPaymentBox" class="hidden card p-4 space-y-3">
+                    <div id="cryptoPaymentBox" class="hidden pay-panel space-y-3">
+                        <div>
+                            <h4>Mit Solana bezahlen</h4>
+                            <p class="text-xs text-zinc-400 mt-1 leading-relaxed">Phantom im Browser oder QR-Code auf dem Handy. Der Betrag wird on-chain geprüft.</p>
+                        </div>
                         <div id="cryptoPaymentSlot" data-integration="solana-phantom" class="space-y-3">
                             <fieldset class="grid grid-cols-2 gap-2">
                                 <legend class="field-label">Währung</legend>
-                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="SOL" checked class="h-4 w-4 accent-pink-500"> <span class="text-sm font-bold text-white">SOL</span></label>
-                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="USDC" class="h-4 w-4 accent-pink-500"> <span class="text-sm font-bold text-white">USDC</span></label>
+                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="SOL" checked class="h-4 w-4 accent-pink-500" onchange="toggleManualCoin()"> <span class="text-sm font-bold text-white">SOL</span></label>
+                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="USDC" class="h-4 w-4 accent-pink-500" onchange="toggleManualCoin()"> <span class="text-sm font-bold text-white">USDC</span></label>
+                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="ETH" class="h-4 w-4 accent-pink-500" onchange="toggleManualCoin()"> <span class="text-sm font-bold text-white">ETH</span></label>
+                                <label class="pay-option !p-3"><input type="radio" name="cryptoToken" value="BTC" class="h-4 w-4 accent-pink-500" onchange="toggleManualCoin()"> <span class="text-sm font-bold text-white">BTC</span></label>
                             </fieldset>
-                            <p class="text-xs text-zinc-400">Der Betrag wird live in SOL/USDC umgerechnet und 30 Minuten reserviert. Die Zahlung wird auf der Blockchain geprüft – erst dann wird deine Bestellung freigeschaltet.</p>
+                            <p id="solanaAutoNote" class="text-xs text-zinc-400">SOL und USDC werden live umgerechnet und on-chain geprüft. ETH und BTC legt der Shop nur an – die Bestätigung macht der Inhaber manuell.</p>
+                            <div id="manualCoinBox" class="hidden text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 space-y-1">
+                                <p id="manualCoinText"></p>
+                            </div>
                             <button id="cryptoStartBtn" onclick="startCheckoutCrypto()" class="btn btn-primary w-full"><i class="fa-solid fa-ghost" aria-hidden="true"></i> Mit Krypto bezahlen</button>
                         </div>
                     </div>
@@ -844,6 +1271,8 @@
                         <div><dt class="eyebrow" data-i18n="total">Gesamt</dt><dd id="confirmTotal" class="font-extrabold text-accent mt-0.5">—</dd></div>
                     </dl>
                     <p id="confirmLinkNote" class="hidden text-xs text-zinc-300 card p-3"><i class="fa-solid fa-link text-accent mr-1.5" aria-hidden="true"></i><span data-i18n="confirmLink">Dein Zugang ist ab sofort im Kundenportal unter „Bestellungen“ freigeschaltet.</span></p>
+                    <!-- E-Mail-Versand: der Worker hat kein SMTP. Hier würde nach der Zahlung ein Mail-Hook (z. B. an L@valentinolopez.de und die Kundenadresse) ausgelöst. -->
+                    <p class="text-[11px] text-zinc-500">Eine Bestätigungsmail ist noch nicht angebunden. Den Beleg findest du im Kundenportal.</p>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <button onclick="openPortalAfterCheckout()" class="btn btn-primary"><i class="fa-solid fa-user" aria-hidden="true"></i> <span data-i18n="toPortal">Zum Kundenportal</span></button>
                         <button onclick="togglePaymentModal()" class="btn btn-secondary"><span data-i18n="continueShopping">Weiter einkaufen</span></button>
@@ -1026,9 +1455,14 @@
                         <div id="topupPayArea" class="hidden space-y-3">
                             <p class="field-label !mb-0">2. Bezahlen: <span id="topupSelectedLabel" class="text-white"></span></p>
                             <div class="grid md:grid-cols-2 gap-4">
-                                <div class="space-y-2">
-                                    <p class="text-xs font-semibold text-zinc-300"><i class="fa-brands fa-paypal text-sky-400 mr-1" aria-hidden="true"></i> PayPal / Karte</p>
-                                    <div id="topupPaypalContainer" class="min-h-[50px]"></div>
+                                <div class="pay-panel space-y-3">
+                                    <div>
+                                        <h4>PayPal, Karte oder SEPA</h4>
+                                        <p class="text-xs text-zinc-400 mt-1">Die PayPal-Buttons liegen in diesem dunklen Feld.</p>
+                                    </div>
+                                    <div class="pay-sdk-slot">
+                                        <div id="topupPaypalContainer" class="min-h-[50px]"></div>
+                                    </div>
                                     <p id="topupPaypalMsg" class="text-xs text-zinc-400" aria-live="polite"></p>
                                 </div>
                                 <div class="space-y-2">
@@ -1042,7 +1476,28 @@
                         </div>
                         <p id="topupLoginNote" class="hidden text-sm text-amber-200"><i class="fa-solid fa-user-lock mr-1.5" aria-hidden="true"></i>Bitte melde dich an, um Guthaben zu kaufen.</p>
                     </div>
-                    <p class="text-xs text-zinc-400" data-i18n="balanceHint">Guthaben kann an der Kasse als Zahlungsart gewählt werden.</p>
+                    <div class="card p-5 sm:p-6 space-y-3">
+                        <h3 class="text-sm font-extrabold text-white uppercase tracking-wider">Geschenkkarte</h3>
+                        <p class="text-xs text-zinc-400">Kauf einen Code (10–500 €). Nach bestätigter SOL/USDC- oder PayPal-Zahlung steht der Code in der Bestellung. Einlösen schreibt ihn einmalig aufs Guthaben.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-secondary" onclick="renderGiftPaypal(25)">25 € PayPal</button>
+                            <div id="giftPaypalSlot" class="w-full"></div>
+                            <button type="button" class="btn btn-secondary" onclick="buyGiftCard('SOL', 25)">25 € SOL</button>
+                            <button type="button" class="btn btn-secondary" onclick="buyGiftCard('USDC', 25)">25 € USDC</button>
+                        </div>
+                        <form class="flex gap-2" onsubmit="event.preventDefault(); redeemGiftCard();">
+                            <label class="sr-only" for="giftRedeem">Code einlösen</label>
+                            <input id="giftRedeem" class="field uppercase" placeholder="Code einlösen" maxlength="20">
+                            <button class="btn btn-primary" type="submit">Einlösen</button>
+                        </form>
+                        <p id="giftMsg" class="text-xs text-zinc-400" role="status"></p>
+                    </div>
+                        <p class="text-xs text-zinc-400" data-i18n="balanceHint">Guthaben kann an der Kasse als Zahlungsart gewählt werden.</p>
+                    <div class="card p-5 space-y-2">
+                        <h3 class="text-sm font-extrabold text-white">Mitgliedschaft</h3>
+                        <p class="text-xs text-zinc-400">Ein Abo braucht eine PayPal-Plan-ID in den Studio-Einstellungen. Wiederkehrende Krypto-Zahlungen gibt es nicht.</p>
+                        <button type="button" class="btn btn-secondary" onclick="startMembership()">Abo vormerken</button>
+                    </div>
                 </section>
 
                 <!-- Profil & Einstellungen -->
@@ -1090,20 +1545,26 @@
                             <p class="text-xs text-zinc-400" data-i18n="logoutHint">Von diesem Gerät abmelden.</p>
                         </div>
                         <button onclick="handleLogout()" class="btn btn-danger"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> <span data-i18n="logout">Abmelden</span></button>
+                        <button type="button" class="btn btn-secondary" onclick="exportMyData()">Daten exportieren</button>
+                        <button type="button" class="btn btn-secondary" onclick="deleteMyAccount()">Konto löschen</button>
                     </div>
                 </section>
 
                 <!-- Support -->
                 <section id="tabContentSupport" class="hidden space-y-6 max-w-4xl mx-auto">
                     <h2 class="text-2xl font-extrabold text-white tracking-tight" data-i18n="dashSupport">Hilfe & Support</h2>
-                    <div class="grid sm:grid-cols-2 gap-4">
-                        <a href="mailto:L@valentinolopez.de" class="card p-5 hover:border-zinc-600 transition flex items-center gap-4">
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <a href="mailto:L@valentinolopez.de" class="card p-5 hover:border-pink-400/40 transition flex items-center gap-4">
                             <span class="w-11 h-11 rounded-2xl bg-accent/15 text-accent flex items-center justify-center" aria-hidden="true"><i class="fa-solid fa-envelope"></i></span>
                             <span><span class="block text-sm font-bold text-white" data-i18n="supportMail">E-Mail-Support</span><span class="block text-xs text-zinc-400">L@valentinolopez.de</span></span>
                         </a>
-                        <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="card p-5 hover:border-zinc-600 transition flex items-center gap-4">
+                        <a href="https://discord.gg/YE2jHSwM7" target="_blank" rel="noopener noreferrer" class="card p-5 hover:border-pink-400/40 transition flex items-center gap-4">
                             <span class="w-11 h-11 rounded-2xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center" aria-hidden="true"><i class="fa-brands fa-discord"></i></span>
                             <span><span class="block text-sm font-bold text-white">Discord</span><span class="block text-xs text-zinc-400" data-i18n="supportDiscord">Schnelle Hilfe in der Community</span></span>
+                        </a>
+                        <a href="https://linktr.ee/val3nt1no" target="_blank" rel="noopener noreferrer" class="card p-5 hover:border-pink-400/40 transition flex items-center gap-4 sm:col-span-2 lg:col-span-1">
+                            <span class="w-11 h-11 rounded-2xl bg-pink-500/15 text-pink-300 flex items-center justify-center" aria-hidden="true"><i class="fa-solid fa-link"></i></span>
+                            <span><span class="block text-sm font-bold text-white">Alle Links</span><span class="block text-xs text-zinc-400">Linktree</span></span>
                         </a>
                     </div>
                     <form class="card p-5 sm:p-6 space-y-4" onsubmit="event.preventDefault(); sendSupportRequest();">
@@ -1150,6 +1611,17 @@
                             <p class="text-sm text-zinc-400 mt-1">Bestellungen, Umsatz, Produkte, Gutscheine und Besucher.</p>
                         </div>
                         <p id="adminDataSourceNote" class="text-[11px] text-amber-300/80"><i class="fa-solid fa-triangle-exclamation mr-1" aria-hidden="true"></i>Server-Daten nur mit Admin-Claim sichtbar.</p>
+                        <div class="card p-4 space-y-2">
+                            <h3 class="text-sm font-extrabold text-white">Zwei-Faktor (TOTP)</h3>
+                            <p class="text-xs text-zinc-400">Optional. Erst nach Bestätigung eines Codes verlangt der Worker den Code bei Admin-Aktionen. Geheimnis liegt nur in Firestore, nicht im Browser dauerhaft.</p>
+                            <button type="button" class="btn btn-secondary !py-2" onclick="startAdminTotp()">Einrichten</button>
+                            <p id="totpSetup" class="text-xs text-zinc-300 break-all"></p>
+                            <form class="flex gap-2" onsubmit="event.preventDefault(); confirmAdminTotp();">
+                                <label class="sr-only" for="totpCode">Code</label>
+                                <input id="totpCode" inputmode="numeric" maxlength="6" class="field !py-2 w-32" placeholder="123456">
+                                <button class="btn btn-primary !py-2" type="submit">Aktivieren</button>
+                            </form>
+                        </div>
                     </div>
 
                     <!-- KPIs -->
@@ -1182,6 +1654,7 @@
                         <button onclick="switchAdminSubTab('products')" id="admSub-products" class="sub-tab" role="tab" aria-selected="false">Produkte</button>
                         <button onclick="switchAdminSubTab('coupons')" id="admSub-coupons" class="sub-tab" role="tab" aria-selected="false">Gutscheine</button>
                         <button onclick="switchAdminSubTab('ips')" id="admSub-ips" class="sub-tab" role="tab" aria-selected="false">IPs</button>
+                        <button onclick="switchAdminSubTab('studio')" id="admSub-studio" class="sub-tab" role="tab" aria-selected="false">Studio</button>
                     </div>
 
                     <!-- Bestellungen -->
@@ -1234,7 +1707,15 @@
                                 <tbody id="adminProductsTable" class="divide-y divide-saBorder/40"></tbody>
                             </table>
                         </div>
-                        <p class="text-xs text-zinc-400">Produkte und Preise werden direkt im HTML gepflegt (Abschnitt „Products Grid“).</p>
+                        <form id="shopProductForm" class="grid sm:grid-cols-2 gap-3 pt-2" onsubmit="event.preventDefault(); saveShopProductAdmin();">
+                            <div><label class="field-label" for="spId">ID</label><input id="spId" class="field" required pattern="[A-Za-z0-9_-]{2,32}" placeholder="basic"></div>
+                            <div><label class="field-label" for="spName">Name</label><input id="spName" class="field" required maxlength="80"></div>
+                            <div class="sm:col-span-2"><label class="field-label" for="spBlurb">Kurztext</label><input id="spBlurb" class="field" maxlength="280"></div>
+                            <div><label class="field-label" for="spStock">Bestand</label><input id="spStock" type="number" min="0" max="9999" class="field" value="99"></div>
+                            <label class="flex items-center gap-2 text-sm text-zinc-300"><input id="spActive" type="checkbox" checked class="accent-pink-500"> sichtbar</label>
+                            <p class="sm:col-span-2 text-xs text-zinc-400">Bestand und Text liegen in Firestore unter shopProducts (lokal, bis der Worker neu deployt ist). Der Zahlungspreis bleibt im Server-Katalog und wird hier nicht verändert.</p>
+                            <button type="submit" class="btn btn-primary sm:col-span-2">Produkt speichern</button>
+                        </form>
                     </div>
 
                     <!-- Gutscheine -->
@@ -1255,6 +1736,38 @@
 
                     <!-- IPs (unverändert) -->
                     <div id="admBox-ips" class="hidden card p-4 sm:p-6 space-y-4 shadow-xl" role="tabpanel"><div class="overflow-x-auto max-h-96 overflow-y-auto font-mono text-xs"><table class="w-full text-left"><thead><tr class="text-zinc-400 text-xs border-b border-saBorder"><th class="py-3 px-3">Uhrzeit</th><th class="py-3 px-3">IP</th><th class="py-3 px-3">Standort</th><th class="py-3 px-3">Gerät</th></tr></thead><tbody id="adminIpLogTable" class="divide-y divide-saBorder/40"></tbody></table></div></div>
+                    <div id="admBox-studio" class="hidden card p-4 sm:p-6 space-y-4" role="tabpanel">
+                        <h3 class="text-sm font-extrabold text-white">Inhalte aus Firestore</h3>
+                        <p class="text-xs text-zinc-400">Nur das Konto l@valentinolopez.de mit Admin-Claim. Die Seite nutzt diese Daten, sonst die eingebauten Texte. Zahlungsprüfung bleibt im Worker.</p>
+                        <label class="field-label" for="cmsCollection">Bereich</label>
+                        <select id="cmsCollection" class="field" onchange="renderCmsEditor()">
+                            <option value="siteSettings">Einstellungen</option>
+                            <option value="catalog">Produkte</option>
+                            <option value="bundles">Mengenrabatt</option>
+                            <option value="reviews">Stimmen</option>
+                            <option value="posts">Journal</option>
+                            <option value="faqs">FAQ</option>
+                            <option value="partners">Partner</option>
+                        </select>
+                        <div id="cmsEditor" class="space-y-3"></div>
+                        <h3 class="text-sm font-extrabold text-white pt-2">Live-Chat</h3>
+                        <div id="adminThreads" class="text-sm text-zinc-300 space-y-2"></div>
+                        <form class="flex gap-2" onsubmit="event.preventDefault(); replyLiveChat();">
+                            <label class="sr-only" for="chatUid">Kunden-ID</label>
+                            <input id="chatUid" class="field" placeholder="uid">
+                            <label class="sr-only" for="chatReply">Antwort</label>
+                            <input id="chatReply" class="field" placeholder="Antwort">
+                            <button class="btn btn-primary" type="submit">Senden</button>
+                        </form>
+                        <h3 class="text-sm font-extrabold text-white">Rollen</h3>
+                        <form class="grid sm:grid-cols-3 gap-2" onsubmit="event.preventDefault(); saveAdminRole();">
+                            <input id="roleUid" class="field" placeholder="uid" aria-label="Nutzer-ID">
+                            <input id="roleEmail" class="field" placeholder="email" aria-label="E-Mail">
+                            <select id="roleName" class="field" aria-label="Rolle"><option value="support">Support</option><option value="editor">Redaktion</option></select>
+                            <button class="btn btn-secondary sm:col-span-3" type="submit">Rolle speichern</button>
+                        </form>
+                        <p id="analyticsLine" class="text-xs text-zinc-400">Besuche heute werden nach dem Laden ergänzt.</p>
+                    </div>
                 </section>
             </div>
         </div>
@@ -1296,10 +1809,11 @@
         <div class="bg-saCard border border-saBorder p-6 sm:p-8 rounded-3xl max-w-md w-full relative space-y-4 shadow-2xl">
             <button onclick="toggleImpressum()" class="icon-btn absolute top-4 right-4" aria-label="Impressum schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="impressumTitle" class="text-lg font-bold text-white">Impressum</h2>
-            <div class="text-sm text-zinc-300 space-y-3 leading-relaxed">
+            <div id="impressumBody" class="text-sm text-zinc-300 space-y-3 leading-relaxed">
                 <p class="eyebrow">Angaben gemäß § 5 DDG</p>
                 <p>Valentino Lopez<br>Europa-Allee 2<br>60327 Frankfurt am Main</p>
                 <p>E-Mail: <a href="mailto:L@valentinolopez.de" class="text-accent hover:underline underline-offset-4">L@valentinolopez.de</a></p>
+                <div class="legal-en hidden"><p>Legal notice: Valentino Lopez, Europa-Allee 2, 60327 Frankfurt am Main, Germany. Email L@valentinolopez.de. This text can be replaced in the admin studio.</p></div>
             </div>
         </div>
     </div>
@@ -1338,6 +1852,11 @@
         <article class="bg-saCard border border-saBorder p-6 sm:p-8 sm:rounded-3xl max-w-3xl w-full relative shadow-2xl min-h-full sm:min-h-0 sm:max-h-[90vh] overflow-y-auto text-sm text-zinc-300 leading-relaxed space-y-4">
             <button onclick="toggleLegal('datenschutzModal')" class="icon-btn absolute top-4 right-4" aria-label="Datenschutzerklärung schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="dsTitle" class="text-xl font-extrabold text-white pr-10">Datenschutzerklärung</h2>
+            <div class="legal-en hidden space-y-3">
+                <p><b>Controller:</b> Valentino Lopez, Europa-Allee 2, 60327 Frankfurt am Main, L@valentinolopez.de.</p>
+                <p>We store shop preferences in your browser. Login uses Firebase. Payments use PayPal or a Solana transaction, which is public on the blockchain. Orders are kept as required for tax records.</p>
+                <p>You can export or delete your account data in the customer portal. You may contact us about access, correction, or erasure.</p>
+            </div>
             <p class="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><b>Vorlage:</b> Dieser Text ist ein unverbindliches Muster. Bitte [PLATZHALTER] ersetzen und vor Veröffentlichung rechtlich prüfen lassen (z. B. Anwalt oder Datenschutz-Generator).</p>
             <h3 class="text-white font-bold">1. Verantwortlicher</h3>
             <p>[PLATZHALTER: Vollständiger Name]<br>[PLATZHALTER: Straße, Hausnummer]<br>[PLATZHALTER: PLZ, Ort]<br>E-Mail: L@valentinolopez.de</p>
@@ -1373,6 +1892,10 @@
         <article class="bg-saCard border border-saBorder p-6 sm:p-8 sm:rounded-3xl max-w-3xl w-full relative shadow-2xl min-h-full sm:min-h-0 sm:max-h-[90vh] overflow-y-auto text-sm text-zinc-300 leading-relaxed space-y-4">
             <button onclick="toggleLegal('agbModal')" class="icon-btn absolute top-4 right-4" aria-label="AGB schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="agbTitle" class="text-xl font-extrabold text-white pr-10">Allgemeine Geschäftsbedingungen (AGB)</h2>
+            <div class="legal-en hidden space-y-3">
+                <p>Prices are in euro. Digital access is provided after payment. By starting digital delivery early you waive the withdrawal right for that content, as stated at checkout.</p>
+                <p>SOL and USDC are confirmed on-chain. ETH and BTC are confirmed manually. Network fees are yours.</p>
+            </div>
             <p class="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><b>Vorlage:</b> Unverbindliches Muster. [PLATZHALTER] ersetzen und rechtlich prüfen lassen.</p>
             <h3 class="text-white font-bold">§ 1 Geltungsbereich, Anbieter</h3>
             <p>Diese AGB gelten für alle Verträge zwischen [PLATZHALTER: Name], [PLATZHALTER: Anschrift] („Anbieter“) und Kunden über den Online-Shop valentinolopez.de. Verbraucher ist jede natürliche Person, die ein Rechtsgeschäft zu überwiegend privaten Zwecken abschließt (§ 13 BGB).</p>
@@ -1402,6 +1925,9 @@
         <article class="bg-saCard border border-saBorder p-6 sm:p-8 sm:rounded-3xl max-w-3xl w-full relative shadow-2xl min-h-full sm:min-h-0 sm:max-h-[90vh] overflow-y-auto text-sm text-zinc-300 leading-relaxed space-y-4">
             <button onclick="toggleLegal('widerrufModal')" class="icon-btn absolute top-4 right-4" aria-label="Widerrufsbelehrung schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
             <h2 id="wrTitle" class="text-xl font-extrabold text-white pr-10">Widerrufsbelehrung</h2>
+            <div class="legal-en hidden space-y-3">
+                <p>Consumers may withdraw within 14 days. For digital content the right ends once delivery has started with your express consent. Email L@valentinolopez.de to withdraw.</p>
+            </div>
             <p class="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-xl p-3"><b>Vorlage</b> nach dem gesetzlichen Muster (Anlage 1 zu Art. 246a § 1 Abs. 2 EGBGB). [PLATZHALTER] ersetzen und rechtlich prüfen lassen.</p>
             <h3 class="text-white font-bold">Widerrufsrecht</h3>
             <p>Du hast das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.</p>
@@ -1426,6 +1952,80 @@
             </div>
             <a href="mailto:L@valentinolopez.de?subject=Widerruf&body=Hiermit%20widerrufe%20ich%20den%20Vertrag%20%C3%BCber%3A%20%0ABestellt%20am%3A%20%0ARechnungsnr.%3A%20%0AName%3A%20%0AAnschrift%3A%20%0ADatum%3A%20" class="btn btn-secondary"><i class="fa-solid fa-envelope" aria-hidden="true"></i> Widerruf per E-Mail vorbereiten</a>
         </article>
+    </div>
+
+    <nav class="bottom-nav" aria-label="Mobil">
+        <a href="#productsGrid"><i class="fa-solid fa-store" aria-hidden="true"></i>Shop</a>
+        <a href="#storeSearchInputMobile"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>Suche</a>
+        <button type="button" onclick="toggleCartModal()"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>Korb</button>
+        <button type="button" onclick="document.getElementById('authNavBtn').click()"><i class="fa-solid fa-user" aria-hidden="true"></i>Konto</button>
+    </nav>
+    <div id="compareBar" class="hidden card px-4 py-3 flex items-center gap-3 shadow-2xl">
+        <span id="compareCount" class="text-sm text-white font-semibold">0</span>
+        <button type="button" class="btn btn-primary !py-2" onclick="openCompare()">Vergleichen</button>
+        <button type="button" class="btn btn-ghost !py-2" onclick="clearCompare()">Leeren</button>
+    </div>
+    <dialog id="compareDialog" class="card p-5 max-w-3xl w-[calc(100%-2rem)] backdrop:bg-black/70">
+        <h2 class="text-lg font-extrabold text-white">Vergleich</h2>
+        <div id="compareTable" class="mt-3 overflow-x-auto text-sm"></div>
+        <button type="button" class="btn btn-secondary mt-4" onclick="document.getElementById('compareDialog').close()">Schließen</button>
+    </dialog>
+    <div id="adminTour" class="hidden fixed inset-0 z-[70] bg-black/70 p-4 flex items-end sm:items-center justify-center">
+        <div class="card p-5 max-w-md w-full space-y-3" role="dialog" aria-labelledby="tourTitle">
+            <h2 id="tourTitle" class="text-lg font-extrabold text-white">Admin-Rundgang</h2>
+            <p id="tourText" class="text-sm text-zinc-300"></p>
+            <div class="flex gap-2">
+                <button type="button" class="btn btn-primary" onclick="nextAdminTour()">Weiter</button>
+                <button type="button" class="btn btn-ghost" onclick="endAdminTour()">Überspringen</button>
+            </div>
+        </div>
+    </div>
+    <aside id="cookieBanner" class="cookie-banner card p-4 shadow-2xl hidden" role="dialog" aria-labelledby="cookieTitle">
+        <h2 id="cookieTitle" class="text-sm font-extrabold text-white">Cookies & Datenschutz</h2>
+        <p class="text-xs text-zinc-400 mt-1 leading-relaxed">Wir speichern Einstellungen (Sprache, Warenkorb, Einwilligung) lokal in deinem Browser. Zahlung und Login laufen über PayPal, Firebase und den Cloudflare Worker. Details stehen in der Datenschutzerklärung.</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+            <button type="button" class="btn btn-primary !py-2 !text-xs" onclick="acceptCookies()">Einverstanden</button>
+            <button type="button" class="btn btn-secondary !py-2 !text-xs" onclick="toggleLegal('datenschutzModal')">Datenschutz</button>
+        </div>
+    </aside>
+    <div id="salePop" class="sale-pop card p-3 hidden shadow-2xl" role="status" aria-live="polite"></div>
+    <dialog id="qrDialog" class="card p-6 max-w-sm w-[calc(100%-2rem)] text-center backdrop:bg-black/70">
+        <h2 class="text-lg font-extrabold text-white">Shop teilen</h2>
+        <img id="shopQrImg" alt="QR-Code zu valentinolopez.de" class="mx-auto mt-4 rounded-xl bg-white p-2" width="220" height="220">
+        <p class="text-xs text-zinc-400 mt-2">https://valentinolopez.de</p>
+        <button type="button" class="btn btn-secondary mt-4" onclick="document.getElementById('qrDialog').close()">Schließen</button>
+    </dialog>
+
+    <div id="helpChat" class="help-chat">
+        <section id="helpChatPanel" class="help-panel" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="helpChatTitle" tabindex="-1">
+            <div class="help-chat-head">
+                <span class="w-9 h-9 rounded-xl bg-accent/20 text-accent inline-flex items-center justify-center" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
+                <div class="min-w-0 flex-1">
+                    <h2 id="helpChatTitle" class="text-sm font-extrabold text-white">Hilfe-Chat</h2>
+                    <p class="text-[11px] text-zinc-400">Antworten aus dem Shop – ohne externe KI</p>
+                </div>
+                <button type="button" class="icon-btn" onclick="closeHelpChat()" aria-label="Hilfe-Chat schließen"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </div>
+            <div id="helpChatLog" class="help-chat-log" aria-live="polite"></div>
+            <div id="helpChatQuick" class="help-quick no-scrollbar" role="group" aria-label="Häufige Themen">
+                <button type="button" data-topic="payment" aria-pressed="false">Zahlung (PayPal &amp; Krypto/Solana)</button>
+                <button type="button" data-topic="crypto" aria-pressed="false">Krypto-Zahlung Schritt für Schritt</button>
+                <button type="button" data-topic="delivery" aria-pressed="false">Lieferung/Auto-Lieferung</button>
+                <button type="button" data-topic="products" aria-pressed="false">Produkte &amp; Preise</button>
+                <button type="button" data-topic="balance" aria-pressed="false">Guthaben aufladen</button>
+                <button type="button" data-topic="account" aria-pressed="false">Konto/Login</button>
+                <button type="button" data-topic="contact" aria-pressed="false">Kontakt/Links</button>
+            </div>
+            <form id="helpChatForm" class="help-form">
+                <label for="helpChatInput" class="sr-only">Frage an den Hilfe-Chat</label>
+                <input id="helpChatInput" class="field !py-2.5" type="text" maxlength="240" autocomplete="off" placeholder="Frage eingeben …">
+                <button type="submit" class="btn btn-primary shrink-0" aria-label="Frage senden"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
+                <button type="button" class="btn btn-secondary shrink-0" onclick="sendLiveChat()" aria-label="Nachricht an das Team">Team</button>
+            </form>
+        </section>
+        <button type="button" id="helpChatToggle" class="help-launcher" onclick="toggleHelpChat()" aria-expanded="false" aria-controls="helpChatPanel" aria-label="Hilfe-Chat öffnen">
+            <i class="fa-solid fa-comments" aria-hidden="true"></i>
+        </button>
     </div>
 
     <!-- ==================== SCRIPT ENGINE ==================== -->
@@ -1937,6 +2537,7 @@
             for (const id of ['agbModal', 'widerrufModal', 'datenschutzModal', 'productDetailModal', 'authModal', 'impressumModal', 'paymentModal', 'dashboardModal']) {
                 if (document.getElementById(id).classList.contains('active')) return closeModalById(id);
             }
+            if (document.getElementById('helpChat') && document.getElementById('helpChat').classList.contains('is-open')) closeHelpChat();
         });
 
         /* ---------- Sprache & Währung ---------- */
@@ -1953,7 +2554,7 @@
             });
             const ls = document.getElementById('langSelect'); if (ls) ls.value = currentLang;
         }
-        function savePrefs() { localStorage.setItem('store_prefs', JSON.stringify({ lang: currentLang, currency: currentCurrency })); }
+        function savePrefs() { localStorage.setItem('store_prefs', JSON.stringify({ lang: currentLang, currency: currentCurrency })); localStorage.setItem('store_locale_manual', '1'); }
 
         function changeCurrency(curr) {
             currentCurrency = rates[curr] ? curr : 'EUR';
@@ -1973,7 +2574,27 @@
         function changeLanguage(lang) {
             applyLanguage(lang);
             savePrefs();
+            applyLegalLang();
             showToast((currentLang === 'de' ? 'Sprache geändert: ' : 'Language: ') + currentLang.toUpperCase());
+        }
+        function applyLegalLang() {
+            const en = currentLang === 'en';
+            document.querySelectorAll('.legal-en').forEach(el => el.classList.toggle('hidden', !en));
+            ['datenschutzModal', 'agbModal', 'widerrufModal', 'impressumModal'].forEach(id => {
+                const root = document.getElementById(id);
+                if (!root) return;
+                root.querySelectorAll('p, h3, div.card, div.eyebrow').forEach(el => {
+                    if (el.classList.contains('legal-en') || el.closest('.legal-en')) return;
+                    if (el.querySelector && el.querySelector('.legal-en')) return;
+                    el.classList.toggle('hidden', en && !el.classList.contains('legal-keep'));
+                });
+            });
+            const settings = window.cms && window.cms.siteSettings && window.cms.siteSettings.main;
+            const box = document.getElementById('impressumBody');
+            if (box && settings) {
+                const custom = en ? settings.impressumEn : settings.impressumDe;
+                if (custom) box.textContent = custom;
+            }
         }
 
         /* ---------- Produkte: Sortieren, Filtern, Details ---------- */
@@ -1991,14 +2612,18 @@
             items.forEach(item => grid.appendChild(item));
         }
 
+        let priceBand = 'all';
+        function setPriceBand(v) { priceBand = v || 'all'; applyFilters(); }
         function applyFilters() {
             let count = 0;
             document.querySelectorAll('.product-item').forEach(item => {
                 const name = item.dataset.name.toLowerCase();
                 const desc = item.dataset.desc.toLowerCase();
+                const price = parseFloat(item.dataset.price);
                 const matchQ = !searchQuery || name.includes(searchQuery) || desc.includes(searchQuery);
                 const matchC = activeCategory === 'all' || (activeCategory === 'wishlist' ? wishlist.includes(item.dataset.key) : item.dataset.category === activeCategory);
-                const show = matchQ && matchC;
+                const matchP = priceBand === 'low' ? price < 10 : priceBand === 'mid' ? price >= 10 && price <= 30 : priceBand === 'high' ? price > 30 : true;
+                const show = matchQ && matchC && matchP;
                 item.style.display = show ? 'flex' : 'none';
                 if (show) count++;
             });
@@ -2032,6 +2657,8 @@
             document.getElementById('storeSearchInput').value = '';
             document.getElementById('storeSearchInputMobile').value = '';
             searchQuery = '';
+            priceBand = 'all';
+            const pb = document.getElementById('priceBand'); if (pb) pb.value = 'all';
             setCategory('all');
         }
 
@@ -2051,7 +2678,11 @@
 
         /* ---------- Warenkorb ---------- */
         function addToCartDirect(name, price) {
+            const card = [...document.querySelectorAll('.product-item')].find(c => c.dataset.name === name);
+            const stock = card ? Number(card.dataset.stock) : NaN;
             const found = cart.find(i => i.name === name);
+            if (Number.isFinite(stock) && stock <= 0) return showToast('Ausverkauft.');
+            if (Number.isFinite(stock) && found && found.qty >= stock) return showToast('Nicht genug auf Lager.');
             if (found) found.qty++;
             else cart.push({ name, price, qty: 1 });
             localStorage.setItem('store_cart_items', JSON.stringify(cart));
@@ -2193,7 +2824,7 @@
             return {
                 _server: true, id: o.id, invoice: o.invoice, email: o.email, kind: o.kind || 'order', uid: o.uid,
                 items: lines.length ? lines.map(l => `${l.qty}x ${l.name}`).join(', ') : (o.kind === 'topup' ? 'Guthaben-Aufladung' : ''),
-                itemsDetail: lines.map(l => ({ name: l.name, qty: l.qty, price: (l.unitCents || 0) / 100 })),
+                itemsDetail: lines.map(l => ({ name: l.name, qty: l.qty, price: (l.unitCents || 0) / 100, productId: l.productId })),
                 total: eur(o.totalCents), totalEUR: (o.totalCents || 0) / 100,
                 coupon: o.coupon || '', method: o.methodLabel || o.method, status: o.status,
                 link: '', delivery: Array.isArray(o.delivery) ? o.delivery : null,
@@ -2236,24 +2867,26 @@
                 document.getElementById('checkoutEmailSummary').innerText = document.getElementById('checkoutEmail').value.trim();
                 const media = cartHasMedia();
                 document.getElementById('checkoutMediaNote').classList.toggle('hidden', !media);
-                ['payOptBalance', 'payOptCrypto'].forEach(id => {
-                    const el = document.getElementById(id);
-                    el.disabled = media;
-                    el.closest('label').classList.toggle('opacity-50', media);
-                    el.closest('label').classList.toggle('pointer-events-none', media);
-                    if (media && el.checked) document.querySelector('input[name="payMethod"][value="paypal"]').checked = true;
-                });
+                const bal = document.getElementById('payOptBalance');
+                bal.disabled = media;
+                bal.closest('label').classList.toggle('opacity-50', media);
+                bal.closest('label').classList.toggle('pointer-events-none', media);
+                if (media && bal.checked) document.querySelector('input[name="payMethod"][value="paypal"]').checked = true;
+                const cryptoOpt = document.getElementById('payOptCrypto');
+                cryptoOpt.disabled = false;
+                cryptoOpt.closest('label').classList.remove('opacity-50', 'pointer-events-none');
                 const sel = document.querySelector('input[name="payMethod"]:checked');
                 selectPaymentMethod(sel ? sel.value : 'paypal');
                 refreshServerQuote();
             }
+            if (n === 3 && typeof refreshSolPrice === 'function') refreshSolPrice();
             if (n === 4) document.getElementById('checkoutStepConfirm').focus({ preventScroll: true });
         }
 
         async function refreshServerQuote() {
             const note = document.getElementById('checkoutServerNote');
             checkoutQuote = null;
-            if (cartHasMedia() || !serverReady() || !signedInUser()) { note.innerText = ''; updateCheckoutBalance(); return; }
+            if (!serverReady() || !signedInUser()) { note.innerText = ''; updateCheckoutBalance(); return; }
             note.innerText = 'Preis wird serverseitig geprüft …';
             try {
                 checkoutQuote = await window.callServer('quoteCart', { items: cartServerItems(), coupon: appliedCouponCode });
@@ -2353,7 +2986,11 @@
         }
 
         function selectPaymentMethod(m) {
-            if (cartHasMedia() && m !== 'paypal') m = 'paypal';
+            if (cartHasMedia() && m === 'balance') {
+                m = 'paypal';
+                const pp = document.querySelector('input[name="payMethod"][value="paypal"]');
+                if (pp) pp.checked = true;
+            }
             document.getElementById('paypalPaymentBox').classList.toggle('hidden', m !== 'paypal');
             document.getElementById('balancePaymentBox').classList.toggle('hidden', m !== 'balance');
             document.getElementById('cryptoPaymentBox').classList.toggle('hidden', m !== 'crypto');
@@ -2379,6 +3016,7 @@
                 if (paypalRendered) return;
                 paypalRendered = true;
                 paypal.Buttons({
+                    style: { layout: 'vertical', color: 'black', shape: 'rect', height: 45 },
                     createOrder: async function(data, actions) {
                         status.innerText = '';
                         if (cartHasMedia()) {
@@ -2389,7 +3027,7 @@
                         ppMode = 'server';
                         if (!signedInUser()) { status.innerText = 'Bitte melde dich an.'; throw new Error('not signed in'); }
                         try {
-                            const r = await window.callServer('createPayPalOrder', { kind: 'order', items: cartServerItems(), coupon: appliedCouponCode });
+                            const r = await window.callServer('createPayPalOrder', { kind: 'order', items: cartServerItems(), coupon: appliedCouponCode, billing: collectBilling() });
                             ppServerOrderId = r.orderId;
                             return r.paypalOrderId;
                         } catch (e) { status.innerText = friendlyErr(e); throw e; }
@@ -2423,7 +3061,7 @@
             const btn = document.getElementById('payWithBalanceBtn');
             btn.disabled = true;
             try {
-                const r = await window.callServer('payWithBalance', { items: cartServerItems(), coupon: appliedCouponCode });
+                const r = await window.callServer('payWithBalance', { items: cartServerItems(), coupon: appliedCouponCode, billing: collectBilling() });
                 showToast("Erfolgreich mit Guthaben bezahlt!");
                 finishServerOrder({ orderId: r.orderId, invoice: r.invoice, totalCents: r.totalCents, method: 'Account-Guthaben' });
             } catch (e) {
@@ -2445,6 +3083,7 @@
 
         // Bestätigung für serverseitig bezahlte Bestellungen
         function finishServerOrder({ orderId, invoice, totalCents, method }) {
+            if (typeof notePurchasePairs === 'function') notePurchasePairs();
             const itemsHTML = cart.map(i => `<div class="flex justify-between gap-3 py-1"><span><span class="text-zinc-400">${i.qty}×</span> ${esc(i.name)}</span></div>`).join('');
             const email = signedInUser() ? signedInUser().email : document.getElementById('checkoutEmail').value.trim();
             const total = totalCents != null ? eur(totalCents) : (symbols[currentCurrency] + getCartTotal());
@@ -2556,14 +3195,17 @@
 
         async function startCheckoutCrypto() {
             if (!signedInUser()) return showToast('Bitte melde dich an.');
-            if (cartHasMedia()) return showToast('Krypto-Zahlung ist für „All-in-One Media Access“ nicht verfügbar.');
             if (!serverReady()) return showToast('Server nicht erreichbar.');
             const token = (document.querySelector('input[name="cryptoToken"]:checked') || {}).value || 'SOL';
             const btn = document.getElementById('cryptoStartBtn');
             btn.disabled = true;
             try {
-                const r = await window.callServer('createCryptoOrder', { items: cartServerItems(), coupon: appliedCouponCode, token });
-                openCryptoModal(r, 'order');
+                const r = await window.callServer('createCryptoOrder', { items: cartServerItems(), coupon: appliedCouponCode, token, billing: collectBilling() });
+                if (r.manual) {
+                    document.getElementById('manualCoinText').textContent = r.asset + '-Adresse: ' + r.address + '. Bestellung #' + r.invoice + ' wartet auf manuelle Bestätigung. SOL/USDC bleiben automatisch.';
+                    document.getElementById('manualCoinBox').classList.remove('hidden');
+                    showToast('Manuelle ' + r.asset + '-Bestellung angelegt.');
+                } else openCryptoModal(r, 'order');
             } catch (e) { showToast(friendlyErr(e)); }
             finally { btn.disabled = false; }
         }
@@ -2580,7 +3222,7 @@
         async function openCryptoModal(r, kind) {
             stopCryptoTimers();
             cryptoState = { ...r, kind };
-            document.getElementById('cryptoModalTitle').innerText = kind === 'topup' ? 'Guthaben mit Krypto kaufen' : 'Mit Krypto bezahlen';
+            document.getElementById('cryptoModalTitle').innerText = kind === 'topup' ? 'Guthaben mit Krypto kaufen' : kind === 'gift' ? 'Geschenkkarte mit Krypto' : 'Mit Krypto bezahlen';
             document.getElementById('cryptoInvoice').innerText = '#' + r.invoice;
             document.getElementById('cryptoAmount').innerText = r.amount;
             document.getElementById('cryptoTokenLabel').innerText = r.token;
@@ -2829,7 +3471,11 @@
                             <span class="text-xs text-zinc-400 flex items-center gap-2"><i class="fa-solid fa-link text-accent" aria-hidden="true"></i> Dein Zugang</span>
                             <a href="${esc(o.link)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary !py-2 !text-xs sm:ml-auto"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i> Zugang öffnen</a>
                         </div>` : (o.link ? '<p class="text-xs text-zinc-400">Der Zugang wird freigeschaltet, sobald die Zahlung bestätigt ist.</p>' : '')}
-                        <button onclick="contactSupportForOrder('${esc(o.invoice)}')" class="text-xs text-zinc-400 hover:text-white underline underline-offset-4 rounded">Problem mit dieser Bestellung melden</button>
+                        ${(o._server && (st === 'bezahlt' || st === 'geliefert') ? (o.itemsDetail || []).filter(i => ['krypto-einsteiger-2026','discord-server-playbook','digitale-produkte-business-guide'].includes(i.productId)).map(i => `<button type="button" class="btn btn-primary !py-2 !text-xs" onclick="downloadPaidGuide('${esc(o.id)}','${esc(i.productId)}')">PDF herunterladen</button>`).join('') : '')}
+                        <div class="flex flex-wrap gap-3">
+                            <button type="button" onclick="downloadReceipt('${esc(o.invoice)}')" class="text-xs text-accent hover:text-white underline underline-offset-4 rounded">Beleg als PDF</button>
+                            <button type="button" onclick="contactSupportForOrder('${esc(o.invoice)}')" class="text-xs text-zinc-400 hover:text-white underline underline-offset-4 rounded">Problem mit dieser Bestellung melden</button>
+                        </div>
                     </div>
                 </details>`;
         }
@@ -2918,7 +3564,7 @@
                 if (topupPaypalRendered) return;
                 topupPaypalRendered = true;
                 paypal.Buttons({
-                    style: { layout: 'vertical', height: 40 },
+                    style: { layout: 'vertical', color: 'black', shape: 'rect', height: 45 },
                     createOrder: async function() {
                         msg.innerText = '';
                         if (!selectedTopUp) { msg.innerText = 'Bitte Betrag wählen.'; throw new Error('no amount'); }
@@ -3000,7 +3646,7 @@
         }
 
         /* ---------- Admin ---------- */
-        const ADMIN_SUBTABS = ['orders', 'revenue', 'products', 'coupons', 'ips'];
+        const ADMIN_SUBTABS = ['orders', 'revenue', 'products', 'coupons', 'ips', 'studio'];
         function switchAdminSubTab(sub) {
             ADMIN_SUBTABS.forEach(k => {
                 document.getElementById('admBox-' + k).classList.toggle('hidden', k !== sub);
@@ -3231,6 +3877,12 @@
                 const data = await res.json();
                 window.currentVisitorIP = data.ip || 'Unbekannt';
                 saveVisitorLog(window.currentVisitorIP, data.city ? `${data.city}, ${data.country_name}` : 'Direkt');
+                if (!localStorage.getItem('store_prefs')) {
+                    const cc = String(data.country || '').toUpperCase();
+                    const map = { DE: ['de', 'EUR'], AT: ['de', 'EUR'], CH: ['de', 'CHF'], US: ['en', 'USD'], GB: ['en', 'GBP'], FR: ['fr', 'EUR'], IT: ['it', 'EUR'], ES: ['es', 'EUR'] };
+                    const pick = map[cc];
+                    if (pick) { applyLanguage(pick[0]); changeCurrency(pick[1]); localStorage.removeItem('store_locale_manual'); }
+                }
             } catch (e) {
                 window.currentVisitorIP = 'Lokal';
                 saveVisitorLog(window.currentVisitorIP, 'Lokal');
@@ -3262,6 +3914,7 @@
         }
 
         /* ---------- Start ---------- */
+        let compareSet = new Set();
         (function init() {
             const prefs = JSON.parse(localStorage.getItem('store_prefs') || '{}');
             if (prefs.lang && i18n[prefs.lang]) applyLanguage(prefs.lang);
@@ -3282,8 +3935,809 @@
             renderWishlistUI();
             renderCartUI();
             applyFilters();
+            if (typeof initStoreExtras === 'function') initStoreExtras();
         })();
+        let solEur = null, solFetched = 0;
+        async function refreshSolPrice() {
+            if (!(solEur && Date.now() - solFetched < 60000)) {
+                try {
+                    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=eur');
+                    const j = await r.json();
+                    solEur = Number(j.solana && j.solana.eur) || null;
+                    solFetched = Date.now();
+                } catch (e) { solEur = null; }
+            }
+            const el = document.getElementById('solLiveRate');
+            if (el) el.textContent = solEur ? solEur.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €' : 'Kurs gerade nicht erreichbar';
+            updateSolConverter();
+        }
+        function updateSolConverter() {
+            const input = document.getElementById('solEurInput');
+            const out = document.getElementById('solConvertOut');
+            if (!out) return;
+            const eur = Number(input && input.value);
+            out.textContent = solEur && eur > 0 ? (eur / solEur).toFixed(4) : '—';
+        }
+        function shopMeta() {
+            const local = JSON.parse(localStorage.getItem('store_shop_products') || '{}');
+            return Object.assign({}, local, window.shopProducts || {});
+        }
+        function applyShopProducts() {
+            const meta = shopMeta();
+            document.querySelectorAll('.product-item').forEach(card => {
+                const row = meta[card.dataset.key];
+                const stock = row && row.stock != null ? Number(row.stock) : 99;
+                card.dataset.stock = String(Number.isFinite(stock) ? stock : 99);
+                const off = stock <= 0 || (row && row.active === false);
+                card.classList.toggle('is-sold-out', off);
+                let badge = card.querySelector('.stock-badge');
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'stock-badge chip bg-black/40 text-white border border-white/10 absolute top-3 left-3 z-10';
+                    const media = card.querySelector('.h-40');
+                    if (media) media.appendChild(badge);
+                }
+                badge.textContent = stock <= 0 ? 'Ausverkauft' : (stock < 8 ? 'Nur noch ' + stock : 'Auf Lager');
+                let alertBtn = card.querySelector('.stock-alert');
+                if (!alertBtn) {
+                    alertBtn = document.createElement('button');
+                    alertBtn.type = 'button';
+                    alertBtn.className = 'stock-alert btn btn-secondary w-full mt-2 !py-2 !text-xs';
+                    alertBtn.textContent = 'Sag mir, wenn wieder da';
+                    alertBtn.onclick = () => notifyStock(card.dataset.key);
+                    card.querySelector('.p-5.pt-0')?.appendChild(alertBtn);
+                }
+                alertBtn.classList.toggle('hidden', !off);
+                const watched = JSON.parse(localStorage.getItem('store_stock_alerts') || '[]');
+                if (card.dataset.wasOut === '1' && !off && watched.includes(card.dataset.key)) {
+                    showToast(card.dataset.name + ' ist wieder da.');
+                    localStorage.setItem('store_stock_alerts', JSON.stringify(watched.filter(x => x !== card.dataset.key)));
+                }
+                card.dataset.wasOut = off ? '1' : '0';
+                if (row && row.blurb) {
+                    const p = card.querySelector('[data-i18n]');
+                    if (p && row.blurb) { /* Anzeigetext; i18n kann ihn beim Sprachwechsel überschreiben */ }
+                }
+            });
+        };
+        function saveShopProductAdmin() {
+            const id = document.getElementById('spId').value.trim().toLowerCase();
+            const rec = {
+                name: document.getElementById('spName').value.trim(),
+                blurb: document.getElementById('spBlurb').value.trim(),
+                stock: Math.max(0, Math.min(9999, Math.round(Number(document.getElementById('spStock').value) || 0))),
+                active: document.getElementById('spActive').checked
+            };
+            const all = JSON.parse(localStorage.getItem('store_shop_products') || '{}');
+            all[id] = rec;
+            localStorage.setItem('store_shop_products', JSON.stringify(all));
+            window.shopProducts = Object.assign({}, window.shopProducts || {}, { [id]: rec });
+            applyShopProducts();
+            // Firestore-Schreibweg: nur mit Admin-Claim. Preise der Zahlung bleiben in catalog.js.
+            if (window.isAdminClaim && window.callServer) {
+                window.callServer('adminSaveProduct', { id, ...rec }).then(() => showToast('In Firestore gespeichert.')).catch(e => showToast(friendlyErr(e)));
+            } else showToast('Lokal gespeichert. Firestore braucht einen Admin-Login und den deployten Worker.');
+        }
+        async function downloadPaidGuide(orderId, productId) {
+            try {
+                const r = await window.callServer('issueDownload', { orderId, productId });
+                location.href = window.WORKER_URL + '/api/download/' + encodeURIComponent(r.orderId) + '?product=' + encodeURIComponent(r.productId) + '&token=' + encodeURIComponent(r.token);
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        function downloadReceipt(invoice) {
+            const email = getPortalEmail();
+            const o = (email ? getPortalOrders(email) : []).find(x => String(x.invoice) === String(invoice));
+            if (!o) return showToast('Beleg nicht gefunden.');
+            const w = window.open('', '_blank', 'noopener,width=720,height=900');
+            if (!w) return showToast('Pop-up blockiert.');
+            const safe = (s) => String(s || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+            w.document.write('<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>Beleg ' + safe(o.invoice) + '</title><style>body{font-family:Georgia,serif;margin:48px;color:#111}h1{font-size:22px}p{line-height:1.5}</style></head><body><h1>Val3ntino</h1><p>Beleg / Rechnung #' + safe(o.invoice) + '</p><p>' + safe(o.date) + '<br>' + safe(o.method) + '</p><p>' + safe(o.items) + '</p><p><b>' + safe(o.total) + '</b></p><p>Lokale Kopie zum Drucken oder Speichern als PDF. Eine Mail wird derzeit nicht versendet.</p><script>window.print()<\/script></body></html>');
+            w.document.close();
+        }
+        function shareWishlist() {
+            const keys = (wishlist || []).join(',');
+            const url = location.origin + location.pathname + (keys ? '?wish=' + encodeURIComponent(keys) : '');
+            navigator.clipboard.writeText(url).then(() => showToast('Merkliste-Link kopiert.')).catch(() => showToast(url));
+        }
+        function copyReferral() {
+            const code = document.getElementById('referralCode').textContent.trim();
+            const url = location.origin + location.pathname + '?ref=' + encodeURIComponent(code);
+            navigator.clipboard.writeText(url).then(() => showToast('Empfehlungslink kopiert.')).catch(() => showToast(url));
+        }
+        function acceptCookies() {
+            localStorage.setItem('store_cookie_ok', '1');
+            document.getElementById('cookieBanner').classList.add('hidden');
+        }
+        function saveNewsletter() {
+            if (!guardForm('newsHoney', 'newsCaptcha', 'newsCaptchaQ')) return;
+            const email = document.getElementById('newsEmail').value.trim();
+            const list = JSON.parse(localStorage.getItem('store_newsletter') || '[]');
+            if (!list.includes(email)) list.push(email);
+            localStorage.setItem('store_newsletter', JSON.stringify(list));
+            document.getElementById('newsMsg').textContent = 'Gespeichert in diesem Browser. Ein Versanddienst ist nicht angebunden.';
+        }
+        async function showShopQr() {
+            const dlg = document.getElementById('qrDialog');
+            const img = document.getElementById('shopQrImg');
+            try {
+                const QR = await import('https://esm.sh/qrcode@1.5.4');
+                img.src = await (QR.default || QR).toDataURL('https://valentinolopez.de/', { width: 440, margin: 1 });
+            } catch (e) { img.alt = 'QR-Code konnte nicht geladen werden.'; }
+            dlg.showModal();
+        }
+        function loyaltyPoints() {
+            const email = (typeof getPortalEmail === 'function' && getPortalEmail()) || '';
+            const orders = email && typeof getPortalOrders === 'function' ? getPortalOrders(email) : [];
+            const spent = orders.filter(o => ['bezahlt', 'geliefert'].includes(typeof normalizeStatus === 'function' ? normalizeStatus(o.status) : o.status)).reduce((s, o) => s + (typeof orderAmountEUR === 'function' ? orderAmountEUR(o) : 0), 0);
+            return Math.floor(spent);
+        }
+        function redeemLoyalty() {
+            const pts = loyaltyPoints();
+            if (pts < 100) return showToast('100 Punkte ergeben 1 €. Du hast ' + pts + '.');
+            const code = 'TREUE' + String(pts).slice(-4);
+            coupons[code] = Math.floor(pts / 100);
+            localStorage.setItem('store_coupons', JSON.stringify(coupons));
+            showToast(code + ' liegt lokal über ' + coupons[code].toFixed(2) + ' €. Für die Server-Kasse im Admin als Gutschein anlegen.');
+        }
+        function collectBilling() {
+            const box = document.getElementById('bizToggle');
+            if (!box || !box.checked) return null;
+            return {
+                business: true,
+                company: document.getElementById('bizCompany').value.trim(),
+                street: document.getElementById('bizStreet').value.trim(),
+                zip: document.getElementById('bizZip').value.trim(),
+                city: document.getElementById('bizCity').value.trim(),
+                country: document.getElementById('bizCountry').value.trim() || 'DE',
+                vatId: document.getElementById('bizVat').value.trim()
+            };
+        }
+        function toggleManualCoin() {
+            const token = (document.querySelector('input[name="cryptoToken"]:checked') || {}).value;
+            const manual = token === 'ETH' || token === 'BTC';
+            document.getElementById('manualCoinBox').classList.toggle('hidden', !manual);
+            document.getElementById('solanaAutoNote').classList.toggle('hidden', manual);
+            if (manual) document.getElementById('manualCoinText').textContent = token + ' wird nicht automatisch geprüft. Die Adresse kommt aus dem Worker (ETH_ADDRESS / BTC_ADDRESS). SOL und USDC bleiben automatisch.';
+        }
+        let giftPpReady = false;
+        function renderGiftPaypal(amount) {
+            if (!signedInUser()) return showToast('Bitte melde dich an.');
+            const msg = document.getElementById('giftMsg');
+            whenPayPalReady(msg, () => {
+                if (giftPpReady) return;
+                giftPpReady = true;
+                paypal.Buttons({
+                    style: { layout: 'vertical', color: 'black', shape: 'rect', height: 40 },
+                    createOrder: async () => {
+                        const r = await window.callServer('createGiftCardPayPal', { amountEUR: amount });
+                        window.__giftOrder = r.orderId;
+                        return r.paypalOrderId;
+                    },
+                    onApprove: async () => {
+                        const r = await window.callServer('capturePayPalOrder', { orderId: window.__giftOrder });
+                        msg.textContent = 'Status: ' + (r.status || '') + '. Den Code findest du in der Bestellung im Portal.';
+                    },
+                    onError: () => { msg.textContent = 'PayPal-Fehler.'; }
+                }).render('#giftPaypalSlot');
+            });
+        }
+        async function buyGiftCard(token, amount) {
+            if (!signedInUser()) return showToast('Bitte melde dich an.');
+            try {
+                const r = await window.callServer('createGiftCardCrypto', { amountEUR: amount, token });
+                openCryptoModal(r, 'gift');
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function redeemGiftCard() {
+            const code = document.getElementById('giftRedeem').value.trim();
+            try {
+                const r = await window.callServer('redeemGiftCard', { code });
+                document.getElementById('giftMsg').textContent = (r.valueCents / 100).toFixed(2) + ' € wurden gutgeschrieben.';
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function startAdminTotp() {
+            try {
+                const r = await window.callServer('adminTotpSetup', {});
+                document.getElementById('totpSetup').textContent = r.otpauth;
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function confirmAdminTotp() {
+            try {
+                await window.callServer('adminTotpConfirm', { totp: document.getElementById('totpCode').value.trim() });
+                showToast('Zwei-Faktor ist aktiv.');
+            } catch (e) { showToast(friendlyErr(e)); }
+        }
+        function enablePush() {
+            const msg = document.getElementById('pushMsg');
+            // VAPID-Public-Key hier einsetzen, privaten Schlüssel als wrangler secret VAPID_PRIVATE_KEY.
+            const PUSH_VAPID_PUBLIC_KEY = '';
+            if (!PUSH_VAPID_PUBLIC_KEY) { msg.textContent = 'Push ist noch nicht eingerichtet (kein VAPID-Schlüssel).'; return; }
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) { msg.textContent = 'Dieser Browser kann keine Push-Nachrichten.'; return; }
+            Notification.requestPermission().then(p => { msg.textContent = p === 'granted' ? 'Erlaubnis da. Abo folgt nach dem Schlüssel.' : 'Nicht erlaubt.'; });
+        }
+        async function refreshFx() {
+            try {
+                const r = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD,CHF,GBP');
+                const j = await r.json();
+                if (j.rates) {
+                    if (j.rates.USD) rates.USD = j.rates.USD;
+                    if (j.rates.CHF) rates.CHF = j.rates.CHF;
+                    if (j.rates.GBP) rates.GBP = j.rates.GBP;
+                    if (currentCurrency !== 'EUR') changeCurrency(currentCurrency);
+                }
+            } catch (e) { /* eingebaute Kurse bleiben */ }
+        }
+        function renderRecommendations() {
+            const box = document.getElementById('recommendGrid');
+            if (!box) return;
+            const cards = [...document.querySelectorAll('.product-item')];
+            const last = localStorage.getItem('store_last_product');
+            const pairs = JSON.parse(localStorage.getItem('store_copurchase') || '{}');
+            const scored = cards.map(card => {
+                let score = 0;
+                const id = card.dataset.key;
+                if (last && pairs[last] && pairs[last][id]) score += pairs[last][id];
+                if (last) {
+                    const src = cards.find(c => c.dataset.key === last);
+                    if (src && src.dataset.category === card.dataset.category && id !== last) score += 2;
+                    if (src && Math.abs(parseFloat(src.dataset.price) - parseFloat(card.dataset.price)) < 15) score += 1;
+                }
+                return { card, score };
+            }).filter(x => x.card.dataset.key !== last && x.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+            const pick = scored.length ? scored : cards.slice(0, 3).map(card => ({ card }));
+            box.innerHTML = pick.map(({ card }) => `<button type="button" class="card p-4 text-left" onclick="document.querySelector('[data-key=${card.dataset.key}]').scrollIntoView({behavior:'smooth',block:'center'})"><span class="text-sm font-bold text-white">${escHtml(card.dataset.name)}</span><span class="block text-xs text-zinc-400 mt-1">${escHtml(card.dataset.price)} €</span></button>`).join('');
+        }
+        function notePurchasePairs() {
+            const ids = [...document.querySelectorAll('.product-item')].filter(c => cart.some(i => i.name === c.dataset.name)).map(c => c.dataset.key);
+            const pairs = JSON.parse(localStorage.getItem('store_copurchase') || '{}');
+            ids.forEach(a => { pairs[a] = pairs[a] || {}; ids.forEach(b => { if (a !== b) pairs[a][b] = (pairs[a][b] || 0) + 1; }); localStorage.setItem('store_last_product', a); });
+            localStorage.setItem('store_copurchase', JSON.stringify(pairs));
+        }
+        function setupCompare() {
+            compareSet = new Set(JSON.parse(localStorage.getItem('store_compare') || '[]'));
+            document.querySelectorAll('.product-item').forEach(card => {
+                if (card.querySelector('.compare-toggle')) return;
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'compare-toggle text-[11px] font-bold text-zinc-400 hover:text-white mt-2';
+                b.textContent = 'Vergleichen';
+                b.setAttribute('aria-pressed', compareSet.has(card.dataset.key) ? 'true' : 'false');
+                b.onclick = () => {
+                    const id = card.dataset.key;
+                    if (compareSet.has(id)) compareSet.delete(id); else if (compareSet.size < 3) compareSet.add(id);
+                    localStorage.setItem('store_compare', JSON.stringify([...compareSet]));
+                    b.setAttribute('aria-pressed', compareSet.has(id) ? 'true' : 'false');
+                    const bar = document.getElementById('compareBar');
+                    document.getElementById('compareCount').textContent = compareSet.size + ' Produkte';
+                    bar.classList.toggle('hidden', compareSet.size < 2);
+                };
+                card.querySelector('.p-5.pt-0')?.appendChild(b);
+            });
+        }
+        function openCompare() {
+            const rows = [...compareSet].map(id => document.querySelector(`.product-item[data-key="${id}"]`)).filter(Boolean);
+            document.getElementById('compareTable').innerHTML = `<table class="w-full text-left"><thead><tr>${rows.map(c => `<th class="p-2 text-white">${escHtml(c.dataset.name)}</th>`).join('')}</tr></thead><tbody><tr>${rows.map(c => `<td class="p-2 text-zinc-300">${escHtml(c.dataset.price)} €<br>${escHtml(c.dataset.category)}<br>${c.classList.contains('is-sold-out') ? 'Ausverkauft' : 'Lieferbar'}</td>`).join('')}</tr></tbody></table>`;
+            document.getElementById('compareDialog').showModal();
+        }
+        function clearCompare() { compareSet.clear(); localStorage.removeItem('store_compare'); document.getElementById('compareBar').classList.add('hidden'); }
+        function setupSwipe() {
+            document.querySelectorAll('.product-item').forEach(card => {
+                let x0 = 0;
+                card.addEventListener('touchstart', (e) => { x0 = e.changedTouches[0].clientX; }, { passive: true });
+                card.addEventListener('touchend', (e) => {
+                    const dx = e.changedTouches[0].clientX - x0;
+                    if (Math.abs(dx) > 70 && card.dataset.key) toggleWishlist(card.dataset.key);
+                }, { passive: true });
+            });
+        }
+        function armCaptcha() {
+            const q = document.getElementById('newsCaptchaQ');
+            if (!q) return;
+            const a = 2 + Math.floor(Math.random() * 4);
+            const b = 1 + Math.floor(Math.random() * 4);
+            q.dataset.answer = String(a + b);
+            q.textContent = a + ' + ' + b + ' =';
+        }
+        function guardForm(honeyId, captchaId, questionId) {
+            const honey = document.getElementById(honeyId);
+            if (honey && honey.value) return false;
+            const q = document.getElementById(questionId);
+            const a = document.getElementById(captchaId);
+            if (q && a && a.value.trim() !== q.dataset.answer) { showToast('Bitte die Rechenaufgabe lösen.'); return false; }
+            return true;
+        }
+        async function exportMyData() {
+            const local = { prefs: localStorage.getItem('store_prefs'), cart: localStorage.getItem('store_cart_items'), newsletter: localStorage.getItem('store_newsletter') };
+            let remote = null;
+            try { remote = await window.callServer('exportMyData', {}); } catch (e) { remote = { note: friendlyErr(e) }; }
+            const blob = new Blob([JSON.stringify({ local, remote }, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'val3ntino-daten.json';
+            a.click();
+        }
+        async function deleteMyAccount() {
+            if (!confirm('Konto und Chat löschen? Rechnungen bleiben anonymisiert.')) return;
+            try { const r = await window.callServer('deleteMyAccount', {}); showToast(r.kept || 'Gelöscht.'); } catch (e) { showToast(friendlyErr(e)); return; }
+            const user = window.firebaseAuth && window.firebaseAuth.currentUser;
+            if (user && user.delete) user.delete().catch(() => showToast('Firebase verlangt eine frische Anmeldung, um das Login zu löschen.'));
+        }
+        async function notifyStock(productId) {
+            const list = JSON.parse(localStorage.getItem('store_stock_alerts') || '[]');
+            if (!list.includes(productId)) list.push(productId);
+            localStorage.setItem('store_stock_alerts', JSON.stringify(list));
+            try { await window.callServer('joinStockAlert', { productId }); } catch (e) { /* lokal gemerkt; Mail braucht SMTP */ }
+            showToast('Wir merken es uns in diesem Browser. Eine E-Mail geht erst raus, wenn Versand angebunden ist.');
+        }
+        const tourSteps = [
+            'Unter Studio pflegst du Texte, Preise, FAQ und Partner. Die Seite fällt auf die eingebauten Texte zurück, solange Firestore leer ist.',
+            'Gutscheine und der Bestand gelten an der Kasse erst nach dem Worker-Deploy und dem Admin-Claim.',
+            'Zwei-Faktor schaltest du freiwillig ein. Danach verlangt der Server den Code.',
+            'Der Rundgang ist fertig. Du kannst ihn über den Button im Studio neu starten.'
+        ];
+        let tourIndex = 0;
+        function maybeAdminTour() {
+            if (!window.isStoreAdmin || localStorage.getItem('admin_tour_done') === '1') return;
+            tourIndex = 0;
+            document.getElementById('tourText').textContent = tourSteps[0];
+            document.getElementById('adminTour').classList.remove('hidden');
+        }
+        function nextAdminTour() {
+            tourIndex += 1;
+            if (tourIndex >= tourSteps.length) return endAdminTour();
+            document.getElementById('tourText').textContent = tourSteps[tourIndex];
+        }
+        function endAdminTour() {
+            localStorage.setItem('admin_tour_done', '1');
+            document.getElementById('adminTour').classList.add('hidden');
+        }
+        function applyHeroTest() {
+            let variant = localStorage.getItem('ab_hero');
+            if (variant !== 'A' && variant !== 'B') {
+                variant = Math.random() < 0.5 ? 'A' : 'B';
+                localStorage.setItem('ab_hero', variant);
+                // analytics: hier die Variante an einen Collector schicken. Kein Dienst ist angebunden.
+            }
+            document.documentElement.dataset.hero = variant;
+            if (variant === 'B') {
+                const h1 = document.querySelector('.store-banner h1');
+                const cta = document.querySelector('.store-banner .btn-primary');
+                if (h1) h1.textContent = 'Val3ntino';
+                if (cta) cta.textContent = 'Jetzt starten';
+            }
+        }
+        const CMS_FIELDS = {
+            siteSettings: ['heroTitle', 'heroText', 'promoText', 'accent', 'linktree', 'paypalPlanId', 'unitsSold', 'payments', 'legalName', 'legalStreet', 'legalZipCity', 'legalEmail', 'impressumDe', 'impressumEn'],
+            catalog: ['name', 'blurb', 'priceCents', 'stock', 'image', 'video', 'deliveryType', 'downloadKey', 'crypto', 'active'],
+            reviews: ['name', 'quote'],
+            posts: ['title', 'date', 'body'],
+            faqs: ['productId', 'q', 'a'],
+            partners: ['label', 'href'],
+            bundles: ['name', 'productId', 'minQty', 'percent']
+        };
+        function escHtml(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+        function applyPublicCms() {
+            const cms = window.cms || {};
+            const settings = (cms.siteSettings && cms.siteSettings.main) || {};
+            if (settings.heroText) {
+                const p = document.querySelector('[data-i18n="bannerText"]');
+                if (p) p.textContent = settings.heroText;
+            }
+            if (settings.heroTitle && document.documentElement.dataset.hero !== 'B') {
+                const h1 = document.querySelector('.store-banner h1');
+                if (h1) h1.textContent = settings.heroTitle;
+            }
+            if (settings.promoText) {
+                const a = document.querySelector('#promoBanner [data-i18n="announcement"]');
+                if (a) a.textContent = settings.promoText;
+            }
+            if (settings.linktree) document.querySelectorAll('a[href^="https://linktr.ee/"]').forEach(el => { el.href = settings.linktree; });
+            if (settings.accent && /^#[0-9a-fA-F]{6}$/.test(settings.accent)) {
+                document.documentElement.style.setProperty('--brand', settings.accent);
+                document.documentElement.dataset.brand = 'custom';
+            }
+            if (settings.unitsSold != null && document.getElementById('soldCounter')) document.getElementById('soldCounter').textContent = settings.unitsSold + ' Mal bestellt';
+            const catalog = cms.catalog || {};
+            document.querySelectorAll('.product-item').forEach(card => {
+                const row = catalog[card.dataset.key];
+                if (!row) return;
+                if (row.name) { card.dataset.name = row.name; const h = card.querySelector('h3'); if (h) h.textContent = row.name; }
+                if (row.priceCents) {
+                    const eur = (Number(row.priceCents) / 100).toFixed(2);
+                    card.dataset.price = eur;
+                    const price = card.querySelector('.product-price');
+                    if (price) price.dataset.base = eur;
+                }
+                if (row.blurb) { const d = card.querySelector('p.line-clamp-2'); if (d) d.textContent = row.blurb; }
+                card.dataset.crypto = row.crypto === false ? '0' : '1';
+                if (row.image) {
+                    const media = card.querySelector('.h-40');
+                    if (media && !media.querySelector('img.product-photo')) {
+                        const img = document.createElement('img');
+                        img.className = 'product-photo absolute inset-0 h-full w-full object-cover';
+                        img.alt = '';
+                        img.src = row.image;
+                        media.appendChild(img);
+                    }
+                }
+            });
+            const reviews = Object.values(cms.reviews || {});
+            if (reviews.length && document.getElementById('reviewGrid')) {
+                document.getElementById('reviewGrid').innerHTML = reviews.map(r => `<figure class="card p-5"><blockquote class="text-sm text-zinc-200">${escHtml(r.quote)}</blockquote><figcaption class="mt-3 text-xs font-bold text-white">${escHtml(r.name)}</figcaption></figure>`).join('');
+            }
+            const posts = Object.values(cms.posts || {});
+            if (posts.length && document.getElementById('journalGrid')) {
+                document.getElementById('journalGrid').innerHTML = posts.map(p => `<article class="card p-5"><p class="text-xs text-zinc-500">${escHtml(p.date)}</p><h3 class="text-base font-bold text-white mt-2">${escHtml(p.title)}</h3><p class="text-sm text-zinc-400 mt-2">${escHtml(p.body)}</p></article>`).join('');
+            }
+            const faqs = Object.values(cms.faqs || {});
+            if (faqs.length && document.getElementById('faqList')) {
+                document.getElementById('faqList').innerHTML = faqs.map(f => `<details class="border-b border-white/10 py-2"><summary class="font-semibold text-white">${escHtml(f.q)}</summary><p class="text-sm text-zinc-400 mt-2">${escHtml(f.a)}</p></details>`).join('');
+            }
+            const partners = Object.values(cms.partners || {});
+            if (partners.length && document.getElementById('logoStrip')) {
+                document.getElementById('logoStrip').innerHTML = partners.map(p => `<a class="logo-pill" href="${escHtml(p.href || '#')}">${escHtml(p.label)}</a>`).join('');
+            }
+            if (typeof applyShopProducts === 'function') applyShopProducts();
+        }
+        function renderCmsEditor() {
+            const col = document.getElementById('cmsCollection').value;
+            const box = document.getElementById('cmsEditor');
+            const fields = CMS_FIELDS[col] || [];
+            const rows = window.cms && window.cms[col] ? window.cms[col] : {};
+            const ids = Object.keys(rows);
+            box.innerHTML = `<label class="field-label" for="cmsId">ID</label><input id="cmsId" class="field" value="${escHtml(ids[0] || (col === 'siteSettings' ? 'main' : ''))}">` +
+                fields.map(f => `<label class="field-label" for="cms_${f}">${f}</label><input id="cms_${f}" class="field" value="${escHtml(rows[ids[0]] ? rows[ids[0]][f] : '')}">`).join('') +
+                `<div class="flex gap-2"><button type="button" class="btn btn-primary" onclick="saveCmsDoc()">Speichern</button><button type="button" class="btn btn-secondary" onclick="deleteCmsDoc()">Löschen</button></div>`;
+        }
+        async function saveCmsDoc() {
+            const col = document.getElementById('cmsCollection').value;
+            const id = document.getElementById('cmsId').value.trim();
+            const data = {};
+            (CMS_FIELDS[col] || []).forEach(f => {
+                const raw = document.getElementById('cms_' + f).value;
+                if (raw === 'true' || raw === 'false') data[f] = raw === 'true';
+                else if (raw !== '' && !Number.isNaN(Number(raw)) && /Cents|Qty|percent|unitsSold|stock|price/.test(f)) data[f] = Number(raw);
+                else data[f] = raw;
+            });
+            try { await window.callServer('adminUpsert', { collection: col, id, data }); showToast('Gespeichert.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function deleteCmsDoc() {
+            try { await window.callServer('adminDeleteContent', { collection: document.getElementById('cmsCollection').value, id: document.getElementById('cmsId').value.trim() }); showToast('Gelöscht.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function sendLiveChat() {
+            const input = document.getElementById('helpChatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            if (!signedInUser()) return showToast('Bitte melde dich an, damit das Team antworten kann.');
+            try { await window.callServer('postChat', { text }); input.value = ''; appendHelpMessage('user', { text }); showToast('An das Team gesendet.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function replyLiveChat() {
+            try { await window.callServer('adminReplyChat', { uid: document.getElementById('chatUid').value.trim(), text: document.getElementById('chatReply').value.trim() }); showToast('Antwort gespeichert.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function saveAdminRole() {
+            try { await window.callServer('adminSetRole', { uid: document.getElementById('roleUid').value.trim(), email: document.getElementById('roleEmail').value.trim(), role: document.getElementById('roleName').value }); showToast('Rolle gespeichert.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        async function startMembership() {
+            try { const r = await window.callServer('startMembership', {}); showToast(r.note || 'Vorgemerkt.'); }
+            catch (e) { showToast(friendlyErr(e)); }
+        }
+        function initStoreExtras() {
+            applyHeroTest();
+            applyLegalLang();
+            refreshFx();
+            renderRecommendations();
+            setupCompare();
+            setupSwipe();
+            armCaptcha();
+            maybeAdminTour();
+            window.applyPublicCms = applyPublicCms;
+            window.renderCmsEditor = renderCmsEditor;
+            window.saveCmsDoc = saveCmsDoc;
+            window.deleteCmsDoc = deleteCmsDoc;
+            window.sendLiveChat = sendLiveChat;
+            window.replyLiveChat = replyLiveChat;
+            window.saveAdminRole = saveAdminRole;
+            window.startMembership = startMembership;
+            if (cart.length) document.getElementById('abandonedCart')?.classList.remove('hidden');
+            try { fetch(window.WORKER_URL + '/api/trackVisit', { method: 'POST', headers: { 'Content-Type': 'application/json', Origin: location.origin }, body: '{}' }); } catch (e) {}
+            applyPublicCms();
+            if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+            applyShopProducts();
+            const params = new URLSearchParams(location.search);
+            if (params.get('wish')) {
+                params.get('wish').split(',').map(s => s.trim()).filter(Boolean).forEach(k => { if (!wishlist.includes(k)) wishlist.push(k); });
+                localStorage.setItem('store_wishlist', JSON.stringify(wishlist));
+                renderWishlistUI();
+                applyFilters();
+            }
+            let ref = localStorage.getItem('store_ref_code');
+            if (!ref) { ref = 'V' + Math.random().toString(36).slice(2, 7).toUpperCase(); localStorage.setItem('store_ref_code', ref); }
+            const refEl = document.getElementById('referralCode'); if (refEl) refEl.textContent = ref;
+            const incoming = (params.get('ref') || '').toUpperCase();
+            if (incoming && incoming !== ref && !localStorage.getItem('store_ref_seen_' + incoming)) {
+                localStorage.setItem('store_ref_seen_' + incoming, '1');
+                coupons['FREUND' + incoming.slice(0, 4)] = 1;
+                localStorage.setItem('store_coupons', JSON.stringify(coupons));
+                showToast('Empfehlung erkannt. Lokaler Code FREUND' + incoming.slice(0, 4) + ' über 1 € liegt bereit.');
+            }
+            if (localStorage.getItem('store_promo_hidden') === '1') {
+                const b = document.getElementById('promoBanner'); if (b) b.remove();
+            } else {
+                const end = new Date('2026-11-30T22:59:00Z');
+                const tick = () => {
+                    const el = document.getElementById('promoCountdown'); if (!el) return;
+                    const ms = end - Date.now();
+                    if (ms <= 0) { el.textContent = 'beendet'; return; }
+                    const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24, m = Math.floor(ms / 60000) % 60;
+                    el.textContent = d + ' T ' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+                };
+                tick(); setInterval(tick, 30000);
+                const dismiss = document.getElementById('promoDismiss');
+                if (dismiss) dismiss.onclick = () => { localStorage.setItem('store_promo_hidden', '1'); document.getElementById('promoBanner').remove(); };
+            }
+            const themeBtn = document.getElementById('themeToggle');
+            const applyTheme = (t) => {
+                document.documentElement.dataset.theme = t;
+                localStorage.setItem('store_theme', t);
+                const meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.content = t === 'light' ? '#f6f5f7' : '#09090b';
+                if (themeBtn) themeBtn.setAttribute('aria-label', t === 'light' ? 'Dunkles Design einschalten' : 'Helles Design einschalten');
+            };
+            applyTheme(localStorage.getItem('store_theme') === 'light' ? 'light' : 'dark');
+            if (themeBtn) themeBtn.onclick = () => applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+            if (localStorage.getItem('store_cookie_ok') !== '1') document.getElementById('cookieBanner').classList.remove('hidden');
+            const workerEl = document.getElementById('workerStatus');
+            if (workerEl && window.WORKER_URL) {
+                fetch(window.WORKER_URL + '/health').then(r => r.json()).then(j => {
+                    workerEl.textContent = j && j.ok ? 'online' : 'Antwort unklar';
+                    workerEl.className = 'font-semibold ' + (j && j.ok ? 'text-emerald-300' : 'text-amber-300');
+                }).catch(() => { workerEl.textContent = 'nicht erreichbar'; workerEl.className = 'font-semibold text-amber-300'; });
+            }
+            const pop = document.getElementById('salePop');
+            const recent = [];
+            try { JSON.parse(localStorage.getItem('all_orders_global') || '[]').forEach(o => { if (o.items) recent.push(o.items); }); } catch (e) {}
+            if (pop && recent.length) {
+                let i = 0;
+                setInterval(() => {
+                    pop.textContent = 'Jemand hat gerade ' + String(recent[i % recent.length]).slice(0, 80) + ' gekauft.';
+                    pop.classList.remove('hidden');
+                    i++;
+                    setTimeout(() => pop.classList.add('hidden'), 4200);
+                }, 28000);
+            }
+            const loyalty = document.createElement('p');
+            loyalty.className = 'text-xs text-zinc-400 mt-2';
+            loyalty.id = 'loyaltyLine';
+            const partner = document.getElementById('partner');
+            if (partner) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-secondary mt-3 ml-2';
+                btn.textContent = 'Punkte einlösen';
+                btn.onclick = () => { loyalty.textContent = 'Punkte aus bezahlten Bestellungen: ' + loyaltyPoints() + ' (100 = 1 € lokal).'; redeemLoyalty(); };
+                partner.appendChild(btn);
+                partner.appendChild(loyalty);
+            }
+            window.applyShopProducts = applyShopProducts;
+            window.saveShopProductAdmin = saveShopProductAdmin;
+            window.downloadReceipt = downloadReceipt;
+            window.shareWishlist = shareWishlist;
+            window.copyReferral = copyReferral;
+            window.acceptCookies = acceptCookies;
+            window.saveNewsletter = saveNewsletter;
+            window.showShopQr = showShopQr;
+            window.buyGiftCard = buyGiftCard;
+            window.renderGiftPaypal = renderGiftPaypal;
+            window.redeemGiftCard = redeemGiftCard;
+            window.startAdminTotp = startAdminTotp;
+            window.confirmAdminTotp = confirmAdminTotp;
+            window.enablePush = enablePush;
+            window.toggleManualCoin = toggleManualCoin;
+            window.collectBilling = collectBilling;
+            window.updateSolConverter = updateSolConverter;
+            window.refreshSolPrice = refreshSolPrice;
+            window.setPriceBand = setPriceBand;
+        }
+
         trackVisitorIP();
+
+        /* ---------- Hilfe-Chat (lokal, ohne externe KI) ---------- */
+        const HELP_TOPICS = [
+            {
+                id: 'crypto',
+                label: 'Krypto-Zahlung Schritt für Schritt',
+                keywords: ['krypto', 'crypto', 'solana', 'phantom', 'usdc', 'sol', 'qr', 'qrcode', 'wallet', 'blockchain', 'on-chain', 'onchain', 'referenz', 'schritt', 'anleitung'],
+                text: 'So bezahlst du mit Solana – für jedes Produkt, auch „All-in-One Media Access“:\n1. Melde dich an.\n2. Lege den Artikel in den Warenkorb und öffne die Kasse.\n3. Trag deine E-Mail ein und bestätige AGB sowie den Hinweis zum Widerruf.\n4. Wähle „Krypto (Solana via Phantom)“ und danach SOL oder USDC.\n5. Tippe auf „Mit Krypto bezahlen“. Der Euro-Betrag wird live umgerechnet und 30 Minuten reserviert.\n6. Zahle mit Phantom im Browser oder per QR-Code in der Wallet-App. Nur so steckt die Referenz in der Transaktion, an der wir die Zahlung erkennen.\n7. Nach der Bestätigung on-chain wird die Bestellung automatisch freigeschaltet. Den Status siehst du im Kundenportal unter „Bestellungen“. Die Netzwerkgebühr trägst du selbst.'
+            },
+            {
+                id: 'balance',
+                label: 'Guthaben aufladen',
+                keywords: ['guthaben', 'aufladen', 'aufladung', 'topup', 'top-up', 'balance', 'gutschrift'],
+                text: 'Guthaben kaufst du im Kundenportal unter „Guthaben“. Du musst angemeldet sein. Wähle einen Betrag zwischen 5 € und 500 € und bezahle ihn per PayPal oder per Krypto (SOL oder USDC). Gutgeschrieben wird das Guthaben erst nach bestätigter Zahlung, nicht schon beim Auswählen des Betrags. Danach kannst du an der Kasse „Account-Guthaben“ wählen. Für „All-in-One Media Access“ ist Guthaben nicht verfügbar.'
+            },
+            {
+                id: 'delivery',
+                label: 'Lieferung/Auto-Lieferung',
+                keywords: ['lieferung', 'liefern', 'automatisch', 'zugang', 'download', 'freigeschaltet', 'bestellung', 'tuning termin'],
+                text: 'Nach bestätigter Zahlung liegt der Zugang im Kundenportal unter „Bestellungen“. Bei Krypto passiert das automatisch, sobald die Transaktion on-chain bestätigt ist. „All-in-One Media Access“ wird als Sofort-Link freigeschaltet. Bei PC-Tuning und Custom Website melden wir uns per E-Mail oder Discord zur Terminabsprache, in der Regel innerhalb von 24 Stunden.'
+            },
+            {
+                id: 'products',
+                label: 'Produkte & Preise',
+                keywords: ['produkt', 'produkte', 'preis', 'preise', 'kosten', 'euro', 'gutschein', 'coupon', 'rabatt', 'val3ntino', 'cent50', 'basic', 'pro', 'website', 'media', 'tuning'],
+                text: 'Aktuelle Preise in Euro:\n• All-in-One Media Access – 0,50 €\n• Basic PC-Tuning – 15 €\n• Pro Tuning (0 Delay) – 35 €\n• Custom Website Build – 25 €\nDie Anzeige kannst du auf USD, GBP oder CHF umstellen; abgerechnet wird in Euro. Gutscheine an der Kasse: VAL3NTINO (−5 €) und CENT50 (−0,50 €).'
+            },
+            {
+                id: 'account',
+                label: 'Konto/Login',
+                keywords: ['konto', 'login', 'anmelden', 'registr', 'passwort', 'firebase', 'google', 'apple', 'portal', 'kundenportal', 'profil'],
+                text: 'Das Konto läuft über Firebase: E-Mail und Passwort, Google oder Apple. Ein neues Passwort bekommst du als Link per E-Mail. Nach dem Login öffnest du oben das Kundenportal für Bestellungen, Guthaben und Profil. Krypto, Guthaben und die serverseitige PayPal-Zahlung brauchen ein angemeldetes Konto.'
+            },
+            {
+                id: 'contact',
+                label: 'Kontakt/Links',
+                keywords: ['kontakt', 'linktree', 'links', 'discord', 'email', 'e-mail', 'mail', 'support', 'hilfe', 'impressum', 'agb'],
+                text: 'Alle Links stehen gesammelt auf Linktree. Discord und E-Mail erreichst du auch direkt. Impressum, Datenschutz, AGB und Widerruf findest du unten auf dieser Seite.',
+                links: [
+                    { href: 'https://linktr.ee/val3nt1no', label: 'Alle Links (Linktree)' },
+                    { href: 'https://discord.gg/YE2jHSwM7', label: 'Discord' },
+                    { href: 'mailto:L@valentinolopez.de', label: 'L@valentinolopez.de' }
+                ]
+            },
+            {
+                id: 'payment',
+                label: 'Zahlung (PayPal & Krypto/Solana)',
+                keywords: ['zahlung', 'bezahlen', 'bezahlung', 'paypal', 'karte', 'sepa', 'lastschrift', 'visa', 'kasse', 'checkout', 'rabattcode'],
+                text: 'An der Kasse zahlst du mit PayPal (im PayPal-Fenster auch Karte oder SEPA), mit Account-Guthaben oder mit Krypto über Solana (SOL oder USDC, Phantom). Krypto gibt es für jedes Produkt, auch für „All-in-One Media Access“. Guthaben ist nur für dieses Media-Produkt nicht verfügbar. Den Preis prüft der Server in Euro. Rabattcodes: VAL3NTINO (−5 €) und CENT50 (−0,50 €).'
+            }
+        ];
+        const HELP_FALLBACK = {
+            text: 'Dazu habe ich keine passende Kurzantwort. Über Alle Links erreichst du Discord und die E-Mail – dort helfen wir dir weiter.',
+            links: [
+                { href: 'https://linktr.ee/val3nt1no', label: 'Alle Links (Linktree)' },
+                { href: 'mailto:L@valentinolopez.de', label: 'E-Mail schreiben' }
+            ]
+        };
+        function helpNorm(s) {
+            return String(s || '').toLowerCase()
+                .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+                .replace(/[^a-z0-9]+/g, ' ').trim();
+        }
+        function matchHelpTopic(query) {
+            const n = helpNorm(query);
+            if (!n) return null;
+            if (/^(hallo|hi|hey|moin|servus|danke|guten tag|guten morgen)\b/.test(n)) return { greet: true };
+            let best = null, bestScore = 0;
+            const tokens = new Set(n.split(' ').filter(Boolean));
+            HELP_TOPICS.forEach(topic => {
+                let score = 0;
+                topic.keywords.forEach(raw => {
+                    const k = helpNorm(raw);
+                    if (!k) return;
+                    const hit = k.includes(' ') ? n.includes(k) : tokens.has(k);
+                    if (hit) score += k.length >= 6 ? 3 : 2;
+                });
+                if (score > bestScore) { best = topic; bestScore = score; }
+            });
+            return bestScore >= 2 ? best : null;
+        }
+        const helpHistory = [];
+        function rememberHelp(role, payload) {
+            helpHistory.push({ role, text: payload.text || '', links: payload.links || [] });
+            if (helpHistory.length > 40) helpHistory.shift();
+            if (window.persistHelpChat) window.persistHelpChat(helpHistory);
+        }
+        function appendHelpMessage(role, payload, skipSave) {
+            const log = document.getElementById('helpChatLog');
+            const bubble = document.createElement('div');
+            bubble.className = 'help-msg ' + (role === 'user' ? 'is-user' : 'is-bot');
+            const text = document.createElement('p');
+            text.textContent = payload.text || '';
+            bubble.appendChild(text);
+            (payload.links || []).forEach(link => {
+                const a = document.createElement('a');
+                a.href = link.href;
+                a.textContent = link.label;
+                if (!link.href.startsWith('mailto:')) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+                a.style.display = 'inline-block';
+                a.style.marginTop = '0.45rem';
+                a.style.marginRight = '0.75rem';
+                bubble.appendChild(a);
+            });
+            log.appendChild(bubble);
+            log.scrollTop = log.scrollHeight;
+            if (!skipSave) rememberHelp(role, payload);
+        }
+        function showHelpTopic(topic, fromUser) {
+            if (fromUser) appendHelpMessage('user', { text: fromUser });
+            document.querySelectorAll('#helpChatQuick button').forEach(b => b.setAttribute('aria-pressed', b.dataset.topic === topic.id ? 'true' : 'false'));
+            appendHelpMessage('bot', topic);
+        }
+        function answerHelpQuery(query) {
+            const q = query.trim();
+            if (!q) return;
+            const hit = matchHelpTopic(q);
+            if (hit && hit.greet) {
+                appendHelpMessage('user', { text: q });
+                appendHelpMessage('bot', { text: 'Hallo! Wähl ein Thema über den Buttons oder frag zum Beispiel nach PayPal, Phantom, Lieferung oder Gutscheinen.' });
+                return;
+            }
+            if (hit) showHelpTopic(hit, q);
+            else {
+                appendHelpMessage('user', { text: q });
+                appendHelpMessage('bot', HELP_FALLBACK);
+                document.querySelectorAll('#helpChatQuick button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+            }
+        }
+        let helpChatGreeted = false;
+        function openHelpChat() {
+            const root = document.getElementById('helpChat');
+            const panel = document.getElementById('helpChatPanel');
+            const btn = document.getElementById('helpChatToggle');
+            if (root.classList.contains('is-open')) return;
+            root.classList.add('is-open');
+            document.body.classList.add('help-chat-open');
+            panel.setAttribute('aria-hidden', 'false');
+            btn.setAttribute('aria-expanded', 'true');
+            btn.setAttribute('aria-label', 'Hilfe-Chat schließen');
+            if (!helpChatGreeted) {
+                helpChatGreeted = true;
+                const paintGreeting = () => appendHelpMessage('bot', { text: 'Hallo! Ich bin der Hilfe-Chat von Val3ntino. Ich kenne Zahlung, Krypto mit Phantom, Lieferung, Produkte, Guthaben und das Konto. Wähl ein Thema oder schreib deine Frage.' });
+                if (window.loadHelpChat) {
+                    window.loadHelpChat().then(list => {
+                        if (list && list.length) {
+                            list.forEach(m => appendHelpMessage(m.role === 'user' ? 'user' : 'bot', m, true));
+                            helpHistory.splice(0, helpHistory.length, ...list);
+                        } else paintGreeting();
+                    }).catch(paintGreeting);
+                } else paintGreeting();
+            }
+            panel.focus();
+        }
+        function closeHelpChat() {
+            const root = document.getElementById('helpChat');
+            const panel = document.getElementById('helpChatPanel');
+            const btn = document.getElementById('helpChatToggle');
+            if (!root.classList.contains('is-open')) return;
+            root.classList.remove('is-open');
+            document.body.classList.remove('help-chat-open');
+            panel.setAttribute('aria-hidden', 'true');
+            btn.setAttribute('aria-expanded', 'false');
+            btn.setAttribute('aria-label', 'Hilfe-Chat öffnen');
+            btn.focus();
+        }
+        function toggleHelpChat() {
+            document.getElementById('helpChat').classList.contains('is-open') ? closeHelpChat() : openHelpChat();
+        }
+        window.toggleHelpChat = toggleHelpChat;
+        window.closeHelpChat = closeHelpChat;
+        document.getElementById('helpChatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('helpChatInput');
+            const q = input.value;
+            input.value = '';
+            if (!document.getElementById('helpChat').classList.contains('is-open')) openHelpChat();
+            answerHelpQuery(q);
+        });
+        document.getElementById('helpChatQuick').addEventListener('click', (e) => {
+            const b = e.target.closest('button[data-topic]');
+            if (!b) return;
+            const topic = HELP_TOPICS.find(t => t.id === b.dataset.topic);
+            if (topic) showHelpTopic(topic, topic.label);
+        });
+        document.getElementById('helpChatPanel').addEventListener('keydown', (e) => {
+            if (e.key !== 'Tab') return;
+            const focusable = [...document.getElementById('helpChatPanel').querySelectorAll('button, a[href], input')].filter(el => !el.disabled);
+            if (!focusable.length) return;
+            const first = focusable[0], last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+        });
     </script>
 </body>
 </html>

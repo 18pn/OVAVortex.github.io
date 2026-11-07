@@ -5,7 +5,7 @@ compatibility_date = "2024-11-01"
 
 # Alle 5 Minuten offene Krypto-Bestellungen nachprüfen / nach 30 Min. ablaufen lassen
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["*/5 * * * *", "0 3 * * *"]
 
 # Öffentliche Konfiguration (keine Geheimnisse hier!)
 [vars]
@@ -15,8 +15,21 @@ PAYPAL_ENV = "sandbox"          # "sandbox" oder "live"
 PAYPAL_CLIENT_ID = "BAAG-tugo2HjXVgrKwLwBtRX-BXO2ftGLsfoacn0acpjI9xXIp09omgmOp_6-rtVkUjNuagLj8E4eoU6GA"           # öffentliche PayPal-Client-ID (muss zur client-id im HTML passen)
 ALLOWED_ORIGINS = "https://valentinolopez.de,https://www.valentinolopez.de,http://localhost:8788,http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000"
 SMTP_ENABLED = "false"          # E-Mail-Versand ist auf Workers nicht eingebaut (siehe README)
+ETH_ADDRESS = ""                # öffentliche Empfangsadresse, manuelle ETH-Bestätigung
+BTC_ADDRESS = ""                # öffentliche Empfangsadresse, manuelle BTC-Bestätigung
+# VAPID_PUBLIC_KEY bleibt leer, bis Web Push eingerichtet ist (Secret: VAPID_PRIVATE_KEY)
+VAPID_PUBLIC_KEY = ""
 
 # Geheimnisse (NICHT hier eintragen) – per:
 #   npx wrangler secret put GOOGLE_SERVICE_ACCOUNT   (kompletter JSON-Inhalt des Dienstkonto-Schlüssels)
 #   npx wrangler secret put PAYPAL_CLIENT_SECRET
 #   optional: npx wrangler secret put SOLANA_RPC_URL  (eigener RPC, z. B. Helius Free; Standard: api.mainnet-beta.solana.com)
+#   optional: npx wrangler secret put VAPID_PRIVATE_KEY
+#   optional: npx wrangler secret put BACKUP_WEBHOOK   (URL, die den nächtlichen Zähler empfängt)
+#   Pflicht für PDF-Downloads: npx wrangler secret put DOWNLOAD_TOKEN_SECRET
+
+# Cover und PDFs. Nicht ins Git. Nach `npx wrangler kv namespace create ASSETS`
+# die ausgegebene id unten einsetzen (die Zeile "id = ...").
+[[kv_namespaces]]
+binding = "ASSETS"
+id = "ERSETZEN_NACH_KV_NAMESPACE_CREATE"

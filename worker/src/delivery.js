@@ -7,11 +7,31 @@ const DEFAULT_DELIVERY = {
   links: [],
 };
 
+// Sofortzugang, falls in Firestore noch kein deliveries/media liegt. Ein vorhandenes Dokument gewinnt.
+const MEDIA_FALLBACK = {
+  title: 'All-in-One Media Access',
+  instructions: 'Dein Zugang ist sofort verfügbar.',
+  links: ['https://yarrlist.net/'],
+};
+
+const GUIDE_IDS = new Set(['krypto-einsteiger-2026', 'discord-server-playbook', 'digitale-produkte-business-guide']);
+
 export async function buildDelivery(env, lines) {
   const out = [];
   for (const l of lines || []) {
+    if (GUIDE_IDS.has(l.productId)) {
+      out.push({
+        productId: l.productId,
+        name: l.name,
+        title: 'Dein PDF',
+        instructions: 'Der Download steht im Kundenportal. Der Link gilt nur kurz und nur für diese bezahlte Bestellung. Die Datei liegt nicht öffentlich auf der Webseite.',
+        links: [],
+        downloadKey: l.productId,
+      });
+      continue;
+    }
     const doc = await fsGet(env, `deliveries/${l.productId}`);
-    const d = doc ? doc.data : DEFAULT_DELIVERY;
+    const d = doc ? doc.data : (l.productId === 'media' ? MEDIA_FALLBACK : DEFAULT_DELIVERY);
     out.push({
       productId: l.productId,
       name: l.name,
