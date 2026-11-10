@@ -10,4 +10,8 @@ assert.match(html, /window\.isStoreAdmin\s*=\s*claimAdmin\s*;/, 'admin UI requir
 assert.doesNotMatch(html, /window\.isStoreAdmin\s*=\s*claimAdmin\s*\|\|/, 'email must not grant admin UI');
 assert.match(html, /<link rel="stylesheet" href="\/mobile-refinements\.css">/, 'mobile stylesheet linked');
 assert.match(css, /#dashboardModal #dashboardContent/, 'portal mobile styling present');
-console.log('PASS customer and admin portal static regression checks');
+const rules = readFileSync(new URL('../firebase/firestore.rules', import.meta.url), 'utf8');
+assert.match(rules, /match \/supportChats\/\{uid\}/, 'support chat rule exists');
+assert.match(rules, /request\.resource\.data\.keys\(\)\.hasOnly\(\['messages', 'updatedAt'\]\)/, 'support chat cannot write arbitrary fields');
+assert.match(rules, /allow delete: if false;/, 'client cannot delete chat records');
+console.log('PASS customer/admin portal and Firestore static regression checks');
