@@ -899,6 +899,9 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: cors['Access-Control-Allow-Origin'] ? 204 : 403, headers: cors });
     const url = new URL(request.url);
     if (url.pathname === '/health') return json({ ok: true, manual: { ETH: env.ETH_ADDRESS || '', BTC: env.BTC_ADDRESS || '' }, push: !!env.VAPID_PUBLIC_KEY, discord: !!env.DISCORD_PUBLIC_KEY }, 200, cors);
+    // Staging safety lock: never process payments, orders, Firestore writes or Discord actions.
+    // Only the read-only health endpoint is enabled until isolated test credentials exist.
+    if (env.TEST_MODE === 'true') return json({ error: 'Testmodus: API-Aktionen deaktiviert.' }, 503, cors);
     if (url.pathname === '/discord/interactions' && request.method === 'POST') {
       const rawBody = await request.text();
       return handleDiscordInteraction(request, env, rawBody);
@@ -935,7 +938,7 @@ export default {
         return json({ error: 'Anfrage fehlgeschlagen.' }, 500, cors);
       }
     }
-    if (!m || !Object.prototype.hasOwnProperty.call(routes, m[1])) return json({ error: 'Nicht gefunden.' }, 404, cors);
+    if (!m || (m[1] !== 'trackVisit' && !Object.prototype.hasOwnProperty.call(routes, m[1]))) return json({ error: 'Nicht gefunden.' }, 404, cors);
     if (request.method !== 'POST') return json({ error: 'Nur POST.' }, 405, cors);
     try {
       if (m[1] === 'trackVisit') {
@@ -968,6 +971,8 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
+    // Never let staging cron jobs read or mutate production Firestore data.
+    if (env.TEST_MODE === 'true') return;
     if (event.cron === '0 3 * * *') ctx.waitUntil(backupTick(env));
     else ctx.waitUntil(recheckOpenCryptoOrders(env).then(r => console.log('Cron', JSON.stringify(r))));
   },

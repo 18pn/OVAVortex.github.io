@@ -34,8 +34,8 @@ DISCORD_SUPPORT_ROLE_ID = ""      # optionale Rollen-ID, die Tickets sehen darf
 #   für Tickets: npx wrangler secret put DISCORD_PUBLIC_KEY
 #                npx wrangler secret put DISCORD_BOT_TOKEN
 
-# Cover und PDFs. Nicht ins Git. Nach `npx wrangler kv namespace create ASSETS`
-# die ausgegebene id unten einsetzen (die Zeile "id = ...").
+# Cover und PDFs. Vorhandenen Cloudflare-KV-Namespace ASSETS verwenden.
+# Namespace-ID ist eine öffentliche Ressourcenkennung, kein API-Token.
 [[kv_namespaces]]
 binding = "ASSETS"
 id = "24238558ff2b42c081300acde6321ea1"

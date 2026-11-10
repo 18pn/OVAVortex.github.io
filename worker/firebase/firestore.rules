@@ -70,8 +70,17 @@ service cloud.firestore {
     match /referrals/{id} { allow read: if isAdmin(); allow write: if false; }
     match /memberships/{uid} { allow read: if signedIn() && request.auth.uid == uid; allow write: if false; }
 
+    // Customer-side support chat writes may only replace the client's message
+    // history and timestamp. Never allow arbitrary administrative fields.
     match /supportChats/{uid} {
-      allow read, write: if signedIn() && request.auth.uid == uid;
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['messages', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['messages', 'updatedAt'])
+        && request.resource.data.messages is list
+        && request.resource.data.messages.size() <= 100
+        && request.resource.data.updatedAt is number;
+      allow delete: if false;
     }
 
     match /adminTotp/{uid} {

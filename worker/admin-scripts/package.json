@@ -4,7 +4,10 @@
   "description": "Lokale Skripte (laufen auf deinem PC, kostenlos): Admin-Claim setzen, Startdaten anlegen",
   "scripts": {
     "admin": "node set-admin-claim.js l@valentinolopez.de",
-    "seed": "node seed-firestore.js"
+    "seed": "node seed-firestore.js",
+    "verify:admin": "node verify-admin-claim.js"
   },
-  "dependencies": { "firebase-admin": "^12.6.0" }
+  "dependencies": {
+    "firebase-admin": "^12.6.0"
+  }
 }

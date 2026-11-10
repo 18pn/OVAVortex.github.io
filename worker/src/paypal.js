@@ -46,11 +46,22 @@ export async function paypalCaptureAndVerify(env, { paypalOrderId, expectedCents
     if (!already) throw new HttpError(402, 'Die PayPal-Zahlung konnte nicht abgeschlossen werden.');
     j = await (await fetch(url, { headers: { Authorization: 'Bearer ' + t } })).json();
   }
-  const pu = (j.purchase_units || [])[0] || {};
-  const cap = ((pu.payments || {}).captures || [])[0] || {};
-  const value = Math.round(Number(cap.amount && cap.amount.value) * 100);
-  const ok = j.status === 'COMPLETED' && cap.status === 'COMPLETED'
-    && cap.amount && cap.amount.currency_code === 'EUR' && value === expectedCents
+  // Accept exactly one purchase unit and one completed capture. Reject partial,
+  // ambiguous, malformed or unexpected payment responses before fulfilling orders.
+  const units = Array.isArray(j.purchase_units) ? j.purchase_units : [];
+  const pu = units.length === 1 ? units[0] : null;
+  const captures = pu && pu.payments && Array.isArray(pu.payments.captures) ? pu.payments.captures : [];
+  const cap = captures.length === 1 ? captures[0] : null;
+  const amount = cap && cap.amount;
+  const valueText = amount && amount.value;
+  const validAmount = typeof valueText === 'string' && /^(?:0|[1-9]\d*)\.\d{2}$/.test(valueText);
+  const value = validAmount ? Number(valueText.replace('.', '')) : NaN;
+  const ok = units.length === 1 && captures.length === 1
+    && j.status === 'COMPLETED' && cap.status === 'COMPLETED'
+    && typeof cap.id === 'string' && cap.id.length > 0
+    && amount.currency_code === 'EUR' && Number.isSafeInteger(expectedCents)
+    && expectedCents > 0 && value === expectedCents
+    && typeof expectedCustomId === 'string' && expectedCustomId.length > 0
     && (pu.custom_id === expectedCustomId || cap.custom_id === expectedCustomId);
-  return { ok, captureId: cap.id || null };
+  return { ok, captureId: ok ? cap.id : null };
 }

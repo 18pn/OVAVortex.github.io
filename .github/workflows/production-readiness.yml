@@ -1,0 +1,46 @@
+name: Val3ntino production readiness (no deployment)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - val3ntino-paypal-hardening
+    paths:
+      - 'worker/**'
+      - '.github/workflows/production-readiness.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm run test:paypal
+      - run: npm run test:portal
+      - run: npm run test:security
+      - run: npm test
+      - name: Verify production target and safe config
+        run: |
+          grep -q '^name = "valentinolopez-api"$' wrangler.toml
+          grep -q '^PAYPAL_ENV = "production"' wrangler.toml
+          if grep -q '^TEST_MODE = "true"' wrangler.toml; then
+            echo 'Production configuration must not enable staging lock.'
+            exit 1
+          fi
+      - name: Validate production bundle without deploying
+        run: npx wrangler deploy --dry-run --config wrangler.toml --outdir dist-production
+
+# This workflow deliberately does not use Cloudflare credentials or deploy.
+# Production deployment requires separately approved live security/payment checks.

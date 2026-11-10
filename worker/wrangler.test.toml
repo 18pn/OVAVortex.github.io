@@ -1,0 +1,12 @@
+# Isolated staging Worker. Never reuse production KV, payment keys or service accounts.
+name = "valentinolopez-api-test"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+workers_dev = true
+
+[vars]
+TEST_MODE = "true"
+FIREBASE_PROJECT_ID = "valentinolopezde"
+ALLOWED_ORIGINS = "http://localhost:5500,http://127.0.0.1:5500"
+PAYPAL_ENV = "sandbox"
+SMTP_ENABLED = "false"
