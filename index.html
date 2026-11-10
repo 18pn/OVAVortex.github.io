@@ -4781,7 +4781,8 @@
             bundles: ['name', 'productId', 'minQty', 'percent']
         };
         function escHtml(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
-        const DEFAULT_DISCORD = 'https://discord.gg/KZgBuDzRx7';
+        // `var` is hoisted: asynchronous CMS callbacks may run during page initialization.
+        var DEFAULT_DISCORD = 'https://discord.gg/KZgBuDzRx7';
         function discordHref(value) {
             const url = String(value || '').trim();
             return /^https:\/\/(discord\.gg|discord\.com)\//i.test(url) ? url : DEFAULT_DISCORD;
