@@ -16,7 +16,7 @@ Diese Tests verwenden Mocks. Sie bestätigen weder die Live-Umgebung noch die ko
 
 - [ ] In `worker/wrangler.toml` den Platzhalter `ERSETZEN_NACH_KV_NAMESPACE_CREATE` durch eine echte KV-Namespace-ID ersetzen (nicht erfinden)
 - [ ] Cloudflare Worker Secrets `GOOGLE_SERVICE_ACCOUNT`, `PAYPAL_CLIENT_SECRET` und gegebenenfalls `DOWNLOAD_TOKEN_SECRET` sicher konfigurieren (nie in Git committen)
-- [ ] Firestore-Regeln aus `worker/firebase/firestore.rules` im richtigen Firebase-Projekt veröffentlichen und mit Testkonten prüfen
+- [ ] Firestore-Regeln aus `worker/firebase/firestore.rules` im richtigen Firebase-Projekt veröffentlichen und mit Testkonten prüfen (Support-Chat-Felder sind jetzt eingeschränkt; die Regeländerung ist ohne Firebase-Deployment noch nicht aktiv)
 - [ ] Inhaber-Konto erhält serverseitig den Firebase Custom Claim `admin=true`; danach neu anmelden bzw. Token aktualisieren
 - [ ] Ein normales Kundenkonto sieht **keinen** Admin-Reiter und kann keine Admin-API-Aktion ausführen
 - [ ] Admin kann Bestellungen/Produkte sehen und ändern; Kunde sieht nur eigene Daten
