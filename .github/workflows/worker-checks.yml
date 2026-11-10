@@ -1,0 +1,39 @@
+name: Val3ntino Worker checks
+
+on:
+  pull_request:
+    paths:
+      - 'worker/**'
+      - '.github/workflows/worker-checks.yml'
+  push:
+    branches:
+      - val3ntino-paypal-hardening
+      - val3ntino-audit-v1
+    paths:
+      - 'worker/**'
+      - '.github/workflows/worker-checks.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Syntax check
+        run: npm run check
+      - name: PayPal validation regression tests
+        run: npm run test:paypal
+      - name: Worker integration tests (mocked)
+        run: npm test
