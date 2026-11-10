@@ -54,7 +54,7 @@ export async function paypalCaptureAndVerify(env, { paypalOrderId, expectedCents
   const cap = captures.length === 1 ? captures[0] : null;
   const amount = cap && cap.amount;
   const valueText = amount && amount.value;
-  const validAmount = typeof valueText === 'string' && /^(?:0|[1-9]\\d*)\\.\\d{2}$/.test(valueText);
+  const validAmount = typeof valueText === 'string' && /^(?:0|[1-9]\d*)\.\d{2}$/.test(valueText);
   const value = validAmount ? Number(valueText.replace('.', '')) : NaN;
   const ok = units.length === 1 && captures.length === 1
     && j.status === 'COMPLETED' && cap.status === 'COMPLETED'
