@@ -347,7 +347,9 @@
                 let claimAdmin = false;
                 try { const tok = await user.getIdTokenResult(); claimAdmin = tok.claims.admin === true; } catch (e) {}
                 window.isAdminClaim = claimAdmin;
-                window.isStoreAdmin = claimAdmin || (u === OWNER_EMAIL);
+                // UI access follows the verified Firebase admin custom claim only.
+                // The server independently authorizes every privileged operation.
+                window.isStoreAdmin = claimAdmin;
                 subscribeUserData(user, claimAdmin);
                 if (window.isStoreAdmin) {
                     if (adminSidebarBtn) adminSidebarBtn.classList.remove('hidden');
