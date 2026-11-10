@@ -21,3 +21,20 @@
     transition-duration: .01ms !important;
   }
 }
+
+/* Customer and admin portal: responsive layout and usable navigation. */
+#dashboardModal.active { overscroll-behavior: contain; }
+#dashboardModal #dashboardContent { min-height: 0; }
+#dashboardModal .tab-btn { white-space: nowrap; }
+#dashboardModal :is(input, select, textarea) { max-width: 100%; }
+#dashboardModal :is(button, a) { touch-action: manipulation; }
+#dashboardModal :is(.card, table) { min-width: 0; }
+#dashboardModal table { width: 100%; }
+@media (max-width: 767px) {
+  #dashboardModal > div { min-height: 0; height: 100dvh; }
+  #dashboardModal nav { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+  #dashboardModal nav .tab-btn { flex-shrink: 0; }
+  #dashboardModal #dashboardContent { flex: 1 1 auto; padding: 1rem; overflow-y: auto; }
+  #dashboardModal #dashboardContent table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #dashboardModal #dashboardContent :is(button, a) { min-height: 40px; }
+}
