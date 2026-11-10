@@ -971,6 +971,8 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
+    // Never let staging cron jobs read or mutate production Firestore data.
+    if (env.TEST_MODE === 'true') return;
     if (event.cron === '0 3 * * *') ctx.waitUntil(backupTick(env));
     else ctx.waitUntil(recheckOpenCryptoOrders(env).then(r => console.log('Cron', JSON.stringify(r))));
   },
