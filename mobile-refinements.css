@@ -1,0 +1,23 @@
+/* Val3ntino v2: small-screen usability and keyboard-accessibility refinements. */
+:root { color-scheme: dark; }
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #f472b6;
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .header-bar { gap: .5rem; }
+  .site-header button, .site-header a { min-height: 40px; }
+  #cartDrawer { width: 100%; max-width: 100%; }
+  #cartDrawer > :last-child { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  .modal > div { max-height: min(92dvh, 92vh); overflow-y: auto; }
+  #main { padding-bottom: max(5rem, env(safe-area-inset-bottom)); }
+  input, select, textarea { font-size: max(16px, 1em); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
