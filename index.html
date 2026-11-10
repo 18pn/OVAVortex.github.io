@@ -86,6 +86,10 @@
     <!-- PayPal JS SDK mit der öffentlichen Live-Client-ID. Muss zu PAYPAL_CLIENT_ID in worker/wrangler.toml passen.
          Das Secret bleibt Worker-Secret PAYPAL_CLIENT_SECRET und steht nicht in dieser Datei. -->
     <script defer src="https://www.paypal.com/sdk/js?client-id=BAAcpQPHWqavlDSj1GlAmn1RfyXzEWqbRkVIfKkxin6EurDH8Zmrnuvgs9uMHkuF-KPfzOWM_asLiZsSUY&currency=EUR&components=buttons&enable-funding=venmo,paylater,card"></script>
+    <!-- API URL must exist before deferred/module scripts and page initialization. -->
+    <script>
+        window.WORKER_URL = 'https://valentinolopez-api.valentinolopez.workers.dev';
+    </script>
     <!-- Firebase SDKs & Auth -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -138,8 +142,7 @@
 
         // ===== Server: Cloudflare Worker (siehe Ordner worker/) =====
         // NACH DEM DEPLOY HIER DIE ADRESSE DEINES WORKERS EINTRAGEN (ohne / am Ende):
-        const WORKER_URL = 'https://valentinolopez-api.valentinolopez.workers.dev';
-        window.WORKER_URL = WORKER_URL;
+        const WORKER_URL = window.WORKER_URL;
 
         window.callServer = async function(name, data) {
             const user = auth.currentUser;
