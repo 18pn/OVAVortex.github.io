@@ -1,6 +1,6 @@
 /* Shell-Cache für die installierbare Seite. API, PayPal und Firebase bleiben immer Netz. */
-const CACHE = 'val3ntino-shell-v2';
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg'];
+const CACHE = 'val3ntino-shell-v3';
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/mobile-refinements.css'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
