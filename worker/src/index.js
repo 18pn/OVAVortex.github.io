@@ -935,7 +935,7 @@ export default {
         return json({ error: 'Anfrage fehlgeschlagen.' }, 500, cors);
       }
     }
-    if (!m || !Object.prototype.hasOwnProperty.call(routes, m[1])) return json({ error: 'Nicht gefunden.' }, 404, cors);
+    if (!m || (m[1] !== 'trackVisit' && !Object.prototype.hasOwnProperty.call(routes, m[1]))) return json({ error: 'Nicht gefunden.' }, 404, cors);
     if (request.method !== 'POST') return json({ error: 'Nur POST.' }, 405, cors);
     try {
       if (m[1] === 'trackVisit') {
