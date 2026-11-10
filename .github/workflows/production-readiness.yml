@@ -29,6 +29,7 @@ jobs:
       - run: npm run check
       - run: npm run test:paypal
       - run: npm run test:portal
+      - run: npm run test:security
       - run: npm test
       - name: Verify production target and safe config
         run: |
