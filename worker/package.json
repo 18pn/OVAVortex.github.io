@@ -10,7 +10,8 @@
     "check": "node --check src/index.js && node --check src/auth.js && node --check src/firestore.js && node --check src/solana.js && node --check src/paypal.js && node --check src/catalog.js && node --check src/delivery.js && node --check src/util.js",
     "test:solana": "node scripts/test-solana.mjs",
     "test": "wrangler deploy --dry-run --outdir dist && node test/integration.mjs",
-    "test:paypal": "node test/paypal-validation.mjs"
+    "test:paypal": "node test/paypal-validation.mjs",
+    "test:portal": "node test/portal-static.mjs"
   },
   "dependencies": {
     "jose": "^5.9.6"
