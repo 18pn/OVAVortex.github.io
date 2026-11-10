@@ -35,5 +35,7 @@ jobs:
         run: npm run check
       - name: PayPal validation regression tests
         run: npm run test:paypal
+      - name: Customer and admin portal static checks
+        run: npm run test:portal
       - name: Worker integration tests (mocked)
         run: npm test
