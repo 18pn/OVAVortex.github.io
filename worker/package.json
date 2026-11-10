@@ -11,7 +11,8 @@
     "test:solana": "node scripts/test-solana.mjs",
     "test": "wrangler deploy --dry-run --outdir dist && node test/integration.mjs",
     "test:paypal": "node test/paypal-validation.mjs",
-    "test:portal": "node test/portal-static.mjs"
+    "test:portal": "node test/portal-static.mjs",
+    "test:security": "node test/security-boundaries.mjs"
   },
   "dependencies": {
     "jose": "^5.9.6"
