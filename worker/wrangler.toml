@@ -38,4 +38,4 @@ DISCORD_SUPPORT_ROLE_ID = ""      # optionale Rollen-ID, die Tickets sehen darf
 # die ausgegebene id unten einsetzen (die Zeile "id = ...").
 [[kv_namespaces]]
 binding = "ASSETS"
-id = "ERSETZEN_NACH_KV_NAMESPACE_CREATE"
+id = "24238558ff2b42c081300acde6321ea1"
